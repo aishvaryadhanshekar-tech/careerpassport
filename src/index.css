@@ -1889,8 +1889,10 @@ a {
 }
 
 .choice-badge.selected {
-  background: #f2f2f2;
-  border-color: #b8bec6;
+  background: #1f1b16;
+  border-color: #1f1b16;
+  color: #fff;
+  font-weight: 600;
 }
 
 .choice-badge:focus-visible {
