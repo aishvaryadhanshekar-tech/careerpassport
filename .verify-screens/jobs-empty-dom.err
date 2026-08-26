@@ -1,0 +1,14 @@
+[0825/131039.883781:ERROR:xattr.cc(41)] getxattr size org.chromium.crashpad.database.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131039.884736:ERROR:xattr.cc(41)] getxattr size com.googlecode.crashpad.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131039.885539:ERROR:xattr.cc(66)] setxattr org.chromium.crashpad.database.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131039.886648:ERROR:file_io.cc(103)] ReadExactly: expected 8, observed 0
+[0825/131039.887479:ERROR:xattr.cc(41)] getxattr size org.chromium.crashpad.database.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131039.888278:ERROR:xattr.cc(41)] getxattr size com.googlecode.crashpad.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131039.888973:ERROR:xattr.cc(66)] setxattr org.chromium.crashpad.database.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131040.049684:ERROR:xattr.cc(41)] getxattr size org.chromium.crashpad.database.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131040.050594:ERROR:xattr.cc(41)] getxattr size com.googlecode.crashpad.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131040.051275:ERROR:xattr.cc(66)] setxattr org.chromium.crashpad.database.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131040.052290:ERROR:file_io.cc(103)] ReadExactly: expected 8, observed 0
+[0825/131040.053168:ERROR:xattr.cc(41)] getxattr size org.chromium.crashpad.database.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131040.053883:ERROR:xattr.cc(41)] getxattr size com.googlecode.crashpad.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)
+[0825/131040.054717:ERROR:xattr.cc(66)] setxattr org.chromium.crashpad.database.initialized on file /Users/aishvarya.dhansheka/Library/Application Support/Google/Chrome/Crashpad: Operation not permitted (1)

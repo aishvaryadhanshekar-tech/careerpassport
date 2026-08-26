@@ -1,0 +1,7 @@
+[99398:22531:0825/133450.902115:ERROR:shared_image_manager.cc(358)] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+356394 bytes written to file /Users/aishvarya.dhansheka/Desktop/careerpassport/.verify-screens/application-copy-desktop.png
+Warning: Old MapAsync APIs are deprecated. If using C please pass a CallbackInfo struct that has two userdatas. Otherwise, if using C++, please use templated helpers.
+[99392:259:0825/133907.277038:ERROR:gpu_process_host.cc(953)] GPU process exited unexpectedly: exit_code=15
+[99392:259:0825/133907.278051:ERROR:network_service_instance_impl.cc(612)] Network service crashed, restarting service.
+[2453:259:0825/133907.333547:ERROR:mach_port_rendezvous.cc(653)] bootstrap_look_up com.google.Chrome.MachPortRendezvousServer.1: Unknown service name (1102)
+[2453:259:0825/133907.334236:ERROR:shared_memory_switch.cc(237)] No rendezvous client, terminating process (parent died?)

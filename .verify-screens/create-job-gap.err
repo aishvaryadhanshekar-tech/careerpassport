@@ -1,0 +1,7 @@
+100162 bytes written to file /Users/aishvarya.dhansheka/Desktop/careerpassport/.verify-screens/create-job-gap.png
+[81837:259:0825/024422.782522:ERROR:gpu_process_host.cc(953)] GPU process exited unexpectedly: exit_code=15
+[81837:259:0825/024422.783878:ERROR:network_service_instance_impl.cc(612)] Network service crashed, restarting service.
+[82987:259:0825/024422.859734:ERROR:mach_port_rendezvous.cc(653)] bootstrap_look_up com.google.Chrome.MachPortRendezvousServer.1: Permission denied (1100)
+[82987:259:0825/024422.860751:ERROR:shared_memory_switch.cc(237)] No rendezvous client, terminating process (parent died?)
+[82986:259:0825/024422.862934:ERROR:mach_port_rendezvous.cc(653)] bootstrap_look_up com.google.Chrome.MachPortRendezvousServer.1: Permission denied (1100)
+[82986:259:0825/024422.863670:ERROR:shared_memory_switch.cc(237)] No rendezvous client, terminating process (parent died?)
