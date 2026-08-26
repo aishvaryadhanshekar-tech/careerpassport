@@ -601,21 +601,24 @@ export function CollectJobPage() {
               {recording ? "Stop" : "Record"}
             </button>
           </div>
-          <button
-            type="button"
-            id="generate-btn"
-            className={`btn primary${analysing ? " is-analysing" : ""}`}
-            disabled={!canGenerate}
-            aria-disabled={!canGenerate}
-            onClick={onGenerate}
-          >
-            <SparkleIcon />
-            {generateLabel({
-              analysing,
-              analysedOnce: draft.analysedOnce,
-              buildPhase,
-            })}
-          </button>
+          {analysing ? (
+            <span className="build-loading" aria-live="polite">
+              <SparkleIcon />
+              {generateLabel({ analysing, analysedOnce: draft.analysedOnce, buildPhase })}
+            </span>
+          ) : (
+            <button
+              type="button"
+              id="generate-btn"
+              className="btn primary"
+              disabled={!canGenerate}
+              aria-disabled={!canGenerate}
+              onClick={onGenerate}
+            >
+              <SparkleIcon />
+              {generateLabel({ analysing: false, analysedOnce: draft.analysedOnce })}
+            </button>
+          )}
         </div>
 
       </div>

@@ -1442,13 +1442,18 @@ a {
   border-color: #1f1b16;
 }
 
-.btn.primary.is-analysing svg {
-  animation: sparkle-pulse 0.9s ease-in-out infinite;
+.build-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f1b16;
 }
 
-#generate-btn {
-  min-width: 196px;
-  justify-content: center;
+.build-loading svg {
+  animation: sparkle-pulse 0.9s ease-in-out infinite;
 }
 
 @keyframes sparkle-pulse {
