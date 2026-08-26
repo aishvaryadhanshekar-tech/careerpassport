@@ -16,10 +16,19 @@ export function generateEnabled(input: {
   return input.hasContent;
 }
 
+export const BUILD_PHASES = [
+  "Reading your notes…",
+  "Structuring the role…",
+  "Building your role…",
+] as const;
+
 export function generateLabel(input: {
   analysing: boolean;
   analysedOnce: boolean;
+  buildPhase?: number;
 }): string {
-  if (input.analysing) return "Analysing…";
+  if (input.analysing) {
+    return BUILD_PHASES[(input.buildPhase ?? 0) % BUILD_PHASES.length];
+  }
   return input.analysedOnce ? "Re-build with AI" : "Build with AI";
 }

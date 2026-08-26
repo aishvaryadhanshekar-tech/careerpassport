@@ -61,6 +61,7 @@ export function CollectJobPage() {
   const [interim, setInterim] = useState("");
   const [elapsedMs, setElapsedMs] = useState(0);
   const [analysing, setAnalysing] = useState(false);
+  const [buildPhase, setBuildPhase] = useState(0);
   const [showCaptured, setShowCaptured] = useState(false);
   const [missingIds, setMissingIds] = useState<CoverageId[]>(() =>
     missingFrom(loadDraft()),
@@ -117,6 +118,17 @@ export function CollectJobPage() {
     }, 200);
     return () => window.clearInterval(id);
   }, [recording]);
+
+  useEffect(() => {
+    if (!analysing) {
+      setBuildPhase(0);
+      return;
+    }
+    const id = window.setInterval(() => {
+      setBuildPhase((p) => p + 1);
+    }, 400);
+    return () => window.clearInterval(id);
+  }, [analysing]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -592,13 +604,17 @@ export function CollectJobPage() {
           <button
             type="button"
             id="generate-btn"
-            className="btn primary"
+            className={`btn primary${analysing ? " is-analysing" : ""}`}
             disabled={!canGenerate}
             aria-disabled={!canGenerate}
             onClick={onGenerate}
           >
             <SparkleIcon />
-            {generateLabel({ analysing, analysedOnce: draft.analysedOnce })}
+            {generateLabel({
+              analysing,
+              analysedOnce: draft.analysedOnce,
+              buildPhase,
+            })}
           </button>
         </div>
 

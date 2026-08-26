@@ -56,12 +56,27 @@ describe("generateEnabled", () => {
 });
 
 describe("generateLabel", () => {
-  it("shows the analysing state first", () => {
+  it("cycles through the build phases while analysing", () => {
+    expect(
+      generateLabel({ analysing: true, analysedOnce: false, buildPhase: 0 }),
+    ).toBe("Reading your notes…");
+    expect(
+      generateLabel({ analysing: true, analysedOnce: false, buildPhase: 1 }),
+    ).toBe("Structuring the role…");
+    expect(
+      generateLabel({ analysing: true, analysedOnce: false, buildPhase: 2 }),
+    ).toBe("Building your role…");
+  });
+
+  it("wraps back to the first phase past the end", () => {
+    expect(
+      generateLabel({ analysing: true, analysedOnce: true, buildPhase: 3 }),
+    ).toBe("Reading your notes…");
+  });
+
+  it("defaults to the first phase when no buildPhase is given", () => {
     expect(generateLabel({ analysing: true, analysedOnce: false })).toBe(
-      "Analysing…",
-    );
-    expect(generateLabel({ analysing: true, analysedOnce: true })).toBe(
-      "Analysing…",
+      "Reading your notes…",
     );
   });
 
