@@ -21,5 +21,5 @@ export function generateLabel(input: {
   analysedOnce: boolean;
 }): string {
   if (input.analysing) return "Analysing…";
-  return input.analysedOnce ? "Re-analyse" : "Generate with AI";
+  return input.analysedOnce ? "Re-build with AI" : "Build with AI";
 }

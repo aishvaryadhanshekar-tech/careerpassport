@@ -597,6 +597,7 @@ export function CollectJobPage() {
             aria-disabled={!canGenerate}
             onClick={onGenerate}
           >
+            <SparkleIcon />
             {generateLabel({ analysing, analysedOnce: draft.analysedOnce })}
           </button>
         </div>
@@ -955,6 +956,21 @@ function StopIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
       <rect x="2.5" y="2.5" width="9" height="9" rx="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function SparkleIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M8 1.5c.3 2.2 1 3.3 3 3.6a.4.4 0 0 1 0 .8c-2 .3-2.7 1.4-3 3.6-.3-2.2-1-3.3-3-3.6a.4.4 0 0 1 0-.8c2-.3 2.7-1.4 3-3.6Z"
+        fill="currentColor"
+      />
+      <path
+        d="M13 8.8c.18 1.3.6 1.9 1.7 2.1a.28.28 0 0 1 0 .55c-1.1.2-1.52.8-1.7 2.1-.18-1.3-.6-1.9-1.7-2.1a.28.28 0 0 1 0-.55c1.1-.2 1.52-.8 1.7-2.1Z"
+        fill="currentColor"
+      />
     </svg>
   );
 }

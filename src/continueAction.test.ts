@@ -67,13 +67,13 @@ describe("generateLabel", () => {
 
   it("invites the first analysis before one has run", () => {
     expect(generateLabel({ analysing: false, analysedOnce: false })).toBe(
-      "Generate with AI",
+      "Build with AI",
     );
   });
 
-  it("offers to re-analyse once the first pass has run", () => {
+  it("offers to rebuild once the first pass has run", () => {
     expect(generateLabel({ analysing: false, analysedOnce: true })).toBe(
-      "Re-analyse",
+      "Re-build with AI",
     );
   });
 });
