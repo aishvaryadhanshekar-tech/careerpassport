@@ -1,76 +1,79 @@
 import { describe, expect, it } from "vitest";
-import { continueClickAction, continueEnabled } from "./continueAction";
+import { continueEnabled, generateEnabled, generateLabel } from "./continueAction";
 
 describe("continueEnabled", () => {
-  it("is off while recording or analysing", () => {
+  it("is off while recording or analysing, even if everything is covered", () => {
     expect(
-      continueEnabled({
-        recording: true,
-        analysing: false,
-        analysedOnce: true,
-        hasContent: true,
-      }),
+      continueEnabled({ recording: true, analysing: false, allCovered: true }),
     ).toBe(false);
     expect(
-      continueEnabled({
-        recording: false,
-        analysing: true,
-        analysedOnce: false,
-        hasContent: true,
-      }),
+      continueEnabled({ recording: false, analysing: true, allCovered: true }),
     ).toBe(false);
   });
 
-  it("is off before the first analysis when there is nothing to extract", () => {
+  it("is off until every required field is covered", () => {
     expect(
       continueEnabled({
         recording: false,
         analysing: false,
-        analysedOnce: false,
-        hasContent: false,
+        allCovered: false,
       }),
     ).toBe(false);
   });
 
-  it("is on when there is content to extract, even before the first analysis", () => {
+  it("is on once every required field is covered", () => {
     expect(
-      continueEnabled({
-        recording: false,
-        analysing: false,
-        analysedOnce: false,
-        hasContent: true,
-      }),
-    ).toBe(true);
-  });
-
-  it("stays on after the first analysis even if fields are still missing", () => {
-    expect(
-      continueEnabled({
-        recording: false,
-        analysing: false,
-        analysedOnce: true,
-        hasContent: false,
-      }),
+      continueEnabled({ recording: false, analysing: false, allCovered: true }),
     ).toBe(true);
   });
 });
 
-describe("continueClickAction", () => {
-  it("navigates when all required fields are already covered", () => {
+describe("generateEnabled", () => {
+  it("is off while recording or analysing", () => {
     expect(
-      continueClickAction({ allCovered: true, hasContent: true }),
-    ).toBe("navigate");
+      generateEnabled({ recording: true, analysing: false, hasContent: true }),
+    ).toBe(false);
+    expect(
+      generateEnabled({ recording: false, analysing: true, hasContent: true }),
+    ).toBe(false);
   });
 
-  it("extracts when fields are missing and there is content", () => {
+  it("is off when there is nothing to extract", () => {
     expect(
-      continueClickAction({ allCovered: false, hasContent: true }),
-    ).toBe("analyse");
+      generateEnabled({
+        recording: false,
+        analysing: false,
+        hasContent: false,
+      }),
+    ).toBe(false);
   });
 
-  it("stays on the page when fields are missing and there is nothing to extract", () => {
+  it("is on when there is content to extract", () => {
     expect(
-      continueClickAction({ allCovered: false, hasContent: false }),
-    ).toBe("stay");
+      generateEnabled({ recording: false, analysing: false, hasContent: true }),
+    ).toBe(true);
+  });
+});
+
+describe("generateLabel", () => {
+  it("shows the analysing state first", () => {
+    expect(generateLabel({ analysing: true, analysedOnce: false })).toBe(
+      "Analysing…",
+    );
+    expect(generateLabel({ analysing: true, analysedOnce: true })).toBe(
+      "Analysing…",
+    );
+  });
+
+  it("invites the first analysis before one has run", () => {
+    expect(generateLabel({ analysing: false, analysedOnce: false })).toBe(
+      "Generate with AI",
+    );
+  });
+
+  it("offers to re-analyse once the first pass has run", () => {
+    expect(generateLabel({ analysing: false, analysedOnce: true })).toBe(
+      "Re-analyse",
+    );
   });
 });

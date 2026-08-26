@@ -5,7 +5,11 @@ import {
   revealMissingDetails,
 } from "./analysisScroll";
 import { applyExtraction } from "./applyAnalysis";
-import { continueClickAction, continueEnabled } from "./continueAction";
+import {
+  continueEnabled,
+  generateEnabled,
+  generateLabel,
+} from "./continueAction";
 import { extractFromTranscript } from "./extractJobFields";
 import {
   ACCEPT,
@@ -73,9 +77,7 @@ export function CollectJobPage() {
   draftRef.current = draft;
   const recordingRef = useRef(false);
   const startedAtRef = useRef(0);
-  const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const appendNewlineRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -85,15 +87,10 @@ export function CollectJobPage() {
 
   const covered = coveredCount(draft.fields, draft.salaryCurrency);
   const hasContent =
-    draft.transcript.trim() !== "" ||
-    draft.clips.length > 0 ||
-    draft.attachments.length > 0;
-  const canContinue = continueEnabled({
-    recording,
-    analysing,
-    analysedOnce: draft.analysedOnce,
-    hasContent,
-  });
+    draft.transcript.trim() !== "" || draft.attachments.length > 0;
+  const allCovered = covered === REQUIRED_COVERAGE_IDS.length;
+  const canContinue = continueEnabled({ recording, analysing, allCovered });
+  const canGenerate = generateEnabled({ recording, analysing, hasContent });
   const speechAvailable = Boolean(speechCtor());
 
   useEffect(() => {
@@ -107,7 +104,6 @@ export function CollectJobPage() {
 
   useEffect(() => {
     return () => {
-      draftRef.current.clips.forEach((c) => URL.revokeObjectURL(c.blobUrl));
       draftRef.current.attachments.forEach((a) =>
         URL.revokeObjectURL(a.blobUrl),
       );
@@ -177,18 +173,6 @@ export function CollectJobPage() {
       return;
     }
     streamRef.current = stream;
-    chunksRef.current = [];
-    const mime = MediaRecorder.isTypeSupported("audio/webm")
-      ? "audio/webm"
-      : undefined;
-    const recorder = mime
-      ? new MediaRecorder(stream, { mimeType: mime })
-      : new MediaRecorder(stream);
-    recorderRef.current = recorder;
-    recorder.ondataavailable = (e) => {
-      if (e.data.size) chunksRef.current.push(e.data);
-    };
-    recorder.start();
 
     const Ctor = speechCtor();
     if (Ctor) {
@@ -254,7 +238,7 @@ export function CollectJobPage() {
       setNoSpeechApi(true);
     }
 
-    appendNewlineRef.current = draftRef.current.clips.length > 0;
+    appendNewlineRef.current = draftRef.current.transcript.trim() !== "";
     startedAtRef.current = Date.now();
     setElapsedMs(0);
     setInterim("");
@@ -272,36 +256,8 @@ export function CollectJobPage() {
       /* ignore */
     }
     recognitionRef.current = null;
-    const recorder = recorderRef.current;
-    const finish = () => {
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-      recorderRef.current = null;
-      const durationMs = Date.now() - startedAtRef.current;
-      if (durationMs < 400 || chunksRef.current.length === 0) return;
-      const blob = new Blob(chunksRef.current, {
-        type: recorder?.mimeType || "audio/webm",
-      });
-      const blobUrl = URL.createObjectURL(blob);
-      setDraft((d) => ({
-        ...d,
-        clips: [
-          ...d.clips,
-          {
-            id: uid(),
-            createdAt: Date.now(),
-            durationMs,
-            blobUrl,
-          },
-        ],
-      }));
-    };
-    if (recorder && recorder.state !== "inactive") {
-      recorder.onstop = finish;
-      recorder.stop();
-    } else {
-      finish();
-    }
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
   }
 
   function addFiles(list: File[]) {
@@ -322,21 +278,6 @@ export function CollectJobPage() {
         })),
       ],
     }));
-  }
-
-  function removeClip(id: string) {
-    if (
-      !window.confirm(
-        "Remove this recording? The transcript text will stay.",
-      )
-    ) {
-      return;
-    }
-    setDraft((d) => {
-      const clip = d.clips.find((c) => c.id === id);
-      if (clip) URL.revokeObjectURL(clip.blobUrl);
-      return { ...d, clips: d.clips.filter((c) => c.id !== id) };
-    });
   }
 
   function removeAttachment(id: string) {
@@ -428,31 +369,14 @@ export function CollectJobPage() {
     navigate("/step-2");
   }
 
-  async function onContinue() {
+  function onContinue() {
     if (!canContinue) return;
-    const action = continueClickAction({
-      allCovered: covered === REQUIRED_COVERAGE_IDS.length,
-      hasContent,
-    });
-    if (action === "navigate") {
-      continueNext();
-      return;
-    }
-    if (action === "analyse") {
-      const next = await analyse();
-      if (
-        next &&
-        coveredCount(next.fields, next.salaryCurrency) ===
-          REQUIRED_COVERAGE_IDS.length
-      ) {
-        continueNext(next);
-      }
-      return;
-    }
-    const firstMissing = missingIds[0];
-    if (firstMissing) {
-      document.getElementById(`field-${firstMissing}`)?.focus();
-    }
+    continueNext();
+  }
+
+  function onGenerate() {
+    if (!canGenerate) return;
+    void analyse();
   }
 
   function jumpToCoverage(id: CoverageId) {
@@ -469,7 +393,7 @@ export function CollectJobPage() {
 
   const recordLabel = recording
     ? "Stop recording"
-    : draft.clips.length === 0
+    : draft.transcript.trim() === ""
       ? "Start recording"
       : "Continue recording";
 
@@ -570,33 +494,15 @@ export function CollectJobPage() {
           </div>
         </div>
 
-        {fileErrors.length > 0 ||
-        draft.clips.length > 0 ||
-        draft.attachments.length > 0 ? (
+        {fileErrors.length > 0 || draft.attachments.length > 0 ? (
           <div className="composer-attachments">
             {fileErrors.map((err) => (
               <p key={err} className="banner">
                 {err}
               </p>
             ))}
-            {draft.clips.length > 0 || draft.attachments.length > 0 ? (
+            {draft.attachments.length > 0 ? (
               <div className="chips">
-                {draft.clips.map((clip, i) => (
-                  <div className="chip" key={clip.id}>
-                    <b>
-                      Recording {i + 1} · {formatDuration(clip.durationMs)}
-                    </b>
-                    <audio src={clip.blobUrl} controls preload="metadata" />
-                    <button
-                      type="button"
-                      className="x"
-                      aria-label={`Remove recording ${i + 1}`}
-                      onClick={() => removeClip(clip.id)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
                 {draft.attachments.map((file) => (
                   <div className="chip" key={file.id}>
                     <b title={file.name}>{file.name}</b>
@@ -673,7 +579,7 @@ export function CollectJobPage() {
             </button>
             <button
               type="button"
-              className={`composer-tool-btn primary${recording ? " on" : ""}`}
+              className={`composer-tool-btn${recording ? " on" : ""}`}
               onClick={recording ? stopRecording : startRecording}
               disabled={analysing}
               aria-label={recordLabel}
@@ -683,6 +589,16 @@ export function CollectJobPage() {
               {recording ? "Stop" : "Record"}
             </button>
           </div>
+          <button
+            type="button"
+            id="generate-btn"
+            className="btn primary"
+            disabled={!canGenerate}
+            aria-disabled={!canGenerate}
+            onClick={onGenerate}
+          >
+            {generateLabel({ analysing, analysedOnce: draft.analysedOnce })}
+          </button>
         </div>
 
       </div>
@@ -770,7 +686,7 @@ export function CollectJobPage() {
           aria-disabled={!canContinue}
           onClick={onContinue}
         >
-          {analysing ? "Analysing…" : "Continue"}
+          Continue
         </button>
       </footer>
     </div>
