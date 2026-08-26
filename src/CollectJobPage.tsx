@@ -720,8 +720,11 @@ const TAG_FIELDS: Partial<Record<CoverageId, readonly string[]>> = {
 
 const CHOICE_FIELDS: Partial<Record<CoverageId, readonly string[]>> = {
   workMode: WORK_MODE_OPTIONS,
-  companyType: COMPANY_TYPE_OPTIONS,
   experienceType: EXPERIENCE_TYPE_OPTIONS,
+};
+
+const SELECT_FIELDS: Partial<Record<CoverageId, readonly string[]>> = {
+  companyType: COMPANY_TYPE_OPTIONS,
 };
 
 function FlagsChoice({
@@ -809,6 +812,7 @@ function FieldControl({
   const inputId = `field-${id}`;
   const value = draft.fields[id].value;
   const choiceOptions = CHOICE_FIELDS[id];
+  const selectOptions = SELECT_FIELDS[id];
   let control;
   if (id === "salary") {
     control = (
@@ -845,6 +849,24 @@ function FieldControl({
         suggestions={TAG_FIELDS[id] ?? []}
         onChange={(next) => onField(id, next)}
       />
+    );
+  } else if (selectOptions) {
+    control = (
+      <select
+        id={inputId}
+        className={`pill-select${value ? "" : " is-placeholder"}`}
+        value={value}
+        onChange={(e) => onField(id, e.target.value)}
+      >
+        <option value="" disabled>
+          Select…
+        </option>
+        {selectOptions.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
     );
   } else if (choiceOptions) {
     control = (

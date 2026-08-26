@@ -169,12 +169,6 @@ export function SalaryInput({
 }) {
   return (
     <div className="salary-input">
-      <input
-        id={id}
-        className="salary-input-amount"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
       <select
         className={`salary-input-currency${currency ? "" : " is-placeholder"}`}
         value={currency ?? ""}
@@ -190,6 +184,12 @@ export function SalaryInput({
           </option>
         ))}
       </select>
+      <input
+        id={id}
+        className="salary-input-amount"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }

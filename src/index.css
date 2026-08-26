@@ -1623,6 +1623,10 @@ a {
   outline-offset: 1px;
 }
 
+.pill-select.is-placeholder {
+  color: #9aa0a6;
+}
+
 .salary-input {
   display: flex;
   align-items: stretch;
@@ -1651,7 +1655,7 @@ a {
   flex: none;
   width: 88px;
   border: 0;
-  border-left: 1px solid #e2e6e9;
+  border-right: 1px solid #e2e6e9;
   background-color: #f7f8f9;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%23666' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -1916,12 +1920,10 @@ a {
 }
 
 .flags h3 {
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #2c6e6b;
+  font-size: 14px;
   font-weight: 600;
-  margin: 0 0 10px;
+  color: #1f1b16;
+  margin: 0 0 12px;
 }
 
 .footer {
