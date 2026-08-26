@@ -7,7 +7,7 @@ export const STEPS: {
   name: string;
   blurb: string;
 }[] = [
-  { index: 1, name: "Information", blurb: "Talk, paste, or attach" },
+  { index: 1, name: "Job details", blurb: "Talk, paste, or attach" },
   { index: 2, name: "Application", blurb: "What to ask" },
   { index: 3, name: "Preview", blurb: "Review & confirm" },
 ];
