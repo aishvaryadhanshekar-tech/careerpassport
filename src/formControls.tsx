@@ -170,13 +170,13 @@ export function SalaryInput({
   return (
     <div className="salary-input">
       <select
-        className={`salary-input-currency${currency ? "" : " is-placeholder"}`}
+        className={`salary-input-currency select-icon${currency ? "" : " is-placeholder"}`}
         value={currency ?? ""}
         aria-label="CTC currency"
         onChange={(e) => onCurrency(e.target.value as Currency)}
       >
         <option value="" disabled>
-          —
+          Select
         </option>
         {CURRENCIES.map((code) => (
           <option key={code} value={code}>

@@ -713,13 +713,18 @@ export function CollectJobPage() {
 const FORM_SECTIONS: { title: string; fields: CoverageId[] }[] = [
   {
     title: "Role",
-    fields: ["designation", "experienceYears", "workMode", "experienceType"],
+    fields: [
+      "designation",
+      "experienceYears",
+      "workMode",
+      "experienceType",
+      "salary",
+    ],
   },
   {
     title: "Company & location",
     fields: ["location", "industryType", "companyType"],
   },
-  { title: "Compensation", fields: ["salary"] },
   {
     title: "Must haves & red flags",
     fields: ["mustHaves", "redFlags", "searchStrategy"],
@@ -871,7 +876,7 @@ function FieldControl({
     control = (
       <select
         id={inputId}
-        className={`pill-select${value ? "" : " is-placeholder"}`}
+        className={`pill-select select-icon${value ? "" : " is-placeholder"}`}
         value={value}
         onChange={(e) => onField(id, e.target.value)}
       >

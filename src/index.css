@@ -1648,6 +1648,19 @@ a {
   color: #9aa0a6;
 }
 
+.select-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%23666' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.pill-select.select-icon {
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
 .salary-input {
   display: flex;
   align-items: stretch;
@@ -1678,18 +1691,13 @@ a {
   border: 0;
   border-right: 1px solid #e2e6e9;
   background-color: #f7f8f9;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%23666' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
   background-position: right 10px center;
   padding: 0 28px 0 12px;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: #1f1b16;
-  cursor: pointer;
   outline: none;
-  appearance: none;
-  -webkit-appearance: none;
 }
 
 .salary-input-currency.is-placeholder {
