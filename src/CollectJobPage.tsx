@@ -789,22 +789,16 @@ const FORM_SECTIONS: { title: string; fields: CoverageId[] }[] = [
   { title: "Compensation", fields: ["salary"] },
   { title: "Must haves", fields: ["mustHaves"] },
   { title: "Red flags", fields: ["redFlags"] },
-  { title: "Evaluation criteria", fields: ["evaluationCriteria"] },
   { title: "Search", fields: ["searchStrategy"] },
 ];
 
 const WIDE_FIELDS = new Set<CoverageId>([
   "mustHaves",
   "redFlags",
-  "evaluationCriteria",
   "searchStrategy",
 ]);
 
-const POINT_FIELDS = new Set<CoverageId>([
-  "mustHaves",
-  "redFlags",
-  "evaluationCriteria",
-]);
+const POINT_FIELDS = new Set<CoverageId>(["mustHaves", "redFlags"]);
 
 const TAG_FIELDS: Partial<Record<CoverageId, readonly string[]>> = {
   location: LOCATION_SUGGESTIONS,

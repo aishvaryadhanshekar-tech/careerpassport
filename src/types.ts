@@ -17,7 +17,8 @@ export const COVERAGE_IDS = [
 export type CoverageId = (typeof COVERAGE_IDS)[number];
 
 export const REQUIRED_COVERAGE_IDS = COVERAGE_IDS.filter(
-  (id): id is Exclude<CoverageId, "disqualifier"> => id !== "disqualifier",
+  (id): id is Exclude<CoverageId, "disqualifier" | "evaluationCriteria"> =>
+    id !== "disqualifier" && id !== "evaluationCriteria",
 );
 
 export const FLAG_IDS = [

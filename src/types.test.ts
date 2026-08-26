@@ -6,9 +6,10 @@ import {
 } from "./types";
 
 describe("required coverage", () => {
-  it("excludes disqualifier from the required set", () => {
+  it("excludes disqualifier and evaluationCriteria from the required set", () => {
     expect(REQUIRED_COVERAGE_IDS).not.toContain("disqualifier");
-    expect(REQUIRED_COVERAGE_IDS).toHaveLength(12);
+    expect(REQUIRED_COVERAGE_IDS).not.toContain("evaluationCriteria");
+    expect(REQUIRED_COVERAGE_IDS).toHaveLength(11);
   });
 
   it("does not count a filled disqualifier toward coverage", () => {
