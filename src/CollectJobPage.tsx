@@ -672,23 +672,23 @@ export function CollectJobPage() {
       </section>
       ) : null}
 
-      <footer className="footer">
-        <div className="meta">
-          {draft.analysedOnce
-            ? `${covered}/${REQUIRED_COVERAGE_IDS.length} covered`
-            : ""}
-        </div>
-        <button
-          type="button"
-          id="continue-btn"
-          className="btn primary"
-          disabled={!canContinue}
-          aria-disabled={!canContinue}
-          onClick={onContinue}
-        >
-          Continue
-        </button>
-      </footer>
+      {draft.analysedOnce ? (
+        <footer className="footer">
+          <div className="meta">
+            {`${covered}/${REQUIRED_COVERAGE_IDS.length} covered`}
+          </div>
+          <button
+            type="button"
+            id="continue-btn"
+            className="btn primary"
+            disabled={!canContinue}
+            aria-disabled={!canContinue}
+            onClick={onContinue}
+          >
+            Continue
+          </button>
+        </footer>
+      ) : null}
     </div>
   );
 }
