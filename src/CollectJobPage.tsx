@@ -126,7 +126,7 @@ export function CollectJobPage() {
     }
     const id = window.setInterval(() => {
       setBuildPhase((p) => p + 1);
-    }, 400);
+    }, 850);
     return () => window.clearInterval(id);
   }, [analysing]);
 
@@ -306,7 +306,7 @@ export function CollectJobPage() {
   async function analyse(): Promise<JobDraft | null> {
     if (recording || analysing || !hasContent) return null;
     setAnalysing(true);
-    await new Promise((r) => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 3400));
     const current = draftRef.current;
     const extraction =
       current.transcript.trim() === ""

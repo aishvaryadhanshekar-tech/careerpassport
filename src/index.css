@@ -1446,6 +1446,11 @@ a {
   animation: sparkle-pulse 0.9s ease-in-out infinite;
 }
 
+#generate-btn {
+  min-width: 196px;
+  justify-content: center;
+}
+
 @keyframes sparkle-pulse {
   0%,
   100% {
