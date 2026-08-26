@@ -1,4 +1,5 @@
 import { persistableDraft } from "./applyAnalysis";
+import { memoryStorage } from "./memoryStore";
 import {
   createDraft,
   emptyFields,
@@ -37,13 +38,13 @@ function readPreview(value: unknown): JobPreviewFields {
 export const STORAGE_KEY = "cp.jobDraft.v1";
 
 export function saveDraft(draft: JobDraft) {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistableDraft(draft)));
+  memoryStorage.setItem(STORAGE_KEY, JSON.stringify(persistableDraft(draft)));
 }
 
 export function loadDraft(): JobDraft {
   const base = createDraft();
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = memoryStorage.getItem(STORAGE_KEY);
     if (!raw) return base;
     const data = JSON.parse(raw) as Partial<ReturnType<typeof persistableDraft>>;
     const fields = emptyFields();

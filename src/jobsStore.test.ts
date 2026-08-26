@@ -1,5 +1,6 @@
-import { describe, expect, it, beforeAll, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { createDraft } from "./types";
+import { memoryStorage } from "./memoryStore";
 import { STORAGE_KEY } from "./storage";
 import {
   JOBS_KEY,
@@ -10,27 +11,9 @@ import {
   startNewJob,
 } from "./jobsStore";
 
-const mem = new Map<string, string>();
-
-beforeAll(() => {
-  Object.defineProperty(globalThis, "sessionStorage", {
-    configurable: true,
-    value: {
-      getItem: (k: string) => mem.get(k) ?? null,
-      setItem: (k: string, v: string) => {
-        mem.set(k, v);
-      },
-      removeItem: (k: string) => {
-        mem.delete(k);
-      },
-      clear: () => mem.clear(),
-    },
-  });
-});
-
 describe("jobsStore", () => {
   beforeEach(() => {
-    sessionStorage.clear();
+    memoryStorage.clear();
   });
 
   it("starts empty", () => {
@@ -74,7 +57,7 @@ describe("jobsStore", () => {
     const a = startNewJob();
     const b = startNewJob();
     expect(a).not.toBe(b);
-    expect(sessionStorage.getItem(CURRENT_JOB_ID_KEY)).toBe(b);
+    expect(memoryStorage.getItem(CURRENT_JOB_ID_KEY)).toBe(b);
   });
 
   it("deleteJobs removes the given jobs and keeps the rest", () => {
@@ -98,14 +81,14 @@ describe("jobsStore", () => {
     draft.fields.designation.value = "PM";
     const id = startNewJob();
     upsertJobFromDraft(id, draft);
-    expect(sessionStorage.getItem(CURRENT_JOB_ID_KEY)).toBe(id);
-    expect(sessionStorage.getItem(STORAGE_KEY)).toBeTruthy();
+    expect(memoryStorage.getItem(CURRENT_JOB_ID_KEY)).toBe(id);
+    expect(memoryStorage.getItem(STORAGE_KEY)).toBeTruthy();
 
     deleteJobs([id]);
 
     expect(listJobs()).toEqual([]);
-    expect(sessionStorage.getItem(CURRENT_JOB_ID_KEY)).toBeNull();
-    expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(memoryStorage.getItem(CURRENT_JOB_ID_KEY)).toBeNull();
+    expect(memoryStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it("deleteJobs of a different job leaves the current draft in place", () => {
@@ -116,12 +99,12 @@ describe("jobsStore", () => {
     draft.fields.designation.value = "Drop";
     const drop = startNewJob();
     upsertJobFromDraft(drop, draft);
-    sessionStorage.setItem(CURRENT_JOB_ID_KEY, current);
+    memoryStorage.setItem(CURRENT_JOB_ID_KEY, current);
 
     deleteJobs([drop]);
 
-    expect(sessionStorage.getItem(CURRENT_JOB_ID_KEY)).toBe(current);
-    expect(sessionStorage.getItem(STORAGE_KEY)).toBeTruthy();
+    expect(memoryStorage.getItem(CURRENT_JOB_ID_KEY)).toBe(current);
+    expect(memoryStorage.getItem(STORAGE_KEY)).toBeTruthy();
   });
 });
 

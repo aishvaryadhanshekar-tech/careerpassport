@@ -1,5 +1,6 @@
 import { persistableDraft } from "./applyAnalysis";
 import { uid } from "./files";
+import { memoryStorage } from "./memoryStore";
 import { STORAGE_KEY, saveDraft } from "./storage";
 import { createDraft, type JobDraft } from "./types";
 
@@ -20,7 +21,7 @@ export type JobRecord = {
 
 function readList(): JobRecord[] {
   try {
-    const raw = sessionStorage.getItem(JOBS_KEY);
+    const raw = memoryStorage.getItem(JOBS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as JobRecord[];
     return Array.isArray(parsed) ? parsed : [];
@@ -30,7 +31,7 @@ function readList(): JobRecord[] {
 }
 
 function writeList(jobs: JobRecord[]) {
-  sessionStorage.setItem(JOBS_KEY, JSON.stringify(jobs));
+  memoryStorage.setItem(JOBS_KEY, JSON.stringify(jobs));
 }
 
 export function listJobs(): JobRecord[] {
@@ -38,12 +39,12 @@ export function listJobs(): JobRecord[] {
 }
 
 export function getCurrentJobId(): string | null {
-  return sessionStorage.getItem(CURRENT_JOB_ID_KEY);
+  return memoryStorage.getItem(CURRENT_JOB_ID_KEY);
 }
 
 export function startNewJob(): string {
   const id = uid();
-  sessionStorage.setItem(CURRENT_JOB_ID_KEY, id);
+  memoryStorage.setItem(CURRENT_JOB_ID_KEY, id);
   saveDraft(createDraft());
   return id;
 }
@@ -51,8 +52,8 @@ export function startNewJob(): string {
 export function openJob(id: string): boolean {
   const job = readList().find((j) => j.id === id);
   if (!job) return false;
-  sessionStorage.setItem(CURRENT_JOB_ID_KEY, id);
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(job.snapshot));
+  memoryStorage.setItem(CURRENT_JOB_ID_KEY, id);
+  memoryStorage.setItem(STORAGE_KEY, JSON.stringify(job.snapshot));
   return true;
 }
 
@@ -80,17 +81,17 @@ export function upsertJobFromDraft(id: string, draft: JobDraft): JobRecord {
     snapshot: persistableDraft(draft),
   };
   writeList([record, ...readList().filter((j) => j.id !== id)]);
-  sessionStorage.setItem(CURRENT_JOB_ID_KEY, id);
+  memoryStorage.setItem(CURRENT_JOB_ID_KEY, id);
   return record;
 }
 
 export function deleteJobs(ids: string[]) {
   const drop = new Set(ids);
   writeList(readList().filter((job) => !drop.has(job.id)));
-  const current = sessionStorage.getItem(CURRENT_JOB_ID_KEY);
+  const current = memoryStorage.getItem(CURRENT_JOB_ID_KEY);
   if (current && drop.has(current)) {
-    sessionStorage.removeItem(CURRENT_JOB_ID_KEY);
-    sessionStorage.removeItem(STORAGE_KEY);
+    memoryStorage.removeItem(CURRENT_JOB_ID_KEY);
+    memoryStorage.removeItem(STORAGE_KEY);
   }
 }
 
