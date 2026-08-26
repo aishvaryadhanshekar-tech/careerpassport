@@ -787,16 +787,13 @@ const FORM_SECTIONS: { title: string; fields: CoverageId[] }[] = [
     fields: ["location", "industryType", "companyType"],
   },
   { title: "Compensation", fields: ["salary"] },
-  { title: "Must haves", fields: ["mustHaves"] },
-  { title: "Red flags", fields: ["redFlags"] },
-  { title: "Search", fields: ["searchStrategy"] },
+  {
+    title: "Must haves & red flags",
+    fields: ["mustHaves", "redFlags", "searchStrategy"],
+  },
 ];
 
-const WIDE_FIELDS = new Set<CoverageId>([
-  "mustHaves",
-  "redFlags",
-  "searchStrategy",
-]);
+const WIDE_FIELDS = new Set<CoverageId>(["searchStrategy"]);
 
 const POINT_FIELDS = new Set<CoverageId>(["mustHaves", "redFlags"]);
 

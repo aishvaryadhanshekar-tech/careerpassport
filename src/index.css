@@ -1711,6 +1711,8 @@ a {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  max-height: 248px;
+  overflow-y: auto;
 }
 
 .point-list-item {
