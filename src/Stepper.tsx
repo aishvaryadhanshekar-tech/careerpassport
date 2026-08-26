@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-export type StepIndex = 1 | 2 | 3;
+export type StepIndex = 1 | 2 | 3 | 4;
 
 export const STEPS: {
   index: StepIndex;
@@ -8,8 +8,9 @@ export const STEPS: {
   blurb: string;
 }[] = [
   { index: 1, name: "Job details", blurb: "Talk, paste, or attach" },
-  { index: 2, name: "Application", blurb: "What to ask" },
-  { index: 3, name: "Preview", blurb: "Review & confirm" },
+  { index: 2, name: "Role Profile", blurb: "Review & refine" },
+  { index: 3, name: "Application", blurb: "What to ask" },
+  { index: 4, name: "Preview", blurb: "Review & confirm" },
 ];
 
 export function isStepCurrent(current: StepIndex, index: StepIndex): boolean {
@@ -21,14 +22,15 @@ export function isStepReachable(current: StepIndex, index: StepIndex): boolean {
 }
 
 export function stepPath(index: StepIndex): string {
-  if (index === 2) return "/step-2";
-  if (index === 3) return "/step-3";
+  if (index === 2) return "/role-profile";
+  if (index === 3) return "/step-2";
+  if (index === 4) return "/step-3";
   return "/create-job";
 }
 
 export function stepperAriaLabel(current: StepIndex): string {
   const step = STEPS.find((item) => item.index === current);
-  return `Step ${current} of 3, ${step?.name ?? ""}`;
+  return `Step ${current} of 4, ${step?.name ?? ""}`;
 }
 
 export function Stepper({ current }: { current: StepIndex }) {

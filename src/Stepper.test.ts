@@ -12,11 +12,12 @@ import {
 } from "./Stepper";
 
 describe("STEPS", () => {
-  it("names the three steps with short blurbs", () => {
+  it("names the four steps with short blurbs", () => {
     expect(STEPS).toEqual([
       { index: 1, name: "Job details", blurb: "Talk, paste, or attach" },
-      { index: 2, name: "Application", blurb: "What to ask" },
-      { index: 3, name: "Preview", blurb: "Review & confirm" },
+      { index: 2, name: "Role Profile", blurb: "Review & refine" },
+      { index: 3, name: "Application", blurb: "What to ask" },
+      { index: 4, name: "Preview", blurb: "Review & confirm" },
     ]);
   });
 });
@@ -32,16 +33,17 @@ describe("isStepCurrent", () => {
 
 describe("stepperAriaLabel", () => {
   it("announces the current named step", () => {
-    expect(stepperAriaLabel(1)).toBe("Step 1 of 3, Job details");
-    expect(stepperAriaLabel(2)).toBe("Step 2 of 3, Application");
+    expect(stepperAriaLabel(1)).toBe("Step 1 of 4, Job details");
+    expect(stepperAriaLabel(2)).toBe("Step 2 of 4, Role Profile");
   });
 });
 
 describe("stepPath", () => {
   it("maps each step to its wizard route", () => {
     expect(stepPath(1)).toBe("/create-job");
-    expect(stepPath(2)).toBe("/step-2");
-    expect(stepPath(3)).toBe("/step-3");
+    expect(stepPath(2)).toBe("/role-profile");
+    expect(stepPath(3)).toBe("/step-2");
+    expect(stepPath(4)).toBe("/step-3");
   });
 });
 
@@ -59,7 +61,7 @@ describe("isStepReachable", () => {
 });
 
 describe("Stepper", () => {
-  it("links Job details to the collect-job route when Application is current", () => {
+  it("links Job details to the collect-job route when Role Profile is current", () => {
     const html = renderToString(
       createElement(
         MemoryRouter,
@@ -69,6 +71,7 @@ describe("Stepper", () => {
     );
     expect(html).toContain('href="/create-job"');
     expect(html).toContain("Job details");
+    expect(html).not.toContain('href="/role-profile"');
     expect(html).not.toContain('href="/step-2"');
     expect(html).not.toContain('href="/step-3"');
   });

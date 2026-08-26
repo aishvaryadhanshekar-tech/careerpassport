@@ -5,11 +5,15 @@ import {
   emptyFields,
   emptyFlags,
   emptyPreviewFields,
+  emptyRoleProfile,
   type ApplicationConfig,
   type CoverageId,
   type Currency,
+  type EvaluationCriterion,
+  type FieldState,
   type JobDraft,
   type JobPreviewFields,
+  type RoleProfileFields,
   type SalaryPeriod,
 } from "./types";
 
@@ -32,6 +36,20 @@ function readPreview(value: unknown): JobPreviewFields {
     expectedSkills: data.expectedSkills ?? base.expectedSkills,
     targetCompanies: data.targetCompanies ?? base.targetCompanies,
     industrySectors: data.industrySectors ?? base.industrySectors,
+  };
+}
+
+function readRoleProfile(value: unknown): RoleProfileFields {
+  const base = emptyRoleProfile();
+  if (!value || typeof value !== "object") return base;
+  const data = value as Partial<RoleProfileFields>;
+  return {
+    headline: (data.headline as FieldState) ?? base.headline,
+    portrait: (data.portrait as FieldState) ?? base.portrait,
+    avoidLookalikes: data.avoidLookalikes ?? base.avoidLookalikes,
+    evaluationFramework: Array.isArray(data.evaluationFramework)
+      ? (data.evaluationFramework as EvaluationCriterion[])
+      : base.evaluationFramework,
   };
 }
 
@@ -65,6 +83,8 @@ export function loadDraft(): JobDraft {
       application: readApplication(data.application),
       preview: readPreview(data.preview),
       previewGenerated: Boolean(data.previewGenerated),
+      roleProfile: readRoleProfile(data.roleProfile),
+      roleProfileGenerated: Boolean(data.roleProfileGenerated),
     };
   } catch {
     return base;

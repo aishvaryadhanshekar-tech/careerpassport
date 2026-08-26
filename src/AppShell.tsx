@@ -21,13 +21,16 @@ export function AppShell() {
   const jobsOn = jobsNavActive(pathname);
   const isWizard =
     pathname.startsWith("/create-job") ||
+    pathname.startsWith("/role-profile") ||
     pathname.startsWith("/step-2") ||
     pathname.startsWith("/step-3");
   const step = pathname.startsWith("/step-3")
-    ? 3
+    ? 4
     : pathname.startsWith("/step-2")
-      ? 2
-      : 1;
+      ? 3
+      : pathname.startsWith("/role-profile")
+        ? 2
+        : 1;
 
   useEffect(() => {
     setProfileOpen(false);

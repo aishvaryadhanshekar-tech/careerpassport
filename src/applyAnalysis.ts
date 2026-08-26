@@ -80,6 +80,8 @@ export function persistableDraft(draft: JobDraft) {
     application: draft.application ?? null,
     preview: draft.preview,
     previewGenerated: draft.previewGenerated,
+    roleProfile: draft.roleProfile,
+    roleProfileGenerated: draft.roleProfileGenerated,
   };
 }
 

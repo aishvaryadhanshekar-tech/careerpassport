@@ -378,7 +378,7 @@ export function CollectJobPage() {
     saveDraft(from);
     const id = getCurrentJobId() ?? startNewJob();
     upsertJobFromDraft(id, from);
-    navigate("/step-2");
+    navigate("/role-profile");
   }
 
   function onContinue() {
@@ -604,7 +604,9 @@ export function CollectJobPage() {
           {analysing ? (
             <span className="build-loading" aria-live="polite">
               <SparkleIcon />
-              {generateLabel({ analysing, analysedOnce: draft.analysedOnce, buildPhase })}
+              <span className="build-loading-text">
+                {generateLabel({ analysing, analysedOnce: draft.analysedOnce, buildPhase })}
+              </span>
             </span>
           ) : (
             <button

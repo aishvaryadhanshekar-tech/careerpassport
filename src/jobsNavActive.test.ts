@@ -5,6 +5,7 @@ describe("jobsNavActive", () => {
   it("is on for Jobs and the create-job wizard", () => {
     expect(jobsNavActive("/")).toBe(true);
     expect(jobsNavActive("/create-job")).toBe(true);
+    expect(jobsNavActive("/role-profile")).toBe(true);
     expect(jobsNavActive("/step-2")).toBe(true);
     expect(jobsNavActive("/step-3")).toBe(true);
   });
