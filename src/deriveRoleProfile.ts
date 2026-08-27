@@ -44,6 +44,7 @@ export function deriveRoleProfile(draft: JobDraft): RoleProfileFields {
   return {
     headline: { value: headlineValue, source: "extracted" },
     portrait: { value: preview.idealCandidate, source: "extracted" },
+    department: { value: "", source: "empty" },
     avoidLookalikes: joinPoints(DEFAULT_AVOID_LOOKALIKES),
     evaluationFramework: [
       ...criteriaFromPoints(mustHaves, "critical"),

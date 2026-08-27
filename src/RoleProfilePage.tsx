@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { deriveJobPreview } from "./derivePreviewFields";
 import { deriveRoleProfile } from "./deriveRoleProfile";
@@ -17,6 +17,7 @@ import { TabPanel, Tabs } from "./Tabs";
 import {
   COMPARATORS,
   COVERAGE_LABELS,
+  DEPARTMENT_OPTIONS,
   EVAL_IMPORTANCE,
   EVAL_IMPORTANCE_LABELS,
   EVAL_TYPES,
@@ -65,32 +66,164 @@ function hydrate(): JobDraft {
   return withRoleProfile(withPreview(loadDraft()));
 }
 
+function LocationIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M8 14.5S13 10 13 6.5A5 5 0 0 0 3 6.5C3 10 8 14.5 8 14.5Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="8" cy="6.5" r="1.7" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+function WorkModeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.5" y="3" width="13" height="8.5" rx="1.3" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5.5 14h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M1.5 9.5h13" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+function ExperienceIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M8 4.8V8l2.3 1.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SalaryIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
+      <path
+        d="M6 10.3c0 .8.9 1.4 2 1.4s2-.5 2-1.3c0-2-4-1-4-3 0-.8.9-1.3 2-1.3s2 .5 2 1.3M8 4.7v1M8 10.3v1"
+        stroke="currentColor"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IndustryIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M1.8 14V6.2L6.5 9V6.2L11.2 9V4L14.2 6v8H1.8Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function DepartmentIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+function SummaryStat({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="jd-summary-stat">
+      <span className="jd-summary-stat-icon" role="img" aria-label={label} title={label}>
+        {icon}
+      </span>
+      <span className="jd-summary-stat-value">{value}</span>
+    </div>
+  );
+}
+
 function RoleSummaryHeader({ draft }: { draft: JobDraft }) {
-  const rows: { label: string; value: string }[] = [
-    { label: COVERAGE_LABELS.designation, value: draft.fields.designation.value || "—" },
-    { label: COVERAGE_LABELS.experienceYears, value: draft.fields.experienceYears.value || "—" },
-    { label: COVERAGE_LABELS.location, value: draft.fields.location.value || "—" },
-    { label: COVERAGE_LABELS.salary, value: salaryLabel(draft) },
+  const designation = draft.fields.designation.value || "—";
+  const department = draft.roleProfile.department.value;
+  const industryType = draft.fields.industryType.value;
+  const subline = [department, industryType].filter(Boolean).join(" · ");
+
+  const logistics = [
     {
+      key: "location",
+      label: COVERAGE_LABELS.location,
+      value: draft.fields.location.value || "—",
+      icon: <LocationIcon />,
+    },
+    {
+      key: "workMode",
       label: COVERAGE_LABELS.workMode,
       value: WORK_MODE_LABEL[draft.fields.workMode.value] ?? (draft.fields.workMode.value || "—"),
+      icon: <WorkModeIcon />,
     },
-    { label: COVERAGE_LABELS.industryType, value: draft.fields.industryType.value || "—" },
+    {
+      key: "experienceYears",
+      label: COVERAGE_LABELS.experienceYears,
+      value: draft.fields.experienceYears.value || "—",
+      icon: <ExperienceIcon />,
+    },
   ];
+
+  const compensation = [
+    {
+      key: "salary",
+      label: COVERAGE_LABELS.salary,
+      value: salaryLabel(draft),
+      icon: <SalaryIcon />,
+    },
+    {
+      key: "industryType",
+      label: COVERAGE_LABELS.industryType,
+      value: industryType || "—",
+      icon: <IndustryIcon />,
+    },
+    {
+      key: "department",
+      label: "Department",
+      value: department || "—",
+      icon: <DepartmentIcon />,
+    },
+  ];
+
   return (
     <section className="app-card">
-      <header className="app-card-head">
-        <h2>Role summary</h2>
-      </header>
-      <div className="app-card-body">
-        <dl className="jd-summary-grid">
-          {rows.map((row) => (
-            <div className="jd-summary-row" key={row.label}>
-              <dt>{row.label}</dt>
-              <dd>{row.value}</dd>
-            </div>
-          ))}
-        </dl>
+      <div className="app-card-body jd-summary-head">
+        <h2 className="jd-summary-name">{designation}</h2>
+        {subline ? <p className="jd-summary-subline">{subline}</p> : null}
+        <div className="jd-summary-columns">
+          <div className="jd-summary-col">
+            {logistics.map((row) => (
+              <SummaryStat key={row.key} icon={row.icon} label={row.label} value={row.value} />
+            ))}
+          </div>
+          <div className="jd-summary-col">
+            {compensation.map((row) => (
+              <SummaryStat key={row.key} icon={row.icon} label={row.label} value={row.value} />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -147,6 +280,29 @@ function OverviewTab({
                 onRoleProfile({ portrait: { value: e.target.value, source: "user" } })
               }
             />
+          </EditableField>
+
+          <EditableField
+            label="Department"
+            display={<p>{draft.roleProfile.department.value || "—"}</p>}
+          >
+            <select
+              className={`pill-select select-icon${draft.roleProfile.department.value ? "" : " is-placeholder"}`}
+              aria-label="Department"
+              value={draft.roleProfile.department.value}
+              onChange={(e) =>
+                onRoleProfile({ department: { value: e.target.value, source: "user" } })
+              }
+            >
+              <option value="" disabled>
+                Select
+              </option>
+              {DEPARTMENT_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </EditableField>
 
           <EditableField

@@ -3179,6 +3179,67 @@ a {
   }
 }
 
+.jd-summary-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jd-summary-name {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.jd-summary-subline {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #667085;
+}
+
+.jd-summary-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 24px;
+  margin-top: 4px;
+}
+
+.jd-summary-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jd-summary-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jd-summary-stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #f7f8f9;
+  color: #667085;
+}
+
+.jd-summary-stat-value {
+  font-size: 14px;
+  color: #1f1b16;
+}
+
+@media (max-width: 640px) {
+  .jd-summary-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Role Profile page */
 
 .role-profile-fields {
