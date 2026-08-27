@@ -7,7 +7,7 @@ import {
   type RoleProfileFields,
 } from "./types";
 
-const DEFAULT_AVOID_LOOKALIKES = [
+const GENERIC_AVOID_LOOKALIKES = [
   "Similar title, different seniority",
   "Adjacent domain without hands-on ownership",
 ];
@@ -31,24 +31,52 @@ function criteriaFromPoints(
   }));
 }
 
+// The "evaluationCriteria" coverage field is never surfaced on the Job
+// Details step (see FORM_SECTIONS in CollectJobPage.tsx), so it is always
+// blank by the time this runs. Red flags collected on Job Details are the
+// closest real signal for a second (non-critical) tier of screening
+// criteria, so use those instead of the always-empty field.
+function avoidLookalikesFor(designation: string, companyType: string, experienceType: string): string[] {
+  const points: string[] = [];
+  if (designation) {
+    points.push(`Similar title to "${designation}", but different seniority or scope`);
+  }
+  if (companyType) {
+    points.push(`Background limited to ${companyType.toLowerCase()}-only companies, without relevant domain exposure`);
+  } else {
+    points.push(GENERIC_AVOID_LOOKALIKES[0]);
+  }
+  if (experienceType && experienceType.toLowerCase() !== "full-time") {
+    points.push(`${experienceType} experience only, without sustained ownership of outcomes`);
+  } else {
+    points.push(GENERIC_AVOID_LOOKALIKES[1]);
+  }
+  return points;
+}
+
 export function deriveRoleProfile(draft: JobDraft): RoleProfileFields {
   const designation = draft.fields.designation.value.trim();
   const industryType = draft.fields.industryType.value.trim();
+  const companyType = draft.fields.companyType.value.trim();
+  const experienceType = draft.fields.experienceType.value.trim();
   const preview = deriveJobPreview(draft);
 
   const headlineValue = [designation, industryType].filter(Boolean).join(" · ");
 
   const mustHaves = splitPoints(draft.fields.mustHaves.value);
-  const evaluationCriteria = splitPoints(draft.fields.evaluationCriteria.value);
+  const redFlags = splitPoints(draft.fields.redFlags.value);
 
   return {
     headline: { value: headlineValue, source: "extracted" },
     portrait: { value: preview.idealCandidate, source: "extracted" },
     department: { value: "", source: "empty" },
-    avoidLookalikes: joinPoints(DEFAULT_AVOID_LOOKALIKES),
+    avoidLookalikes: joinPoints(avoidLookalikesFor(designation, companyType, experienceType)),
     evaluationFramework: [
       ...criteriaFromPoints(mustHaves, "critical"),
-      ...criteriaFromPoints(evaluationCriteria, "important"),
+      ...criteriaFromPoints(
+        redFlags.map((flag) => `No red flag: ${flag}`),
+        "important",
+      ),
     ],
   };
 }
