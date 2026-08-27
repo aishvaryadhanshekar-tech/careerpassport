@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { deriveJobPreview } from "./derivePreviewFields";
 import { deriveRoleProfile } from "./deriveRoleProfile";
@@ -23,6 +23,7 @@ import {
   EVAL_TYPE_LABELS,
   INDUSTRY_SUGGESTIONS,
   LOCATION_SUGGESTIONS,
+  UNIT_SUGGESTIONS,
   WORK_MODE_OPTIONS,
   type Currency,
   type EvalImportance,
@@ -107,6 +108,219 @@ function ImportanceBadge({ importance }: { importance: EvalImportance }) {
       </span>
       {EVAL_IMPORTANCE_LABELS[importance]}
     </span>
+  );
+}
+
+function useCloseOnOutsideClick(open: boolean, onClose: () => void) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [open, onClose]);
+  return rootRef;
+}
+
+function ImportanceDropdown({
+  importance,
+  onChange,
+}: {
+  importance: EvalImportance;
+  onChange: (importance: EvalImportance) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(() => EVAL_IMPORTANCE.indexOf(importance));
+  const rootRef = useCloseOnOutsideClick(open, () => setOpen(false));
+
+  function select(value: EvalImportance) {
+    onChange(value);
+    setOpen(false);
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
+    if (e.key === "Escape") {
+      setOpen(false);
+      return;
+    }
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (!open) {
+        setActiveIndex(EVAL_IMPORTANCE.indexOf(importance));
+        setOpen(true);
+      } else {
+        select(EVAL_IMPORTANCE[activeIndex]);
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!open) {
+        setActiveIndex(EVAL_IMPORTANCE.indexOf(importance));
+        setOpen(true);
+        return;
+      }
+      setActiveIndex((i) => Math.min(i + 1, EVAL_IMPORTANCE.length - 1));
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    }
+  }
+
+  return (
+    <div className="importance-dropdown" ref={rootRef}>
+      <button
+        type="button"
+        className="importance-dropdown-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Importance"
+        onClick={() => {
+          setActiveIndex(EVAL_IMPORTANCE.indexOf(importance));
+          setOpen((o) => !o);
+        }}
+        onKeyDown={handleKeyDown}
+      >
+        <ImportanceBadge importance={importance} />
+        <span className="importance-dropdown-caret" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+      {open ? (
+        <ul className="importance-dropdown-menu" role="listbox" aria-label="Importance options">
+          {EVAL_IMPORTANCE.map((option, index) => (
+            <li
+              key={option}
+              role="option"
+              aria-selected={option === importance}
+              className={`importance-dropdown-option${index === activeIndex ? " active" : ""}`}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => select(option)}
+            >
+              <ImportanceBadge importance={option} />
+              {option === importance ? (
+                <span className="importance-dropdown-check" aria-hidden="true">
+                  ✓
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+function UnitCombobox({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (unit: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [customMode, setCustomMode] = useState(false);
+  const [customValue, setCustomValue] = useState("");
+  const rootRef = useCloseOnOutsideClick(open, () => {
+    setOpen(false);
+    setCustomMode(false);
+  });
+
+  function selectUnit(unit: string) {
+    onChange(unit);
+    setOpen(false);
+    setCustomMode(false);
+  }
+
+  function commitCustom() {
+    const trimmed = customValue.trim();
+    if (trimmed) {
+      onChange(trimmed);
+    }
+    setCustomValue("");
+    setCustomMode(false);
+    setOpen(false);
+  }
+
+  return (
+    <div className="unit-combobox" ref={rootRef}>
+      <button
+        type="button"
+        className="pill-input unit-combobox-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Unit"
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setOpen(false);
+          if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        <span className="unit-combobox-value">{value || "Unit"}</span>
+        <span className="importance-dropdown-caret" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+      {open ? (
+        <ul className="importance-dropdown-menu unit-combobox-menu" role="listbox" aria-label="Unit options">
+          {UNIT_SUGGESTIONS.map((unit) => (
+            <li
+              key={unit}
+              role="option"
+              aria-selected={unit === value}
+              className={`importance-dropdown-option${unit === value ? " active" : ""}`}
+              onClick={() => selectUnit(unit)}
+            >
+              {unit}
+              {unit === value ? (
+                <span className="importance-dropdown-check" aria-hidden="true">
+                  ✓
+                </span>
+              ) : null}
+            </li>
+          ))}
+          <li className="importance-dropdown-option unit-combobox-custom-option">
+            {customMode ? (
+              <input
+                autoFocus
+                className="unit-combobox-custom-input"
+                placeholder="Custom unit"
+                aria-label="Custom unit"
+                value={customValue}
+                onChange={(e) => setCustomValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commitCustom();
+                  }
+                  if (e.key === "Escape") {
+                    e.stopPropagation();
+                    setCustomMode(false);
+                  }
+                }}
+                onBlur={commitCustom}
+              />
+            ) : (
+              <button
+                type="button"
+                className="unit-combobox-add"
+                onClick={() => setCustomMode(true)}
+              >
+                + Add custom unit…
+              </button>
+            )}
+          </li>
+        </ul>
+      ) : null}
+    </div>
   );
 }
 
@@ -362,20 +576,10 @@ function CriterionCard({
           ))}
         </select>
 
-        <select
-          className="type-select"
-          value={criterion.importance}
-          aria-label="Importance"
-          onChange={(e) => onChange({ importance: e.target.value as EvalImportance })}
-        >
-          {EVAL_IMPORTANCE.map((importance) => (
-            <option key={importance} value={importance}>
-              {EVAL_IMPORTANCE_LABELS[importance]}
-            </option>
-          ))}
-        </select>
-
-        <ImportanceBadge importance={criterion.importance} />
+        <ImportanceDropdown
+          importance={criterion.importance}
+          onChange={(importance) => onChange({ importance })}
+        />
       </div>
 
       {criterion.type === "number_threshold" ? (
@@ -399,12 +603,9 @@ function CriterionCard({
             value={criterion.target ?? ""}
             onChange={(e) => onChange({ target: e.target.value })}
           />
-          <input
-            className="pill-input"
-            placeholder="Unit"
-            aria-label="Unit"
+          <UnitCombobox
             value={criterion.unit ?? ""}
-            onChange={(e) => onChange({ unit: e.target.value })}
+            onChange={(unit) => onChange({ unit })}
           />
         </div>
       ) : null}
@@ -497,13 +698,6 @@ function EvaluationTab({
               />
             ))
           )}
-          <button
-            type="button"
-            className="text-add add-another"
-            onClick={() => onFramework(addCriterion(list))}
-          >
-            + Add another
-          </button>
         </div>
       </section>
     </div>
