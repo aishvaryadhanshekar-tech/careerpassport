@@ -14,10 +14,12 @@ export function pickActiveAnchor(
   return best;
 }
 
-// Anchors map directly to DOM ids that are always mounted in the preview
-// when their content is visible (company/role/fields/questions render in
-// one continuous scroll, not behind separate tabs), so no tab state is
-// involved here — only whether the company/role sections have content to show.
+// Anchors map directly to DOM ids that are mounted in the preview whenever
+// their tab/content is visible (desktop renders company/role/fields/questions
+// in one continuous scroll; mobile splits them across an Overview tab
+// (company/role) and an Application tab (fields/questions), switching tabs
+// as needed before scrolling) — only whether the company/role sections have
+// content to show affects the target id here.
 export function previewTargetId(
   anchor: PreviewAnchor,
   visible: { company: boolean; role: boolean },
@@ -51,5 +53,5 @@ export function scrollChildIntoContainer(
   const tRect = child.getBoundingClientRect();
   if (!childNeedsScroll(cRect, tRect)) return;
   const nextTop = container.scrollTop + (tRect.top - cRect.top);
-  container.scrollTo({ top: Math.max(0, nextTop) });
+  container.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
 }
