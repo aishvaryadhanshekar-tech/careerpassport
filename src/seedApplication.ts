@@ -73,6 +73,19 @@ function seedRoleText(draft: JobDraft): string {
   return parts.join(" ");
 }
 
+// Shared by the initial seed and by ApplicationPage's resync-on-load logic,
+// so both stay in sync with whatever Job Details / Role Profile currently
+// hold rather than drifting apart.
+export function deriveContextText(draft: JobDraft): {
+  company: string;
+  role: string;
+} {
+  return {
+    company: seedCompanyText(draft),
+    role: seedRoleText(draft),
+  };
+}
+
 export function seedApplication(draft: JobDraft): ApplicationConfig {
   const items: ApplicationItem[] = [
     {
@@ -148,8 +161,8 @@ export function seedApplication(draft: JobDraft): ApplicationConfig {
   return {
     standardOrder: defaultStandardFields(),
     context: {
-      company: { shown: true, text: seedCompanyText(draft) },
-      role: { shown: true, text: seedRoleText(draft) },
+      company: { shown: true, text: seedCompanyText(draft), source: "extracted" },
+      role: { shown: true, text: seedRoleText(draft), source: "extracted" },
     },
     items,
   };

@@ -30,6 +30,7 @@ import {
   type EvalImportance,
   type EvalType,
   type EvaluationCriterion,
+  type FieldState,
   type JobDraft,
   type JobPreviewFields,
   type RoleProfileFields,
@@ -54,13 +55,33 @@ function withPreview(draft: JobDraft): JobDraft {
   return { ...draft, preview: deriveJobPreview(draft), previewGenerated: true };
 }
 
+// Only refills a field when it's genuinely unset (never "user"-sourced,
+// never already carrying a value) so re-hydrating after the person goes
+// back and edits Job Details keeps picking up the new upstream data
+// without ever clobbering something they typed directly on this page.
+function mergeFieldState(current: FieldState, derived: FieldState): FieldState {
+  if (current.source === "user") return current;
+  if (current.value.trim() !== "") return current;
+  return derived;
+}
+
 function withRoleProfile(draft: JobDraft): JobDraft {
-  if (draft.roleProfileGenerated) return draft;
-  return {
-    ...draft,
-    roleProfile: deriveRoleProfile(draft),
-    roleProfileGenerated: true,
+  // Previously this only ran once (gated on roleProfileGenerated), so
+  // editing Job Details after visiting Role Profile left this page's
+  // headline/portrait/department stuck on stale, pre-edit copy. Re-derive
+  // every hydrate and merge field-by-field instead, so user edits stay
+  // sticky but unedited fields keep resyncing with upstream data.
+  const derived = deriveRoleProfile(draft);
+  const current = draft.roleProfile;
+  const roleProfile: RoleProfileFields = {
+    headline: mergeFieldState(current.headline, derived.headline),
+    portrait: mergeFieldState(current.portrait, derived.portrait),
+    department: mergeFieldState(current.department, derived.department),
+    avoidLookalikes: current.avoidLookalikes.trim() !== "" ? current.avoidLookalikes : derived.avoidLookalikes,
+    evaluationFramework:
+      current.evaluationFramework.length > 0 ? current.evaluationFramework : derived.evaluationFramework,
   };
+  return { ...draft, roleProfile, roleProfileGenerated: true };
 }
 
 function hydrate(): JobDraft {

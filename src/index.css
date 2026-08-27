@@ -45,7 +45,7 @@ a {
   width: 260px;
   height: 100%;
   background: #fff;
-  border-right: 1px solid #e2e6e9;
+  border-right: 1px solid #d5d9dc;
   padding: 22px 14px 16px;
   display: flex;
   flex-direction: column;
@@ -62,7 +62,7 @@ a {
   flex-direction: column;
   gap: 10px;
   padding: 4px 2px 12px;
-  border-bottom: 1px solid #e2e6e9;
+  border-bottom: 1px solid #d5d9dc;
 }
 
 .sidenav-profile {
@@ -332,7 +332,7 @@ a {
   z-index: 25;
   width: 100%;
   background: #fff;
-  border-bottom: 1px solid #e2e6e9;
+  border-bottom: 1px solid #d5d9dc;
   padding: 28px 24px 24px;
 }
 
@@ -500,7 +500,7 @@ a {
 }
 
 .stepper-slot + .stepper-slot {
-  border-left: 1px solid #e2e6e9;
+  border-left: 1px solid #d5d9dc;
   padding-left: 8px;
 }
 
@@ -586,7 +586,7 @@ a {
   flex-wrap: wrap;
   width: 100%;
   background: #fff;
-  border-bottom: 1px solid #e2e6e9;
+  border-bottom: 1px solid #d5d9dc;
   padding: 16px 24px;
 }
 
@@ -806,12 +806,12 @@ a {
   font-weight: 500;
   text-align: left;
   padding: 12px 14px;
-  border-bottom: 1px solid #e2e6e9;
+  border-bottom: 1px solid #d5d9dc;
 }
 
 .jobs-table td {
   padding: 14px;
-  border-bottom: 1px solid #f0f2f4;
+  border-bottom: 1px solid #e3e5e7;
   color: #5c5347;
 }
 
@@ -1143,7 +1143,7 @@ a {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid #e2e6e9;
+  border-bottom: 1px solid #d5d9dc;
 }
 
 .composer-status {
@@ -1238,7 +1238,7 @@ a {
   gap: 12px;
   padding: 10px 14px;
   background: #fff;
-  border-top: 1px solid #e2e6e9;
+  border-top: 1px solid #d5d9dc;
   border-radius: 0 0 16px 16px;
 }
 
@@ -1717,7 +1717,7 @@ a {
   flex: none;
   width: 88px;
   border: 0;
-  border-right: 1px solid #e2e6e9;
+  border-right: 1px solid #d5d9dc;
   background-color: #f7f8f9;
   background-position: right 10px center;
   padding: 0 28px 0 12px;
@@ -1741,7 +1741,7 @@ a {
 .form-section {
   margin-top: 36px;
   padding-top: 28px;
-  border-top: 1px solid #e2e6e9;
+  border-top: 1px solid #d5d9dc;
 }
 
 .form-section:first-of-type {
@@ -1979,7 +1979,7 @@ a {
 .flags {
   margin-top: 36px;
   padding-top: 28px;
-  border-top: 1px solid #e2e6e9;
+  border-top: 1px solid #d5d9dc;
 }
 
 .flags h3 {
@@ -1995,7 +1995,7 @@ a {
   right: 0;
   bottom: 0;
   background: #fff;
-  border-top: 1px solid #e2e6e9;
+  border-top: 1px solid #d5d9dc;
   padding: 12px 24px;
   display: flex;
   justify-content: space-between;
@@ -2047,7 +2047,7 @@ a {
     gap: 16px;
     padding: 12px 16px;
     border-right: 0;
-    border-bottom: 1px solid #e2e6e9;
+    border-bottom: 1px solid #d5d9dc;
   }
   .sidenav-profile-block {
     flex: 1;
@@ -2070,7 +2070,7 @@ a {
   }
   .stepper-slot + .stepper-slot {
     border-left: 0;
-    border-top: 1px solid #e2e6e9;
+    border-top: 1px solid #d5d9dc;
     padding-left: 0;
     padding-top: 8px;
   }
@@ -2178,7 +2178,7 @@ a {
   margin: 0;
   padding: 12px 22px;
   background: #f7f8f9;
-  border-bottom: 1px solid #eef0f2;
+  border-bottom: 1px solid #e1e3e5;
   border-radius: 12px 12px 0 0;
 }
 
@@ -2231,7 +2231,7 @@ a {
 
 .context-block {
   padding: 16px 0;
-  border-bottom: 1px solid #eef0f2;
+  border-bottom: 1px solid #e1e3e5;
 }
 
 .context-block:last-child {
@@ -2349,7 +2349,7 @@ a {
 }
 
 .field-row + .field-row {
-  border-top: 1px solid #eef0f2;
+  border-top: 1px solid #e1e3e5;
 }
 
 .question-top {
@@ -2437,7 +2437,7 @@ a {
 }
 
 .question-block + .question-block {
-  border-top: 1px solid #eef0f2;
+  border-top: 1px solid #e1e3e5;
 }
 
 .question-prompt {
@@ -2491,7 +2491,7 @@ a {
 
 .qblock-wrap + .qblock-wrap .question-block,
 .qblock-wrap + .qblock-wrap .section-block {
-  border-top: 1px solid #eef0f2;
+  border-top: 1px solid #e1e3e5;
 }
 
 .qblock-toolbar {
@@ -2638,7 +2638,7 @@ a {
 .section-description {
   width: 100%;
   border: 0;
-  border-bottom: 1px solid #eef0f2;
+  border-bottom: 1px solid #e1e3e5;
   font-size: 13px;
   color: #667085;
   padding: 6px 0;
@@ -3137,7 +3137,7 @@ a {
 .tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid #e2e6e9;
+  border-bottom: 1px solid #d5d9dc;
   margin-bottom: 20px;
 }
 
@@ -3383,7 +3383,7 @@ a {
 .criterion-label {
   flex: 1;
   border: none;
-  border-bottom: 1px solid #e4e1da;
+  border-bottom: 1px solid #d7d4cd;
   padding: 4px 2px;
   font-size: 14px;
   background: transparent;
