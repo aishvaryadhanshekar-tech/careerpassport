@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { deriveJobPreview } from "./derivePreviewFields";
 import { deriveRoleProfile } from "./deriveRoleProfile";
-import { EditableField } from "./EditableField";
+import { CheckIcon, EditableField, PencilIcon } from "./EditableField";
 import {
   addCriterion,
   removeCriterion,
@@ -243,25 +243,59 @@ function ImportanceBadge({ importance }: { importance: EvalImportance }) {
   );
 }
 
+function TabEditToggle({
+  editing,
+  onToggle,
+  label,
+}: {
+  editing: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={`tab-edit-toggle${editing ? " active" : ""}`}
+      aria-pressed={editing}
+      aria-label={editing ? `Done editing ${label}` : `Edit ${label}`}
+      title={editing ? "Done editing" : "Edit"}
+      onClick={onToggle}
+    >
+      {editing ? <CheckIcon /> : <PencilIcon />}
+    </button>
+  );
+}
+
 function OverviewTab({
   draft,
   onRoleProfile,
   onField,
   onCurrency,
+  editing,
+  onToggleEditing,
 }: {
   draft: JobDraft;
   onRoleProfile: (patch: Partial<RoleProfileFields>) => void;
   onField: (id: "experienceYears" | "location" | "salary" | "industryType" | "workMode", value: string) => void;
   onCurrency: (v: Currency | null) => void;
+  editing: boolean;
+  onToggleEditing: () => void;
 }) {
   return (
     <div className="jd-cards">
       <section className="app-card">
         <header className="app-card-head">
-          <h2>Overview</h2>
+          <div className="app-card-head-title">
+            <h2>Overview</h2>
+            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Overview" />
+          </div>
         </header>
         <div className="app-card-body role-profile-fields">
-          <EditableField label="Headline" display={<p>{draft.roleProfile.headline.value || "—"}</p>}>
+          <EditableField
+            label="Headline"
+            display={<p>{draft.roleProfile.headline.value || "—"}</p>}
+            editing={editing}
+          >
             <input
               className="pill-input"
               value={draft.roleProfile.headline.value}
@@ -271,7 +305,11 @@ function OverviewTab({
             />
           </EditableField>
 
-          <EditableField label="Portrait" display={<p>{draft.roleProfile.portrait.value || "—"}</p>}>
+          <EditableField
+            label="Portrait"
+            display={<p>{draft.roleProfile.portrait.value || "—"}</p>}
+            editing={editing}
+          >
             <textarea
               className="pill-input area-input"
               rows={3}
@@ -308,6 +346,7 @@ function OverviewTab({
           <EditableField
             label={COVERAGE_LABELS.experienceYears}
             display={<p>{draft.fields.experienceYears.value || "—"}</p>}
+            editing={editing}
           >
             <input
               className="pill-input"
@@ -316,7 +355,11 @@ function OverviewTab({
             />
           </EditableField>
 
-          <EditableField label={COVERAGE_LABELS.location} display={<p>{draft.fields.location.value || "—"}</p>}>
+          <EditableField
+            label={COVERAGE_LABELS.location}
+            display={<p>{draft.fields.location.value || "—"}</p>}
+            editing={editing}
+          >
             <TagInput
               id="rp-location"
               value={draft.fields.location.value}
@@ -325,7 +368,11 @@ function OverviewTab({
             />
           </EditableField>
 
-          <EditableField label={COVERAGE_LABELS.salary} display={<p>{salaryLabel(draft)}</p>}>
+          <EditableField
+            label={COVERAGE_LABELS.salary}
+            display={<p>{salaryLabel(draft)}</p>}
+            editing={editing}
+          >
             <SalaryInput
               id="rp-salary"
               value={draft.fields.salary.value}
@@ -338,6 +385,7 @@ function OverviewTab({
           <EditableField
             label={COVERAGE_LABELS.industryType}
             display={<p>{draft.fields.industryType.value || "—"}</p>}
+            editing={editing}
           >
             <TagInput
               id="rp-industry"
@@ -355,6 +403,7 @@ function OverviewTab({
                   (draft.fields.workMode.value || "—")}
               </p>
             }
+            editing={editing}
           >
             <ChoiceRow
               options={WORK_MODE_OPTIONS}
@@ -373,21 +422,29 @@ function RequirementsTab({
   draft,
   onPreview,
   onField,
+  editing,
+  onToggleEditing,
 }: {
   draft: JobDraft;
   onPreview: (patch: Partial<JobPreviewFields>) => void;
   onField: (id: "mustHaves" | "redFlags", value: string) => void;
+  editing: boolean;
+  onToggleEditing: () => void;
 }) {
   return (
     <div className="jd-cards">
       <section className="app-card">
         <header className="app-card-head">
-          <h2>Requirements</h2>
+          <div className="app-card-head-title">
+            <h2>Requirements</h2>
+            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Requirements" />
+          </div>
         </header>
         <div className="app-card-body role-profile-fields">
           <EditableField
             label="Skills expected"
             display={<p>{draft.preview.expectedSkills || "—"}</p>}
+            editing={editing}
           >
             <PointList
               id="rp-skills-expected"
@@ -396,7 +453,11 @@ function RequirementsTab({
             />
           </EditableField>
 
-          <EditableField label="Must haves" display={<p>{draft.fields.mustHaves.value || "—"}</p>}>
+          <EditableField
+            label="Must haves"
+            display={<p>{draft.fields.mustHaves.value || "—"}</p>}
+            editing={editing}
+          >
             <PointList
               id="rp-must-haves"
               value={draft.fields.mustHaves.value}
@@ -404,7 +465,11 @@ function RequirementsTab({
             />
           </EditableField>
 
-          <EditableField label="Red flags" display={<p>{draft.fields.redFlags.value || "—"}</p>}>
+          <EditableField
+            label="Red flags"
+            display={<p>{draft.fields.redFlags.value || "—"}</p>}
+            editing={editing}
+          >
             <PointList
               id="rp-red-flags"
               value={draft.fields.redFlags.value}
@@ -421,21 +486,29 @@ function SourcingTab({
   draft,
   onPreview,
   onRoleProfile,
+  editing,
+  onToggleEditing,
 }: {
   draft: JobDraft;
   onPreview: (patch: Partial<JobPreviewFields>) => void;
   onRoleProfile: (patch: Partial<RoleProfileFields>) => void;
+  editing: boolean;
+  onToggleEditing: () => void;
 }) {
   return (
     <div className="jd-cards">
       <section className="app-card">
         <header className="app-card-head">
-          <h2>Sourcing playbook</h2>
+          <div className="app-card-head-title">
+            <h2>Sourcing playbook</h2>
+            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Sourcing playbook" />
+          </div>
         </header>
         <div className="app-card-body role-profile-fields">
           <EditableField
             label="Target companies"
             display={<p>{draft.preview.targetCompanies || "—"}</p>}
+            editing={editing}
           >
             <PointList
               id="rp-target-companies"
@@ -447,6 +520,7 @@ function SourcingTab({
           <EditableField
             label="Target sectors"
             display={<p>{draft.preview.industrySectors || "—"}</p>}
+            editing={editing}
           >
             <TagInput
               id="rp-target-sectors"
@@ -459,6 +533,7 @@ function SourcingTab({
           <EditableField
             label="Avoid look-alikes"
             display={<p>{draft.roleProfile.avoidLookalikes || "—"}</p>}
+            editing={editing}
           >
             <PointList
               id="rp-avoid-lookalikes"
@@ -615,9 +690,13 @@ function CriterionCard({
 function EvaluationTab({
   draft,
   onFramework,
+  editing,
+  onToggleEditing,
 }: {
   draft: JobDraft;
   onFramework: (next: EvaluationCriterion[]) => void;
+  editing: boolean;
+  onToggleEditing: () => void;
 }) {
   const list = draft.roleProfile.evaluationFramework;
 
@@ -625,7 +704,10 @@ function EvaluationTab({
     <div className="jd-cards">
       <section className="app-card">
         <header className="app-card-head">
-          <h2>Evaluation framework</h2>
+          <div className="app-card-head-title">
+            <h2>Evaluation framework</h2>
+            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Evaluation framework" />
+          </div>
           <button type="button" className="text-add" onClick={() => onFramework(addCriterion(list))}>
             + Add criterion
           </button>
@@ -670,8 +752,18 @@ export function RoleProfilePage() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<JobDraft>(() => hydrate());
   const [tab, setTab] = useState<TabId>("overview");
+  const [editingTabs, setEditingTabs] = useState<Record<TabId, boolean>>({
+    overview: false,
+    requirements: false,
+    sourcing: false,
+    evaluation: false,
+  });
   const draftRef = useRef(draft);
   draftRef.current = draft;
+
+  function toggleTabEditing(id: TabId) {
+    setEditingTabs((current) => ({ ...current, [id]: !current[id] }));
+  }
 
   useEffect(() => {
     const timer = window.setTimeout(() => saveDraft(draftRef.current), 2000);
@@ -743,16 +835,40 @@ export function RoleProfilePage() {
           ]}
         />
         <TabPanel id="overview" active={tab === "overview"}>
-          <OverviewTab draft={draft} onRoleProfile={onRoleProfile} onField={onField} onCurrency={onCurrency} />
+          <OverviewTab
+            draft={draft}
+            onRoleProfile={onRoleProfile}
+            onField={onField}
+            onCurrency={onCurrency}
+            editing={editingTabs.overview}
+            onToggleEditing={() => toggleTabEditing("overview")}
+          />
         </TabPanel>
         <TabPanel id="requirements" active={tab === "requirements"}>
-          <RequirementsTab draft={draft} onPreview={onPreview} onField={onField} />
+          <RequirementsTab
+            draft={draft}
+            onPreview={onPreview}
+            onField={onField}
+            editing={editingTabs.requirements}
+            onToggleEditing={() => toggleTabEditing("requirements")}
+          />
         </TabPanel>
         <TabPanel id="sourcing" active={tab === "sourcing"}>
-          <SourcingTab draft={draft} onPreview={onPreview} onRoleProfile={onRoleProfile} />
+          <SourcingTab
+            draft={draft}
+            onPreview={onPreview}
+            onRoleProfile={onRoleProfile}
+            editing={editingTabs.sourcing}
+            onToggleEditing={() => toggleTabEditing("sourcing")}
+          />
         </TabPanel>
         <TabPanel id="evaluation" active={tab === "evaluation"}>
-          <EvaluationTab draft={draft} onFramework={onFramework} />
+          <EvaluationTab
+            draft={draft}
+            onFramework={onFramework}
+            editing={editingTabs.evaluation}
+            onToggleEditing={() => toggleTabEditing("evaluation")}
+          />
         </TabPanel>
       </main>
       <footer className="footer">

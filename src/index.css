@@ -2189,6 +2189,34 @@ a {
   font-weight: 600;
 }
 
+.app-card-head-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-edit-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #9aa0a6;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.tab-edit-toggle:hover {
+  background: #eef0f2;
+  color: #1f1b16;
+}
+
+.tab-edit-toggle.active {
+  color: #0f766e;
+}
+
 .app-card-count {
   font-size: 11px;
   letter-spacing: 0.12em;
