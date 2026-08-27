@@ -237,9 +237,11 @@ export function Step3Page() {
         </TabPanel>
       </main>
       <footer className="footer">
-        <button type="button" className="btn primary" onClick={onFinish}>
-          Save & finish
-        </button>
+        <div className="footer-actions">
+          <button type="button" className="btn primary" onClick={onFinish}>
+            Save & finish
+          </button>
+        </div>
       </footer>
     </div>
   );

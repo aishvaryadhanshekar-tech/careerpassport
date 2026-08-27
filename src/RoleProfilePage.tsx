@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { deriveJobPreview } from "./derivePreviewFields";
 import { deriveRoleProfile } from "./deriveRoleProfile";
@@ -30,6 +30,7 @@ import {
   type EvalImportance,
   type EvalType,
   type EvaluationCriterion,
+  type FieldState,
   type JobDraft,
   type JobPreviewFields,
   type RoleProfileFields,
@@ -41,24 +42,48 @@ const WORK_MODE_LABEL: Record<string, string> = {
   Hybrid: "Hybrid",
 };
 
-const IMPORTANCE_RANK: Record<EvalImportance, number> = {
-  critical: 3,
-  important: 2,
-  nice_to_have: 1,
-};
-
 type TabId = "overview" | "requirements" | "sourcing" | "evaluation";
 
+// Every field with its own FieldState only refills when it's genuinely
+// unset (never "user"-sourced, never already carrying a value) so a
+// second hydrate — e.g. after the user goes back and fills in more Job
+// Details — keeps picking up new upstream data without ever clobbering
+// something the user typed directly on this page.
+function mergeFieldState(current: FieldState, derived: FieldState): FieldState {
+  if (current.source === "user") return current;
+  if (current.value.trim() !== "") return current;
+  return derived;
+}
+
 function withPreview(draft: JobDraft): JobDraft {
-  if (draft.previewGenerated) return draft;
-  return { ...draft, preview: deriveJobPreview(draft), previewGenerated: true };
+  const derived = deriveJobPreview(draft);
+  return {
+    ...draft,
+    preview: {
+      idealCandidate: draft.preview.idealCandidate.trim() !== "" ? draft.preview.idealCandidate : derived.idealCandidate,
+      expectedSkills: draft.preview.expectedSkills.trim() !== "" ? draft.preview.expectedSkills : derived.expectedSkills,
+      targetCompanies: draft.preview.targetCompanies.trim() !== "" ? draft.preview.targetCompanies : derived.targetCompanies,
+      industrySectors: draft.preview.industrySectors.trim() !== "" ? draft.preview.industrySectors : derived.industrySectors,
+    },
+    previewGenerated: true,
+  };
 }
 
 function withRoleProfile(draft: JobDraft): JobDraft {
-  if (draft.roleProfileGenerated) return draft;
+  const derived = deriveRoleProfile(draft);
   return {
     ...draft,
-    roleProfile: deriveRoleProfile(draft),
+    roleProfile: {
+      headline: mergeFieldState(draft.roleProfile.headline, derived.headline),
+      portrait: mergeFieldState(draft.roleProfile.portrait, derived.portrait),
+      department: mergeFieldState(draft.roleProfile.department, derived.department),
+      avoidLookalikes:
+        draft.roleProfile.avoidLookalikes.trim() !== "" ? draft.roleProfile.avoidLookalikes : derived.avoidLookalikes,
+      evaluationFramework:
+        draft.roleProfile.evaluationFramework.length > 0
+          ? draft.roleProfile.evaluationFramework
+          : derived.evaluationFramework,
+    },
     roleProfileGenerated: true,
   };
 }
@@ -67,161 +92,187 @@ function hydrate(): JobDraft {
   return withRoleProfile(withPreview(loadDraft()));
 }
 
-function LocationIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M8 14.5S13 10 13 6.5A5 5 0 0 0 3 6.5C3 10 8 14.5 8 14.5Z"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="8" cy="6.5" r="1.7" stroke="currentColor" strokeWidth="1.3" />
-    </svg>
-  );
+// Demo/testing fallback only — never written into draft state, so it can
+// never overwrite real data and never gets saved as if it were real.
+const MOCK = {
+  designation: "Senior Product Manager",
+  department: "Product",
+  industryType: "B2B SaaS",
+  location: "Bangalore",
+  workMode: "Hybrid",
+  experienceYears: "5-8 years",
+  salary: "₹28L - ₹40L · per year",
+  headline: "Senior Product Manager · B2B SaaS",
+  portrait:
+    "A hands-on product leader who has shipped 0-to-1 features, partners closely with engineering and design, and makes data-informed calls under ambiguity.",
+  expectedSkills: "Product strategy, Roadmapping, SQL, User research, Cross-functional leadership",
+  mustHaves: "5+ years in product management, Experience with B2B SaaS, Shipped 0-to-1 features",
+  redFlags: "No end-to-end ownership of the product lifecycle, Pure project-management background",
+  targetCompanies: "Freshworks, Zoho, Postman, Chargebee",
+  industrySectors: "B2B SaaS, Enterprise software",
+  avoidLookalikes: "Similar title but IC-only scope, Program manager without product ownership",
+} as const;
+
+function orMock(value: string, mock: string): string {
+  const trimmed = value.trim();
+  return trimmed !== "" && trimmed !== "—" ? value : mock;
 }
 
-function WorkModeIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <rect x="1.5" y="3" width="13" height="8.5" rx="1.3" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M5.5 14h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <path d="M1.5 9.5h13" stroke="currentColor" strokeWidth="1.3" />
-    </svg>
-  );
-}
-
-function ExperienceIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M8 4.8V8l2.3 1.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function SalaryIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
-      <path
-        d="M6 10.3c0 .8.9 1.4 2 1.4s2-.5 2-1.3c0-2-4-1-4-3 0-.8.9-1.3 2-1.3s2 .5 2 1.3M8 4.7v1M8 10.3v1"
-        stroke="currentColor"
-        strokeWidth="1.1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IndustryIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M1.8 14V6.2L6.5 9V6.2L11.2 9V4L14.2 6v8H1.8Z"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function DepartmentIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-      <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-      <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-      <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-    </svg>
-  );
-}
-
-function SummaryStat({
-  icon,
-  label,
-  value,
+function RoleSummaryHeader({
+  draft,
+  editing,
+  onToggleEditing,
+  onField,
+  onRoleProfile,
+  onCurrency,
 }: {
-  icon: ReactNode;
-  label: string;
-  value: string;
+  draft: JobDraft;
+  editing: boolean;
+  onToggleEditing: () => void;
+  onField: (
+    id: "designation" | "experienceYears" | "location" | "salary" | "industryType" | "workMode",
+    value: string,
+  ) => void;
+  onRoleProfile: (patch: Partial<RoleProfileFields>) => void;
+  onCurrency: (v: Currency | null) => void;
 }) {
-  return (
-    <div className="jd-summary-stat">
-      <span className="jd-summary-stat-icon" role="img" aria-label={label} title={label}>
-        {icon}
-      </span>
-      <span className="jd-summary-stat-value">{value}</span>
-    </div>
-  );
-}
-
-function RoleSummaryHeader({ draft }: { draft: JobDraft }) {
-  const designation = draft.fields.designation.value || "—";
-  const department = draft.roleProfile.department.value;
-  const industryType = draft.fields.industryType.value;
+  const designation = orMock(draft.fields.designation.value, MOCK.designation);
+  const department = orMock(draft.roleProfile.department.value, MOCK.department);
+  const industryType = orMock(draft.fields.industryType.value, MOCK.industryType);
   const subline = [department, industryType].filter(Boolean).join(" · ");
 
+  const workModeRaw = draft.fields.workMode.value;
+  const workMode = orMock(WORK_MODE_LABEL[workModeRaw] ?? workModeRaw, MOCK.workMode);
+
   const logistics = [
-    {
-      key: "location",
-      label: COVERAGE_LABELS.location,
-      value: draft.fields.location.value || "—",
-      icon: <LocationIcon />,
-    },
-    {
-      key: "workMode",
-      label: COVERAGE_LABELS.workMode,
-      value: WORK_MODE_LABEL[draft.fields.workMode.value] ?? (draft.fields.workMode.value || "—"),
-      icon: <WorkModeIcon />,
-    },
+    { key: "location", label: COVERAGE_LABELS.location, value: orMock(draft.fields.location.value, MOCK.location) },
+    { key: "workMode", label: COVERAGE_LABELS.workMode, value: workMode },
     {
       key: "experienceYears",
       label: COVERAGE_LABELS.experienceYears,
-      value: draft.fields.experienceYears.value || "—",
-      icon: <ExperienceIcon />,
+      value: orMock(draft.fields.experienceYears.value, MOCK.experienceYears),
     },
   ];
 
   const compensation = [
-    {
-      key: "salary",
-      label: COVERAGE_LABELS.salary,
-      value: salaryLabel(draft),
-      icon: <SalaryIcon />,
-    },
-    {
-      key: "industryType",
-      label: COVERAGE_LABELS.industryType,
-      value: industryType || "—",
-      icon: <IndustryIcon />,
-    },
-    {
-      key: "department",
-      label: "Department",
-      value: department || "—",
-      icon: <DepartmentIcon />,
-    },
+    { key: "salary", label: COVERAGE_LABELS.salary, value: orMock(salaryLabel(draft), MOCK.salary) },
+    { key: "industryType", label: COVERAGE_LABELS.industryType, value: industryType },
+    { key: "department", label: "Department", value: department },
   ];
 
+  if (editing) {
+    return (
+      <section className="app-card role-summary-card">
+        <div className="app-card-body jd-summary-head">
+          <div className="jd-summary-edit-head">
+            <input
+              className="pill-input jd-summary-name-input"
+              aria-label={COVERAGE_LABELS.designation}
+              placeholder={COVERAGE_LABELS.designation}
+              value={draft.fields.designation.value}
+              onChange={(e) => onField("designation", e.target.value)}
+            />
+            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Role summary" />
+          </div>
+          <div className="jd-summary-columns">
+            <div className="jd-summary-col">
+              <label className="jd-summary-edit-field">
+                <span className="jd-summary-stat-label">{COVERAGE_LABELS.location}</span>
+                <TagInput
+                  id="rp-summary-location"
+                  value={draft.fields.location.value}
+                  suggestions={LOCATION_SUGGESTIONS}
+                  onChange={(next) => onField("location", next)}
+                />
+              </label>
+              <label className="jd-summary-edit-field">
+                <span className="jd-summary-stat-label">{COVERAGE_LABELS.workMode}</span>
+                <ChoiceRow
+                  options={WORK_MODE_OPTIONS}
+                  value={draft.fields.workMode.value}
+                  ariaLabel={COVERAGE_LABELS.workMode}
+                  onSelect={(option) => onField("workMode", option)}
+                />
+              </label>
+              <label className="jd-summary-edit-field">
+                <span className="jd-summary-stat-label">{COVERAGE_LABELS.experienceYears}</span>
+                <input
+                  className="pill-input"
+                  value={draft.fields.experienceYears.value}
+                  onChange={(e) => onField("experienceYears", e.target.value)}
+                />
+              </label>
+            </div>
+            <div className="jd-summary-col">
+              <label className="jd-summary-edit-field">
+                <span className="jd-summary-stat-label">{COVERAGE_LABELS.salary}</span>
+                <SalaryInput
+                  id="rp-summary-salary"
+                  value={draft.fields.salary.value}
+                  currency={draft.salaryCurrency}
+                  onChange={(next) => onField("salary", next)}
+                  onCurrency={onCurrency}
+                />
+              </label>
+              <label className="jd-summary-edit-field">
+                <span className="jd-summary-stat-label">{COVERAGE_LABELS.industryType}</span>
+                <TagInput
+                  id="rp-summary-industry"
+                  value={draft.fields.industryType.value}
+                  suggestions={INDUSTRY_SUGGESTIONS}
+                  onChange={(next) => onField("industryType", next)}
+                />
+              </label>
+              <label className="jd-summary-edit-field">
+                <span className="jd-summary-stat-label">Department</span>
+                <select
+                  className={`pill-select select-icon${draft.roleProfile.department.value ? "" : " is-placeholder"}`}
+                  aria-label="Department"
+                  value={draft.roleProfile.department.value}
+                  onChange={(e) =>
+                    onRoleProfile({ department: { value: e.target.value, source: "user" } })
+                  }
+                >
+                  <option value="" disabled>
+                    Select
+                  </option>
+                  {DEPARTMENT_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="app-card">
+    <section className="app-card role-summary-card">
       <div className="app-card-body jd-summary-head">
-        <h2 className="jd-summary-name">{designation}</h2>
+        <div className="jd-summary-view-head">
+          <h2 className="jd-summary-name">{designation}</h2>
+          <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Role summary" />
+        </div>
         {subline ? <p className="jd-summary-subline">{subline}</p> : null}
         <div className="jd-summary-columns">
           <div className="jd-summary-col">
             {logistics.map((row) => (
-              <SummaryStat key={row.key} icon={row.icon} label={row.label} value={row.value} />
+              <div className="jd-summary-stat" key={row.key}>
+                <span className="jd-summary-stat-label">{row.label}</span>
+                <span className="jd-summary-stat-value">{row.value}</span>
+              </div>
             ))}
           </div>
           <div className="jd-summary-col">
             {compensation.map((row) => (
-              <SummaryStat key={row.key} icon={row.icon} label={row.label} value={row.value} />
+              <div className="jd-summary-stat" key={row.key}>
+                <span className="jd-summary-stat-label">{row.label}</span>
+                <span className="jd-summary-stat-value">{row.value}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -231,14 +282,8 @@ function RoleSummaryHeader({ draft }: { draft: JobDraft }) {
 }
 
 function ImportanceBadge({ importance }: { importance: EvalImportance }) {
-  const rank = IMPORTANCE_RANK[importance];
   return (
     <span className={`importance-badge importance-${importance.replace(/_/g, "-")}`}>
-      <span className="importance-dots" aria-hidden="true">
-        {[1, 2, 3].map((dot) => (
-          <span key={dot} className={`importance-dot${dot <= rank ? " filled" : ""}`} />
-        ))}
-      </span>
       {EVAL_IMPORTANCE_LABELS[importance]}
     </span>
   );
@@ -264,6 +309,38 @@ function TabEditToggle({
     >
       {editing ? <CheckIcon /> : <PencilIcon />}
     </button>
+  );
+}
+
+function TabEditControls({
+  editing,
+  onEdit,
+  onDiscard,
+  onSave,
+  label,
+}: {
+  editing: boolean;
+  onEdit: () => void;
+  onDiscard: () => void;
+  onSave: () => void;
+  label: string;
+}) {
+  if (!editing) {
+    return (
+      <button type="button" className="tab-edit-toggle" aria-label={`Edit ${label}`} title="Edit" onClick={onEdit}>
+        <PencilIcon />
+      </button>
+    );
+  }
+  return (
+    <div className="tab-edit-actions">
+      <button type="button" className="btn ghost btn-sm" onClick={onDiscard}>
+        Discard
+      </button>
+      <button type="button" className="btn primary btn-sm" onClick={onSave}>
+        Save
+      </button>
+    </div>
   );
 }
 
@@ -332,7 +409,7 @@ function ImportanceDropdown({
     <div className="importance-dropdown" ref={rootRef}>
       <button
         type="button"
-        className="importance-dropdown-trigger"
+        className={`importance-dropdown-trigger importance-${importance.replace(/_/g, "-")}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Importance"
@@ -342,7 +419,7 @@ function ImportanceDropdown({
         }}
         onKeyDown={handleKeyDown}
       >
-        <ImportanceBadge importance={importance} />
+        <span className="importance-dropdown-trigger-label">{EVAL_IMPORTANCE_LABELS[importance]}</span>
         <span className="importance-dropdown-caret" aria-hidden="true">
           ▾
         </span>
@@ -486,28 +563,32 @@ function OverviewTab({
   onField,
   onCurrency,
   editing,
-  onToggleEditing,
+  onEdit,
+  onDiscard,
+  onSave,
 }: {
   draft: JobDraft;
   onRoleProfile: (patch: Partial<RoleProfileFields>) => void;
   onField: (id: "experienceYears" | "location" | "salary" | "industryType" | "workMode", value: string) => void;
   onCurrency: (v: Currency | null) => void;
   editing: boolean;
-  onToggleEditing: () => void;
+  onEdit: () => void;
+  onDiscard: () => void;
+  onSave: () => void;
 }) {
   return (
     <div className="jd-cards">
       <section className="app-card">
         <header className="app-card-head">
-          <div className="app-card-head-title">
-            <h2>Overview</h2>
-            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Overview" />
+          <h2>Overview</h2>
+          <div className="app-card-head-actions">
+            <TabEditControls editing={editing} onEdit={onEdit} onDiscard={onDiscard} onSave={onSave} label="Overview" />
           </div>
         </header>
         <div className="app-card-body role-profile-fields">
           <EditableField
             label="Headline"
-            display={<p>{draft.roleProfile.headline.value || "—"}</p>}
+            display={<p>{orMock(draft.roleProfile.headline.value, MOCK.headline)}</p>}
             editing={editing}
           >
             <input
@@ -521,7 +602,7 @@ function OverviewTab({
 
           <EditableField
             label="Portrait"
-            display={<p>{draft.roleProfile.portrait.value || "—"}</p>}
+            display={<p>{orMock(draft.roleProfile.portrait.value, MOCK.portrait)}</p>}
             editing={editing}
           >
             <textarea
@@ -536,7 +617,7 @@ function OverviewTab({
 
           <EditableField
             label="Department"
-            display={<p>{draft.roleProfile.department.value || "—"}</p>}
+            display={<p>{orMock(draft.roleProfile.department.value, MOCK.department)}</p>}
           >
             <select
               className={`pill-select select-icon${draft.roleProfile.department.value ? "" : " is-placeholder"}`}
@@ -559,7 +640,7 @@ function OverviewTab({
 
           <EditableField
             label={COVERAGE_LABELS.experienceYears}
-            display={<p>{draft.fields.experienceYears.value || "—"}</p>}
+            display={<p>{orMock(draft.fields.experienceYears.value, MOCK.experienceYears)}</p>}
             editing={editing}
           >
             <input
@@ -571,7 +652,7 @@ function OverviewTab({
 
           <EditableField
             label={COVERAGE_LABELS.location}
-            display={<p>{draft.fields.location.value || "—"}</p>}
+            display={<p>{orMock(draft.fields.location.value, MOCK.location)}</p>}
             editing={editing}
           >
             <TagInput
@@ -584,7 +665,7 @@ function OverviewTab({
 
           <EditableField
             label={COVERAGE_LABELS.salary}
-            display={<p>{salaryLabel(draft)}</p>}
+            display={<p>{orMock(salaryLabel(draft), MOCK.salary)}</p>}
             editing={editing}
           >
             <SalaryInput
@@ -598,7 +679,7 @@ function OverviewTab({
 
           <EditableField
             label={COVERAGE_LABELS.industryType}
-            display={<p>{draft.fields.industryType.value || "—"}</p>}
+            display={<p>{orMock(draft.fields.industryType.value, MOCK.industryType)}</p>}
             editing={editing}
           >
             <TagInput
@@ -612,10 +693,7 @@ function OverviewTab({
           <EditableField
             label={COVERAGE_LABELS.workMode}
             display={
-              <p>
-                {WORK_MODE_LABEL[draft.fields.workMode.value] ??
-                  (draft.fields.workMode.value || "—")}
-              </p>
+              <p>{orMock(WORK_MODE_LABEL[draft.fields.workMode.value] ?? draft.fields.workMode.value, MOCK.workMode)}</p>
             }
             editing={editing}
           >
@@ -637,27 +715,31 @@ function RequirementsTab({
   onPreview,
   onField,
   editing,
-  onToggleEditing,
+  onEdit,
+  onDiscard,
+  onSave,
 }: {
   draft: JobDraft;
   onPreview: (patch: Partial<JobPreviewFields>) => void;
   onField: (id: "mustHaves" | "redFlags", value: string) => void;
   editing: boolean;
-  onToggleEditing: () => void;
+  onEdit: () => void;
+  onDiscard: () => void;
+  onSave: () => void;
 }) {
   return (
     <div className="jd-cards">
       <section className="app-card">
         <header className="app-card-head">
-          <div className="app-card-head-title">
-            <h2>Requirements</h2>
-            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Requirements" />
+          <h2>Requirements</h2>
+          <div className="app-card-head-actions">
+            <TabEditControls editing={editing} onEdit={onEdit} onDiscard={onDiscard} onSave={onSave} label="Requirements" />
           </div>
         </header>
         <div className="app-card-body role-profile-fields">
           <EditableField
             label="Skills expected"
-            display={<p>{draft.preview.expectedSkills || "—"}</p>}
+            display={<p>{orMock(draft.preview.expectedSkills, MOCK.expectedSkills)}</p>}
             editing={editing}
           >
             <PointList
@@ -669,7 +751,7 @@ function RequirementsTab({
 
           <EditableField
             label="Must haves"
-            display={<p>{draft.fields.mustHaves.value || "—"}</p>}
+            display={<p>{orMock(draft.fields.mustHaves.value, MOCK.mustHaves)}</p>}
             editing={editing}
           >
             <PointList
@@ -681,7 +763,7 @@ function RequirementsTab({
 
           <EditableField
             label="Red flags"
-            display={<p>{draft.fields.redFlags.value || "—"}</p>}
+            display={<p>{orMock(draft.fields.redFlags.value, MOCK.redFlags)}</p>}
             editing={editing}
           >
             <PointList
@@ -701,27 +783,37 @@ function SourcingTab({
   onPreview,
   onRoleProfile,
   editing,
-  onToggleEditing,
+  onEdit,
+  onDiscard,
+  onSave,
 }: {
   draft: JobDraft;
   onPreview: (patch: Partial<JobPreviewFields>) => void;
   onRoleProfile: (patch: Partial<RoleProfileFields>) => void;
   editing: boolean;
-  onToggleEditing: () => void;
+  onEdit: () => void;
+  onDiscard: () => void;
+  onSave: () => void;
 }) {
   return (
     <div className="jd-cards">
       <section className="app-card">
         <header className="app-card-head">
-          <div className="app-card-head-title">
-            <h2>Sourcing playbook</h2>
-            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Sourcing playbook" />
+          <h2>Sourcing playbook</h2>
+          <div className="app-card-head-actions">
+            <TabEditControls
+              editing={editing}
+              onEdit={onEdit}
+              onDiscard={onDiscard}
+              onSave={onSave}
+              label="Sourcing playbook"
+            />
           </div>
         </header>
         <div className="app-card-body role-profile-fields">
           <EditableField
             label="Target companies"
-            display={<p>{draft.preview.targetCompanies || "—"}</p>}
+            display={<p>{orMock(draft.preview.targetCompanies, MOCK.targetCompanies)}</p>}
             editing={editing}
           >
             <PointList
@@ -733,7 +825,7 @@ function SourcingTab({
 
           <EditableField
             label="Target sectors"
-            display={<p>{draft.preview.industrySectors || "—"}</p>}
+            display={<p>{orMock(draft.preview.industrySectors, MOCK.industrySectors)}</p>}
             editing={editing}
           >
             <TagInput
@@ -746,7 +838,7 @@ function SourcingTab({
 
           <EditableField
             label="Avoid look-alikes"
-            display={<p>{draft.roleProfile.avoidLookalikes || "—"}</p>}
+            display={<p>{orMock(draft.roleProfile.avoidLookalikes, MOCK.avoidLookalikes)}</p>}
             editing={editing}
           >
             <PointList
@@ -892,12 +984,16 @@ function EvaluationTab({
   draft,
   onFramework,
   editing,
-  onToggleEditing,
+  onEdit,
+  onDiscard,
+  onSave,
 }: {
   draft: JobDraft;
   onFramework: (next: EvaluationCriterion[]) => void;
   editing: boolean;
-  onToggleEditing: () => void;
+  onEdit: () => void;
+  onDiscard: () => void;
+  onSave: () => void;
 }) {
   const list = draft.roleProfile.evaluationFramework;
 
@@ -905,13 +1001,19 @@ function EvaluationTab({
     <div className="jd-cards">
       <section className="app-card">
         <header className="app-card-head">
-          <div className="app-card-head-title">
-            <h2>Evaluation framework</h2>
-            <TabEditToggle editing={editing} onToggle={onToggleEditing} label="Evaluation framework" />
+          <h2>Evaluation framework</h2>
+          <div className="app-card-head-actions">
+            <button type="button" className="text-add" onClick={() => onFramework(addCriterion(list))}>
+              + Add criterion
+            </button>
+            <TabEditControls
+              editing={editing}
+              onEdit={onEdit}
+              onDiscard={onDiscard}
+              onSave={onSave}
+              label="Evaluation framework"
+            />
           </div>
-          <button type="button" className="text-add" onClick={() => onFramework(addCriterion(list))}>
-            + Add criterion
-          </button>
         </header>
         <div className="app-card-body">
           {list.length === 0 ? (
@@ -942,6 +1044,58 @@ function EvaluationTab({
   );
 }
 
+// Each tab only owns a slice of the shared draft. Snapshotting the whole
+// draft on entry and restoring just that tab's slice on Discard means a
+// discard in one tab can never clobber concurrent edits made in another.
+function restoreTabSlice(id: TabId, current: JobDraft, snapshot: JobDraft): JobDraft {
+  switch (id) {
+    case "overview":
+      return {
+        ...current,
+        roleProfile: {
+          ...current.roleProfile,
+          headline: snapshot.roleProfile.headline,
+          portrait: snapshot.roleProfile.portrait,
+          department: snapshot.roleProfile.department,
+        },
+        fields: {
+          ...current.fields,
+          experienceYears: snapshot.fields.experienceYears,
+          location: snapshot.fields.location,
+          salary: snapshot.fields.salary,
+          industryType: snapshot.fields.industryType,
+          workMode: snapshot.fields.workMode,
+        },
+        salaryCurrency: snapshot.salaryCurrency,
+      };
+    case "requirements":
+      return {
+        ...current,
+        preview: { ...current.preview, expectedSkills: snapshot.preview.expectedSkills },
+        fields: {
+          ...current.fields,
+          mustHaves: snapshot.fields.mustHaves,
+          redFlags: snapshot.fields.redFlags,
+        },
+      };
+    case "sourcing":
+      return {
+        ...current,
+        preview: {
+          ...current.preview,
+          targetCompanies: snapshot.preview.targetCompanies,
+          industrySectors: snapshot.preview.industrySectors,
+        },
+        roleProfile: { ...current.roleProfile, avoidLookalikes: snapshot.roleProfile.avoidLookalikes },
+      };
+    case "evaluation":
+      return {
+        ...current,
+        roleProfile: { ...current.roleProfile, evaluationFramework: snapshot.roleProfile.evaluationFramework },
+      };
+  }
+}
+
 export function RoleProfilePage() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<JobDraft>(() => hydrate());
@@ -952,11 +1106,26 @@ export function RoleProfilePage() {
     sourcing: false,
     evaluation: false,
   });
+  const [summaryEditing, setSummaryEditing] = useState(false);
+  const [tabSnapshots, setTabSnapshots] = useState<Partial<Record<TabId, JobDraft>>>({});
   const draftRef = useRef(draft);
   draftRef.current = draft;
 
-  function toggleTabEditing(id: TabId) {
-    setEditingTabs((current) => ({ ...current, [id]: !current[id] }));
+  function beginTabEdit(id: TabId) {
+    setTabSnapshots((current) => ({ ...current, [id]: structuredClone(draftRef.current) }));
+    setEditingTabs((current) => ({ ...current, [id]: true }));
+  }
+
+  function discardTabEdit(id: TabId) {
+    const snapshot = tabSnapshots[id];
+    if (snapshot) {
+      setDraft((current) => restoreTabSlice(id, current, snapshot));
+    }
+    setEditingTabs((current) => ({ ...current, [id]: false }));
+  }
+
+  function saveTabEdit(id: TabId) {
+    setEditingTabs((current) => ({ ...current, [id]: false }));
   }
 
   useEffect(() => {
@@ -985,7 +1154,15 @@ export function RoleProfilePage() {
   }
 
   function onField(
-    id: "experienceYears" | "location" | "salary" | "industryType" | "workMode" | "mustHaves" | "redFlags",
+    id:
+      | "designation"
+      | "experienceYears"
+      | "location"
+      | "salary"
+      | "industryType"
+      | "workMode"
+      | "mustHaves"
+      | "redFlags",
     value: string,
   ) {
     setDraft((current) => ({
@@ -1016,7 +1193,14 @@ export function RoleProfilePage() {
   return (
     <div className="app-shell create-job role-profile-page">
       <main className="preview-main">
-        <RoleSummaryHeader draft={draft} />
+        <RoleSummaryHeader
+          draft={draft}
+          editing={summaryEditing}
+          onToggleEditing={() => setSummaryEditing((v) => !v)}
+          onField={onField}
+          onRoleProfile={onRoleProfile}
+          onCurrency={onCurrency}
+        />
         <Tabs
           ariaLabel="Role profile sections"
           active={tab}
@@ -1035,7 +1219,9 @@ export function RoleProfilePage() {
             onField={onField}
             onCurrency={onCurrency}
             editing={editingTabs.overview}
-            onToggleEditing={() => toggleTabEditing("overview")}
+            onEdit={() => beginTabEdit("overview")}
+            onDiscard={() => discardTabEdit("overview")}
+            onSave={() => saveTabEdit("overview")}
           />
         </TabPanel>
         <TabPanel id="requirements" active={tab === "requirements"}>
@@ -1044,7 +1230,9 @@ export function RoleProfilePage() {
             onPreview={onPreview}
             onField={onField}
             editing={editingTabs.requirements}
-            onToggleEditing={() => toggleTabEditing("requirements")}
+            onEdit={() => beginTabEdit("requirements")}
+            onDiscard={() => discardTabEdit("requirements")}
+            onSave={() => saveTabEdit("requirements")}
           />
         </TabPanel>
         <TabPanel id="sourcing" active={tab === "sourcing"}>
@@ -1053,7 +1241,9 @@ export function RoleProfilePage() {
             onPreview={onPreview}
             onRoleProfile={onRoleProfile}
             editing={editingTabs.sourcing}
-            onToggleEditing={() => toggleTabEditing("sourcing")}
+            onEdit={() => beginTabEdit("sourcing")}
+            onDiscard={() => discardTabEdit("sourcing")}
+            onSave={() => saveTabEdit("sourcing")}
           />
         </TabPanel>
         <TabPanel id="evaluation" active={tab === "evaluation"}>
@@ -1061,14 +1251,21 @@ export function RoleProfilePage() {
             draft={draft}
             onFramework={onFramework}
             editing={editingTabs.evaluation}
-            onToggleEditing={() => toggleTabEditing("evaluation")}
+            onEdit={() => beginTabEdit("evaluation")}
+            onDiscard={() => discardTabEdit("evaluation")}
+            onSave={() => saveTabEdit("evaluation")}
           />
         </TabPanel>
       </main>
       <footer className="footer">
-        <button type="button" className="btn primary" onClick={onContinue}>
-          Continue
-        </button>
+        <div className="footer-actions">
+          <button type="button" className="btn ghost" onClick={() => navigate("/create-job")}>
+            Back
+          </button>
+          <button type="button" className="btn primary" onClick={onContinue}>
+            Continue
+          </button>
+        </div>
       </footer>
     </div>
   );

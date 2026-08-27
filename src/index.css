@@ -1653,8 +1653,23 @@ a {
 }
 
 .req {
-  color: #c9372c;
-  margin-left: 2px;
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fef0c7;
+  color: #b54708;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field-missing {
+  border: 1px solid #fde3ad;
+  background: #fffaf0;
+  border-radius: 10px;
+  padding: 10px 10px 12px;
 }
 
 .pill-input,
@@ -2004,6 +2019,13 @@ a {
   z-index: 20;
 }
 
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
 .footer .meta {
   color: #9aa0a6;
   font-size: 13px;
@@ -2193,6 +2215,30 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.app-card-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tab-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-edit-actions .btn-sm {
+  padding: 5px 12px;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.tab-edit-actions .btn.ghost.btn-sm {
+  border-color: #d0d5dd;
+  background: #fff;
+  font-weight: 500;
 }
 
 .tab-edit-toggle {
@@ -3172,6 +3218,10 @@ a {
   margin-bottom: 20px;
 }
 
+.role-profile-page .app-card + .tabs {
+  margin-top: 28px;
+}
+
 .tab-btn {
   border: 0;
   background: none;
@@ -3238,10 +3288,18 @@ a {
   }
 }
 
+.role-summary-card {
+  margin-bottom: 4px;
+}
+
+.role-summary-card .app-card-body {
+  padding: 24px 26px 26px;
+}
+
 .jd-summary-head {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 16px;
 }
 
 .jd-summary-name {
@@ -3251,8 +3309,28 @@ a {
   color: #1f1b16;
 }
 
+.jd-summary-view-head,
+.jd-summary-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jd-summary-name-input {
+  font-size: 20px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.jd-summary-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .jd-summary-subline {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 13px;
   color: #667085;
 }
@@ -3260,37 +3338,34 @@ a {
 .jd-summary-columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 24px;
-  margin-top: 4px;
+  gap: 16px 32px;
 }
 
 .jd-summary-col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .jd-summary-stat {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.jd-summary-stat-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: #f7f8f9;
+.jd-summary-stat-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: #667085;
+  font-weight: 600;
 }
 
 .jd-summary-stat-value {
   font-size: 14px;
   color: #1f1b16;
+  text-align: right;
 }
 
 @media (max-width: 640px) {
@@ -3361,23 +3436,6 @@ a {
   font-weight: 600;
   padding: 4px 8px;
   border-radius: 999px;
-}
-
-.importance-dots {
-  display: inline-flex;
-  gap: 2px;
-}
-
-.importance-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.25;
-}
-
-.importance-dot.filled {
-  opacity: 1;
 }
 
 .importance-critical {
@@ -3451,23 +3509,31 @@ a {
 .importance-dropdown-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid transparent;
-  background: transparent;
-  padding: 0;
+  gap: 8px;
+  border: 1px solid rgba(16, 24, 40, 0.12);
+  padding: 7px 10px;
   cursor: pointer;
-  border-radius: 999px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.importance-dropdown-trigger:hover,
+.importance-dropdown-trigger:hover {
+  filter: brightness(0.97);
+}
+
 .importance-dropdown-trigger:focus-visible {
-  border-color: #d0d5dd;
+  outline: 2px solid #1f1b16;
+  outline-offset: 1px;
+}
+
+.importance-dropdown-trigger-label {
+  white-space: nowrap;
 }
 
 .importance-dropdown-caret {
-  font-size: 10px;
-  color: #667085;
-  padding-right: 8px;
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 .importance-dropdown-menu {

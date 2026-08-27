@@ -127,9 +127,11 @@ export function ApplicationPage() {
           <span className="meta-dot" aria-hidden="true">·</span>
           <span>{mandatoryCount(config)} mandatory</span>
         </div>
-        <button type="button" className="btn primary" onClick={onContinue}>
-          Continue
-        </button>
+        <div className="footer-actions">
+          <button type="button" className="btn primary" onClick={onContinue}>
+            Continue
+          </button>
+        </div>
       </footer>
     </div>
   );
