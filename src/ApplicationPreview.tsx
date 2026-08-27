@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { STANDARD_FIELD_META } from "./applicationCatalog";
 import { splitTags } from "./formControlUtils";
 import { salaryLabel } from "./jobsStore";
@@ -20,6 +20,8 @@ const WORK_MODE_LABEL: Record<string, string> = {
   Hybrid: "Hybrid",
 };
 
+type PreviewTab = "overview" | "application";
+
 export function ApplicationPreview({
   draft,
   config,
@@ -38,6 +40,7 @@ export function ApplicationPreview({
       draft={draft}
       config={config}
       activeAnchor={activeAnchor}
+      mode={mode}
     />
   );
 
@@ -130,19 +133,24 @@ function PreviewApplyScreen({
   draft,
   config,
   activeAnchor,
+  mode,
 }: {
   draft: JobDraft;
   config: ApplicationConfig;
   activeAnchor: PreviewAnchor | null;
+  mode: "mobile" | "desktop";
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const lastTargetId = useRef<string | null>(null);
   const pointerOnSheet = useRef(false);
+  const showTabs = mode === "mobile";
+  const [tab, setTab] = useState<PreviewTab>("overview");
   const title = draft.fields.designation.value.trim() || "Untitled role";
   const workMode = draft.fields.workMode.value.trim();
   const workLabel = WORK_MODE_LABEL[workMode] ?? workMode;
   const locations = splitTags(draft.fields.location.value);
   const pay = salaryLabel(draft);
+  const requirements = draft.fields.mustHaves.value.trim();
   const hasResume = config.standardOrder.some(
     (field) => field.id === "resume" && field.required !== "skipped",
   );
@@ -162,19 +170,159 @@ function PreviewApplyScreen({
       company: companyVisible,
       role: roleVisible,
     });
+    const targetTab: PreviewTab =
+      activeAnchor === "fields" || activeAnchor === "questions"
+        ? "application"
+        : "overview";
+    if (showTabs && tab !== targetTab) {
+      // Switch tab first; once the matching tab's content is mounted this
+      // effect re-runs (tab is a dependency) and performs the actual scroll.
+      lastTargetId.current = null;
+      setTab(targetTab);
+      return;
+    }
     if (lastTargetId.current === targetId) return;
     const container = frameRef.current;
     if (!container) return;
     if (targetId === "preview-job") {
       lastTargetId.current = targetId;
-      container.scrollTo({ top: 0 });
+      container.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     const el = container.querySelector(`#${targetId}`);
     if (!(el instanceof HTMLElement)) return;
     lastTargetId.current = targetId;
     scrollChildIntoContainer(container, el);
-  }, [activeAnchor, companyVisible, roleVisible]);
+  }, [activeAnchor, companyVisible, roleVisible, showTabs, tab]);
+
+  const headerNode = (
+    <header className="preview-job" id="preview-job">
+      <p className="preview-brand">Career Passport</p>
+      <h3>{title}</h3>
+      {workLabel || locations.length ? (
+        <p className="preview-meta-row">
+          {[workLabel, ...locations].filter(Boolean).map((part, i) => (
+            <span key={part}>
+              {i > 0 ? <span className="preview-meta-dot">·</span> : null}
+              {part}
+            </span>
+          ))}
+        </p>
+      ) : null}
+      {pay !== "—" ? <p className="preview-salary">{pay}</p> : null}
+    </header>
+  );
+
+  const overviewSections = (
+    <>
+      {companyVisible ? (
+        <section className="preview-copy preview-section-card" id="preview-company">
+          <h4 className="preview-eyebrow">Company</h4>
+          <p>{config.context.company.text}</p>
+        </section>
+      ) : null}
+      {roleVisible ? (
+        <section className="preview-copy preview-section-card" id="preview-role">
+          <h4 className="preview-eyebrow">Role</h4>
+          <p>{config.context.role.text}</p>
+        </section>
+      ) : null}
+      {requirements ? (
+        <section className="preview-copy preview-section-card" id="preview-requirements">
+          <h4 className="preview-eyebrow">Requirements</h4>
+          <p>{requirements}</p>
+        </section>
+      ) : null}
+    </>
+  );
+
+  const applicationSections = (
+    <>
+      {hasResume ? <AutofillCard /> : null}
+      <div className="preview-fields preview-section-card" id="preview-fields">
+        <p className="preview-eyebrow">Your details</p>
+        <label className="preview-field">
+          <span>First name</span>
+          <input type="text" name="firstName" autoComplete="given-name" />
+        </label>
+        <label className="preview-field">
+          <span>Last name</span>
+          <input type="text" name="lastName" autoComplete="family-name" />
+        </label>
+        <label className="preview-field">
+          <span>Email</span>
+          <input type="email" name="email" autoComplete="email" />
+        </label>
+        {config.standardOrder
+          .filter(
+            (field) =>
+              field.id !== "resume" && field.required !== "skipped",
+          )
+          .map((field) => <PreviewStandard key={field.id} id={field.id} />)}
+      </div>
+      <div className="preview-questions preview-section-card" id="preview-questions">
+        {config.items.length > 0 ? (
+          <p className="preview-eyebrow">Questions</p>
+        ) : null}
+        {config.items.map((item) =>
+          item.kind === "section" ? (
+            <div key={item.id} className="preview-section">
+              <h4>{item.title || "Untitled section"}</h4>
+              {item.description ? <p>{item.description}</p> : null}
+            </div>
+          ) : (
+            <div key={item.id} className="preview-field">
+              {item.imageUrl ? (
+                <img className="preview-question-image" src={item.imageUrl} alt="" />
+              ) : null}
+              <span>{item.prompt || "Question"}</span>
+              {item.type === "paragraph" ? (
+                <textarea rows={3} />
+              ) : item.type === "short_answer" ? (
+                <input type="text" />
+              ) : item.type === "dropdown" ? (
+                <select defaultValue="">
+                  <option value="" disabled>
+                    Choose
+                  </option>
+                  {item.options
+                    .filter((o) => o.trim())
+                    .map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                </select>
+              ) : (
+                <ul className="preview-options">
+                  {item.options
+                    .filter((o) => o.trim())
+                    .map((option) => (
+                      <li key={option}>
+                        <label>
+                          <input
+                            type={
+                              item.type === "multiple_choice"
+                                ? "radio"
+                                : "checkbox"
+                            }
+                            name={item.type === "multiple_choice" ? item.id : undefined}
+                          />{" "}
+                          {option}
+                        </label>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          ),
+        )}
+        <button type="button" className="preview-submit">
+          Submit application
+        </button>
+      </div>
+    </>
+  );
 
   return (
     <div
@@ -187,136 +335,60 @@ function PreviewApplyScreen({
         pointerOnSheet.current = false;
       }}
     >
-      <header className="preview-job" id="preview-job">
-        <p className="preview-brand">Career Passport</p>
-        <h3>{title}</h3>
-        {workLabel || locations.length ? (
-          <p className="preview-meta-row">
-            {[workLabel, ...locations].filter(Boolean).map((part, i) => (
-              <span key={part}>
-                {i > 0 ? <span className="preview-meta-dot">·</span> : null}
-                {part}
-              </span>
-            ))}
-          </p>
-        ) : null}
-        {pay !== "—" ? <p className="preview-salary">{pay}</p> : null}
-      </header>
-      <div className="preview-body">
-        {companyVisible ? (
-          <section className="preview-copy preview-section-card" id="preview-company">
-            <h4 className="preview-eyebrow">Company</h4>
-            <p>{config.context.company.text}</p>
-          </section>
-        ) : null}
-        {roleVisible ? (
-          <section className="preview-copy preview-section-card" id="preview-role">
-            <h4 className="preview-eyebrow">Role</h4>
-            <p>{config.context.role.text}</p>
-          </section>
-        ) : null}
-        {hasResume ? <AutofillCard /> : null}
-        <div className="preview-fields preview-section-card" id="preview-fields">
-          <p className="preview-eyebrow">Your details</p>
-          <p className="preview-req">Fields marked * are required</p>
-          <label className="preview-field">
-            <span>
-              <span className="preview-required-mark">*</span> First name
-            </span>
-            <input type="text" name="firstName" autoComplete="given-name" />
-          </label>
-          <label className="preview-field">
-            <span>
-              <span className="preview-required-mark">*</span> Last name
-            </span>
-            <input type="text" name="lastName" autoComplete="family-name" />
-          </label>
-          <label className="preview-field">
-            <span>
-              <span className="preview-required-mark">*</span> Email
-            </span>
-            <input type="email" name="email" autoComplete="email" />
-          </label>
-          {config.standardOrder
-            .filter(
-              (field) =>
-                field.id !== "resume" && field.required !== "skipped",
-            )
-            .map((field) => (
-              <PreviewStandard
-                key={field.id}
-                id={field.id}
-                required={field.required === "mandatory"}
-              />
-            ))}
-        </div>
-        <div className="preview-questions preview-section-card" id="preview-questions">
-          {config.items.length > 0 ? (
-            <p className="preview-eyebrow">Questions</p>
-          ) : null}
-          {config.items.map((item) =>
-            item.kind === "section" ? (
-              <div key={item.id} className="preview-section">
-                <h4>{item.title || "Untitled section"}</h4>
-                {item.description ? <p>{item.description}</p> : null}
-              </div>
-            ) : (
-              <div key={item.id} className="preview-field">
-                {item.imageUrl ? (
-                  <img className="preview-question-image" src={item.imageUrl} alt="" />
-                ) : null}
-                <span>
-                  {item.required === "mandatory" ? (
-                    <span className="preview-required-mark">*</span>
-                  ) : null}{" "}
-                  {item.prompt || "Question"}
-                </span>
-                {item.type === "paragraph" ? (
-                  <textarea rows={3} />
-                ) : item.type === "short_answer" ? (
-                  <input type="text" />
-                ) : item.type === "dropdown" ? (
-                  <select defaultValue="">
-                    <option value="" disabled>
-                      Choose
-                    </option>
-                    {item.options
-                      .filter((o) => o.trim())
-                      .map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                  </select>
-                ) : (
-                  <ul className="preview-options">
-                    {item.options
-                      .filter((o) => o.trim())
-                      .map((option) => (
-                        <li key={option}>
-                          <label>
-                            <input
-                              type={
-                                item.type === "multiple_choice"
-                                  ? "radio"
-                                  : "checkbox"
-                              }
-                              name={item.type === "multiple_choice" ? item.id : undefined}
-                            />{" "}
-                            {option}
-                          </label>
-                        </li>
-                      ))}
-                  </ul>
-                )}
-              </div>
-            ),
+      {showTabs ? (
+        <>
+          <div className="preview-tabbar" role="tablist" aria-label="Job preview sections">
+            <button
+              type="button"
+              role="tab"
+              id="preview-tab-overview"
+              aria-selected={tab === "overview"}
+              aria-controls="preview-tabpanel-overview"
+              className={`preview-tab-btn${tab === "overview" ? " active" : ""}`}
+              onClick={() => setTab("overview")}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="preview-tab-application"
+              aria-selected={tab === "application"}
+              aria-controls="preview-tabpanel-application"
+              className={`preview-tab-btn${tab === "application" ? " active" : ""}`}
+              onClick={() => setTab("application")}
+            >
+              Application
+            </button>
+          </div>
+          {tab === "overview" ? (
+            <div
+              role="tabpanel"
+              id="preview-tabpanel-overview"
+              aria-labelledby="preview-tab-overview"
+            >
+              {headerNode}
+              <div className="preview-body">{overviewSections}</div>
+            </div>
+          ) : (
+            <div
+              role="tabpanel"
+              id="preview-tabpanel-application"
+              aria-labelledby="preview-tab-application"
+            >
+              <div className="preview-body">{applicationSections}</div>
+            </div>
           )}
-          <button type="button" className="preview-submit">
-            Submit application
-          </button>
-        </div>
-      </div>
+        </>
+      ) : (
+        <>
+          {headerNode}
+          <div className="preview-body">
+            {overviewSections}
+            {applicationSections}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -339,21 +411,12 @@ function AutofillCard() {
   );
 }
 
-function PreviewStandard({
-  id,
-  required,
-}: {
-  id: StandardFieldId;
-  required: boolean;
-}) {
+function PreviewStandard({ id }: { id: StandardFieldId }) {
   const meta = STANDARD_FIELD_META[id];
-  const star = required ? <span className="preview-required-mark">*</span> : null;
   if (id === "coverLetter") {
     return (
       <label className="preview-field">
-        <span>
-          {star} {meta.label}
-        </span>
+        <span>{meta.label}</span>
         <textarea rows={3} />
       </label>
     );
@@ -366,9 +429,7 @@ function PreviewStandard({
         : "text";
   return (
     <label className="preview-field">
-      <span>
-        {star} {meta.label}
-      </span>
+      <span>{meta.label}</span>
       <input type={type} />
     </label>
   );
