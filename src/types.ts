@@ -95,6 +95,18 @@ export const INDUSTRY_SUGGESTIONS = [
   "E-commerce",
   "AI",
 ] as const;
+export const DEPARTMENT_OPTIONS = [
+  "Engineering",
+  "Product",
+  "Design",
+  "Sales",
+  "Marketing",
+  "HR",
+  "Finance",
+  "Operations",
+  "Customer Success",
+  "Legal",
+] as const;
 
 export type FieldSource = "empty" | "extracted" | "user";
 
@@ -216,6 +228,7 @@ export type EvaluationCriterion = {
 export type RoleProfileFields = {
   headline: FieldState;
   portrait: FieldState;
+  department: FieldState;
   avoidLookalikes: string;
   evaluationFramework: EvaluationCriterion[];
 };
@@ -224,6 +237,7 @@ export function emptyRoleProfile(): RoleProfileFields {
   return {
     headline: { value: "", source: "empty" },
     portrait: { value: "", source: "empty" },
+    department: { value: "", source: "empty" },
     avoidLookalikes: "",
     evaluationFramework: [],
   };

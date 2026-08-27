@@ -46,6 +46,7 @@ function readRoleProfile(value: unknown): RoleProfileFields {
   return {
     headline: (data.headline as FieldState) ?? base.headline,
     portrait: (data.portrait as FieldState) ?? base.portrait,
+    department: (data.department as FieldState) ?? base.department,
     avoidLookalikes: data.avoidLookalikes ?? base.avoidLookalikes,
     evaluationFramework: Array.isArray(data.evaluationFramework)
       ? (data.evaluationFramework as EvaluationCriterion[])
