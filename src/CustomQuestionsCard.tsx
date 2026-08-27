@@ -54,13 +54,6 @@ export function CustomQuestionsCard({
     <section className="app-card" data-editor-anchor="questions">
       <header className="app-card-head">
         <h2>Questions</h2>
-        <button
-          type="button"
-          className="text-add"
-          onClick={() => onChange(addQuestion(config))}
-        >
-          + Add
-        </button>
       </header>
       <div className="app-card-body">
         {config.items.map((item, index) => {

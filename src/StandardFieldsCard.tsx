@@ -10,16 +10,12 @@ import {
   setStandardFieldRequirement,
 } from "./applicationForm";
 import { SegmentedControl } from "./SegmentedControl";
-import type {
-  ApplicationConfig,
-  StandardFieldId,
-  StandardFieldRequirement,
-} from "./types";
+import { Switch } from "./ContextCard";
+import type { ApplicationConfig, StandardFieldId } from "./types";
 
-const REQUIREMENT_OPTIONS: { value: StandardFieldRequirement; label: string }[] = [
+const VISIBILITY_OPTIONS: { value: "skipped" | "optional"; label: string }[] = [
   { value: "skipped", label: "Skip" },
   { value: "optional", label: "Ask" },
-  { value: "mandatory", label: "Require" },
 ];
 
 export function StandardFieldsCard({
@@ -60,21 +56,41 @@ export function StandardFieldsCard({
                   ⋮⋮
                 </span>
                 <div className={skipped ? "field-copy skipped" : "field-copy"}>
-                  <strong>
-                    {mandatory ? "* " : ""}
-                    {meta.label}
-                  </strong>
+                  <strong>{meta.label}</strong>
                 </div>
                 <SegmentedControl
-                  value={field.required}
-                  options={REQUIREMENT_OPTIONS}
-                  ariaLabel={`${meta.label} requirement`}
-                  onChange={(requirement) =>
+                  value={skipped ? "skipped" : "optional"}
+                  options={VISIBILITY_OPTIONS}
+                  ariaLabel={`${meta.label} visibility`}
+                  onChange={(visibility) =>
                     onChange(
-                      setStandardFieldRequirement(config, field.id, requirement),
+                      setStandardFieldRequirement(
+                        config,
+                        field.id,
+                        visibility === "skipped"
+                          ? "skipped"
+                          : mandatory
+                            ? "mandatory"
+                            : "optional",
+                      ),
                     )
                   }
                 />
+                {skipped ? null : (
+                  <Switch
+                    checked={mandatory}
+                    label="Required"
+                    onToggle={() =>
+                      onChange(
+                        setStandardFieldRequirement(
+                          config,
+                          field.id,
+                          mandatory ? "optional" : "mandatory",
+                        ),
+                      )
+                    }
+                  />
+                )}
               </li>
             );
           })}
