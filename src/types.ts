@@ -213,6 +213,18 @@ export const EVAL_IMPORTANCE_LABELS: Record<EvalImportance, string> = {
 export const COMPARATORS = ["≥", "≤", "=", ">", "<"] as const;
 export const DEFAULT_QUALITATIVE_GRADES = ["Weak", "Adequate", "Strong"];
 
+export const UNIT_SUGGESTIONS = [
+  "years",
+  "months",
+  "%",
+  "points",
+  "x (multiplier)",
+  "₹",
+  "$",
+  "hours",
+  "days",
+] as const;
+
 export type EvaluationCriterion = {
   id: string;
   label: string;
