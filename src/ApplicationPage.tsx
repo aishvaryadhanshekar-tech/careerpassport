@@ -7,15 +7,48 @@ import { StandardFieldsCard } from "./StandardFieldsCard";
 import { estimateApplicationOverview, mandatoryCount } from "./applicationForm";
 import { getCurrentJobId, startNewJob, upsertJobFromDraft } from "./jobsStore";
 import { pickActiveAnchor, type PreviewAnchor } from "./previewScroll";
-import { seedApplication } from "./seedApplication";
+import { deriveContextText, seedApplication } from "./seedApplication";
 import { loadDraft, saveDraft } from "./storage";
 import type { ApplicationConfig, JobDraft } from "./types";
 
 const ANCHORS: PreviewAnchor[] = ["company", "role", "fields", "questions"];
 
+// Backfills the Application step from Job Details / Role Profile data.
+// On first visit there's no application config yet, so seed it wholesale.
+// On later visits, re-derive the company/role context copy from the latest
+// draft fields and merge it in — but only for fields the user hasn't
+// personally edited (source !== "user") — so edits elsewhere in the wizard
+// (e.g. going back and changing the designation or location) keep flowing
+// into this step instead of leaving stale, pre-edit copy behind.
 function withApplication(draft: JobDraft): JobDraft {
-  if (draft.application) return draft;
-  const next = { ...draft, application: seedApplication(draft) };
+  if (!draft.application) {
+    const next = { ...draft, application: seedApplication(draft) };
+    saveDraft(next);
+    return next;
+  }
+
+  const config = draft.application;
+  const derived = deriveContextText(draft);
+
+  const company =
+    config.context.company.source === "user" ||
+    config.context.company.text === derived.company
+      ? config.context.company
+      : { ...config.context.company, text: derived.company, source: "extracted" as const };
+
+  const role =
+    config.context.role.source === "user" || config.context.role.text === derived.role
+      ? config.context.role
+      : { ...config.context.role, text: derived.role, source: "extracted" as const };
+
+  if (company === config.context.company && role === config.context.role) {
+    return draft;
+  }
+
+  const next = {
+    ...draft,
+    application: { ...config, context: { company, role } },
+  };
   saveDraft(next);
   return next;
 }

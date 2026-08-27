@@ -182,8 +182,13 @@ export type ApplicationItem = CustomQuestion | SectionBreak;
 export type ApplicationConfig = {
   standardOrder: StandardField[];
   context: {
-    company: { shown: boolean; text: string };
-    role: { shown: boolean; text: string };
+    // `source` mirrors the FieldState convention used elsewhere (see
+    // RoleProfilePage's mergeFieldState): "user" once the person has typed
+    // their own copy in the Application step, so auto-resync from Job
+    // Details / Role Profile knows to leave it alone. Anything else stays
+    // eligible to be refreshed as upstream fields change.
+    company: { shown: boolean; text: string; source: FieldSource };
+    role: { shown: boolean; text: string; source: FieldSource };
   };
   items: ApplicationItem[];
 };

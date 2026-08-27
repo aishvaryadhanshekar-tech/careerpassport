@@ -1,6 +1,25 @@
 import type { ApplicationConfig } from "./types";
-import { setContextText, toggleContextShown } from "./applicationForm";
+import { toggleContextShown } from "./applicationForm";
 import type { PreviewAnchor } from "./previewScroll";
+
+// Editing the context text directly here (rather than via applicationForm's
+// setContextText) so we can stamp source: "user" on the field. That stamp is
+// what tells ApplicationPage's resync logic to stop overwriting this text
+// with freshly-derived copy from Job Details / Role Profile once the user
+// has typed their own version.
+function setContextTextEdited(
+  config: ApplicationConfig,
+  key: "company" | "role",
+  text: string,
+): ApplicationConfig {
+  return {
+    ...config,
+    context: {
+      ...config.context,
+      [key]: { ...config.context[key], text, source: "user" },
+    },
+  };
+}
 
 export function ContextCard({
   config,
@@ -21,15 +40,15 @@ export function ContextCard({
           shown={config.context.company.shown}
           text={config.context.company.text}
           onToggle={() => onChange(toggleContextShown(config, "company"))}
-          onText={(text) => onChange(setContextText(config, "company", text))}
+          onText={(text) => onChange(setContextTextEdited(config, "company", text))}
         />
         <ContextBlock
-          title="Role"
+          title="Job Description"
           anchor="role"
           shown={config.context.role.shown}
           text={config.context.role.text}
           onToggle={() => onChange(toggleContextShown(config, "role"))}
-          onText={(text) => onChange(setContextText(config, "role", text))}
+          onText={(text) => onChange(setContextTextEdited(config, "role", text))}
         />
       </div>
     </section>
