@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "../JobDetailsPage.css";
 import "./trips.css";
+import { getBoard } from "../candidatesStore";
 import { EditableField } from "../EditableField";
 import { getJob, upsertJobFromDraft } from "../jobsStore";
 import { hydrateFromJob } from "../shared/hydrateFromJob";
@@ -12,7 +13,8 @@ import {
   publishTrip,
   updateTrip as updateTripInDraft,
 } from "../tripsStore";
-import type { JobDraft, Trip } from "../types";
+import { DIFFICULTIES, DIFFICULTY_LABELS } from "../types";
+import type { Difficulty, JobDraft, Trip } from "../types";
 import { TripPublishBar } from "./TripPublishBar";
 import { TripRoundTabs } from "./TripRoundTabs";
 import { TripStatusBadge } from "./TripStatusBadge";
@@ -49,6 +51,7 @@ export function TripBuilderPage() {
   }, [id]);
 
   const trip = draft && tripId ? getTrip(draft, tripId) : null;
+  const pipelineStages = id ? getBoard(id).stages : [];
 
   if (!id || !tripId || !job || !draft || !trip) {
     return (
@@ -88,10 +91,10 @@ export function TripBuilderPage() {
     <div className="app-shell jd-page trip-builder-page">
       <main className="preview-main">
         <header className="jd-header trip-builder-header">
-          <Link to={`/jobs/${id}/trips`} className="jd-back-link">
-            ← Back to trips
-          </Link>
           <div className="jd-header-row trip-builder-title-row">
+            <Link to={`/jobs/${id}/trips`} className="jd-back-btn" aria-label="Back to trips">
+              <BackArrowIcon />
+            </Link>
             <EditableField
               label="Trip title"
               display={<h1 className="jd-title">{trip.title || "Untitled trip"}</h1>}
@@ -129,6 +132,47 @@ export function TripBuilderPage() {
                 <p className="trip-spine-text">{trip.spine || "Not generated yet."}</p>
               </div>
             </section>
+
+            <section className="trip-card">
+              <div className="trip-card-head">
+                <h2>Trip settings</h2>
+                <p>Which pipeline stage this trip is sent at, and how hard AI-generated rounds should be.</p>
+              </div>
+              <div className="trip-card-body">
+                <label className="trip-round-duration-field">
+                  <span>Pipeline stage</span>
+                  <select
+                    className={`pill-select select-icon${trip.pipelineStageId ? "" : " is-placeholder"}`}
+                    value={trip.pipelineStageId ?? ""}
+                    onChange={(e) => updateTrip({ pipelineStageId: e.target.value || null })}
+                  >
+                    <option value="" disabled>
+                      Choose a stage
+                    </option>
+                    {pipelineStages.map((stage) => (
+                      <option key={stage.id} value={stage.id}>
+                        {stage.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="trip-round-duration-field">
+                  <span>Difficulty</span>
+                  <select
+                    className="pill-select select-icon"
+                    value={trip.difficulty}
+                    onChange={(e) => updateTrip({ difficulty: e.target.value as Difficulty })}
+                  >
+                    {DIFFICULTIES.map((d) => (
+                      <option key={d} value={d}>
+                        {DIFFICULTY_LABELS[d]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </section>
           </div>
 
           <div className="trip-builder-col trip-builder-col-right">
@@ -141,5 +185,20 @@ export function TripBuilderPage() {
         <TripPublishBar trip={trip} onPublish={handlePublish} onDuplicate={handleDuplicate} />
       </footer>
     </div>
+  );
+}
+
+/** Mirrors JobDetailsPage's wizard-header back arrow, for the same icon-only back affordance here. */
+function BackArrowIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M16 10H5M9.25 5.75 4.5 10l4.75 4.25"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

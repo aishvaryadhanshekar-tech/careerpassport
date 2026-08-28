@@ -94,7 +94,7 @@ describe("generateTripRounds", () => {
 describe("buildTripWithAI", () => {
   it("builds a full trip with spine, cards, and prefilled stages", () => {
     const draft = draftWithContent();
-    const trip = buildTripWithAI(draft);
+    const trip = buildTripWithAI(draft, { difficulty: "medium", pipelineStageId: "screened" });
 
     expect(trip.aiPrefilled).toBe(true);
     expect(trip.inferenceCardsLocked).toBe(true);
@@ -113,7 +113,7 @@ describe("rewriteRoundQuestions", () => {
     const stages = generateTripRounds(cards, draft);
     const caseStudyStage = stages.find((s) => s.type === "case_study")!;
 
-    const rewritten = rewriteRoundQuestions(caseStudyStage, cards, draft);
+    const rewritten = rewriteRoundQuestions(caseStudyStage, cards, draft, "medium");
 
     expect(rewritten.length).toBeGreaterThan(0);
     expect(rewritten.every((q: CustomQuestion) => q.type === "paragraph")).toBe(true);
@@ -128,7 +128,7 @@ describe("rewriteRoundQuestions", () => {
     const stages = generateTripRounds(cards, draft);
     const mcStage = stages.find((s) => s.type === "multiple_choice")!;
 
-    const rewritten = rewriteRoundQuestions(mcStage, cards, draft);
+    const rewritten = rewriteRoundQuestions(mcStage, cards, draft, "medium");
     expect(rewritten.every((q) => q.type === "multiple_choice" && q.options.length > 0)).toBe(true);
   });
 
@@ -138,7 +138,7 @@ describe("rewriteRoundQuestions", () => {
     const stages = generateTripRounds(cards, draft);
     const rapidFireStage = stages.find((s) => s.type === "rapid_fire")!;
 
-    const rewritten = rewriteRoundQuestions(rapidFireStage, cards, draft);
+    const rewritten = rewriteRoundQuestions(rapidFireStage, cards, draft, "medium");
     expect(rewritten.length).toBeGreaterThan(0);
     for (const q of rewritten) {
       expect(q.type).toBe("multiple_choice");

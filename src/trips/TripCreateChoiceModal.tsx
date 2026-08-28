@@ -1,5 +1,7 @@
-import type { JSX } from "react";
+import { useState, type JSX } from "react";
 import { SparkleIcon } from "../shared/icons";
+import { DIFFICULTIES, DIFFICULTY_LABELS } from "../types";
+import type { Difficulty, PipelineStage } from "../types";
 
 /**
  * Choice modal shown when the user clicks "Create a Trip" — lets them pick
@@ -11,24 +13,42 @@ import { SparkleIcon } from "../shared/icons";
  */
 export type TripCreateChoiceModalProps = {
   open: boolean;
+  stages: PipelineStage[];
   onClose: () => void;
   onSelectManual: () => void;
-  onSelectAI: () => void;
+  onSelectAI: (opts: { difficulty: Difficulty; pipelineStageId: string }) => void;
 };
 
 export function TripCreateChoiceModal({
   open,
+  stages,
   onClose,
   onSelectManual,
   onSelectAI,
 }: TripCreateChoiceModalProps): JSX.Element | null {
+  const [aiSelected, setAiSelected] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [pipelineStageId, setPipelineStageId] = useState("");
+
   if (!open) return null;
+
+  function handleClose() {
+    setAiSelected(false);
+    setDifficulty("medium");
+    setPipelineStageId("");
+    onClose();
+  }
+
+  function handleBuild() {
+    if (!pipelineStageId) return;
+    onSelectAI({ difficulty, pipelineStageId });
+  }
 
   return (
     <div
       className="trip-choice-modal-backdrop"
       role="presentation"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         className="trip-choice-modal"
@@ -40,7 +60,7 @@ export function TripCreateChoiceModal({
         <button
           type="button"
           className="trip-choice-modal-close"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Close"
         >
           ×
@@ -65,10 +85,14 @@ export function TripCreateChoiceModal({
             </span>
           </button>
 
-          <button
-            type="button"
-            className="trip-choice-card trip-choice-card-ai"
-            onClick={onSelectAI}
+          <div
+            className={`trip-choice-card trip-choice-card-ai${aiSelected ? " trip-choice-card-expanded" : ""}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => setAiSelected(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") setAiSelected(true);
+            }}
           >
             <span className="trip-choice-card-badge">Recommended</span>
             <span className="trip-choice-card-title">
@@ -79,7 +103,53 @@ export function TripCreateChoiceModal({
               We'll auto-generate rounds using your role's playbook —
               recommended.
             </span>
-          </button>
+
+            {aiSelected ? (
+              <div className="trip-choice-ai-options" onClick={(e) => e.stopPropagation()}>
+                <label className="trip-choice-ai-field">
+                  <span>Difficulty</span>
+                  <select
+                    className="pill-select select-icon"
+                    value={difficulty}
+                    onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+                  >
+                    {DIFFICULTIES.map((d) => (
+                      <option key={d} value={d}>
+                        {DIFFICULTY_LABELS[d]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="trip-choice-ai-field">
+                  <span>Pipeline stage</span>
+                  <select
+                    className={`pill-select select-icon${pipelineStageId ? "" : " is-placeholder"}`}
+                    value={pipelineStageId}
+                    onChange={(e) => setPipelineStageId(e.target.value)}
+                  >
+                    <option value="" disabled>
+                      Choose a stage
+                    </option>
+                    {stages.map((stage) => (
+                      <option key={stage.id} value={stage.id}>
+                        {stage.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={!pipelineStageId}
+                  onClick={handleBuild}
+                >
+                  Build trip
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

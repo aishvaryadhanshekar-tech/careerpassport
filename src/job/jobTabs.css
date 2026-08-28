@@ -3,10 +3,6 @@
 
 /* Scoped so restyling the page-level bar cannot leak into the `.tabs`/`.tab-btn` rules in
  * styles/role-detail.css, which Role Profile, Step 4 and the Overview sub-tabs all share. */
-.job-pagetabs {
-  margin-top: 18px;
-}
-
 .job-pagetabs .tabs {
   gap: 2px;
   margin-bottom: 0;
@@ -18,8 +14,31 @@
   font-size: 14px;
 }
 
+/* `.jd-header`'s border-bottom comes from `.job-pagetabs .tabs` above, so the gap to the tab
+ * body only needs to come from `.preview-main`'s own top padding — not doubled up here. */
 .job-tab-body {
-  padding-top: 24px;
+  padding-top: 0;
+}
+
+/* Sticky Role Details / Application Summary sub-tabs inside the Overview tab (see
+ * JobOverviewTab.tsx). Scoped to this wrapper class — not `.tabs` itself — because
+ * `.preview-layout`/`.preview-content`/`.tabs` are shared with Step3Page and RoleProfilePage,
+ * which don't have a sticky page header to stack under. */
+.jo-subtabs-sticky {
+  position: sticky;
+  top: var(--jd-header-h);
+  z-index: 10;
+  background: #f4f5f7;
+  padding-top: 16px;
+}
+
+.jo-subtabs-sticky .tabs {
+  margin-bottom: 20px;
+}
+
+/* Keep the sidebar from sticking under the fixed header on the Overview tab. */
+.jd-page .preview-sidebar {
+  top: calc(var(--jd-header-h) + 16px);
 }
 
 /* --- shared empty state for tabs that are not built out yet --- */

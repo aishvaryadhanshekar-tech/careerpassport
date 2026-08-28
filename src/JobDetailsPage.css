@@ -8,39 +8,87 @@
   color: #5c5347;
 }
 
+/* Sticky white header, mirroring `.wizard-header` in styles/shell.css. The negative margin
+ * bleeds past `.app-shell`'s own padding so the white background/border reach the full width
+ * of the scroll container; `.jd-header-inner` reinstates that padding plus the same
+ * max-width/gutter as `.preview-main` below so title, tabs and page content line up.
+ *
+ * --jd-header-h is the header's real rendered height, kept in sync by a ResizeObserver in
+ * JobDetailsPage.tsx (a hardcoded px value drifts a couple px from font-metric rounding,
+ * leaving a gap where scrolled content peeks through the seam). This is just the fallback
+ * for the first paint before that effect runs. */
+.jd-page {
+  --jd-header-h: 144px;
+}
+
 .jd-header {
-  margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin: -24px -24px 0;
+  padding: 0 24px;
+  background: #fff;
 }
 
-.jd-back-link {
-  display: inline-block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #5c5347;
-  text-decoration: none;
-  margin-bottom: 12px;
+.jd-header-inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 24px var(--page-pad) 0;
 }
 
-.jd-back-link:hover {
-  color: #1f1b16;
-  text-decoration: underline;
+@media (max-width: 640px) {
+  .jd-header-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 .jd-header-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-wrap: nowrap;
+  margin-bottom: 16px;
+}
+
+/* Icon-only back affordance ahead of the title — mirrors `.wizard-header-title .back-link` in
+ * styles/shell.css so both headers share the same back-button feel. */
+.jd-back-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  color: #5c5347;
+  text-decoration: none;
+}
+
+.jd-back-btn svg {
+  display: block;
+}
+
+.jd-back-btn:hover {
+  color: #1f1b16;
+  background: #f4f5f7;
 }
 
 .jd-title {
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: 24px;
   font-weight: 700;
   color: #1f1b16;
 }
 
 .jd-status-badge {
+  flex: none;
   display: inline-block;
   font-size: 11px;
   font-weight: 700;

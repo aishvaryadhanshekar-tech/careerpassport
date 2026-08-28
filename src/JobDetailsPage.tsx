@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./JobDetailsPage.css";
 import "./job/jobTabs.css";
@@ -40,6 +40,24 @@ export function JobDetailsPage() {
   const job = id ? getJob(id) : null;
   const [draft] = useState<JobDraft | null>(() => (id ? hydrateFromJob(id) : null));
 
+  const pageRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // The sticky sub-tabs bar and role sidebar (see job/jobTabs.css) dock directly under this
+  // header, so they need its real rendered height — not a guessed constant, which drifts a
+  // couple of px from font-metric rounding and leaves a sliver where scrolled content peeks
+  // through the seam.
+  useLayoutEffect(() => {
+    const page = pageRef.current;
+    const header = headerRef.current;
+    if (!page || !header) return;
+    const observer = new ResizeObserver(([entry]) => {
+      page.style.setProperty("--jd-header-h", `${Math.ceil(entry.contentRect.height)}px`);
+    });
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
+
   // Step 4 navigates here immediately on publish and flags the arrival in router state, so the
   // celebration and share composer play over the published job rather than over the wizard.
   const justPublished =
@@ -73,31 +91,32 @@ export function JobDetailsPage() {
   const activeTab = activeTabFor(location.pathname, id);
 
   return (
-    <div className="app-shell preview-page jd-page">
-      {/* The kanban wants every pixel it can get, so it opts out of the 1200px page measure. */}
-      <main className={`preview-main${activeTab === "pipeline" ? " is-wide" : ""}`}>
-        <header className="jd-header">
-          <Link to="/" className="jd-back-link">
-            ← Back to jobs
-          </Link>
+    <div className="app-shell preview-page jd-page" ref={pageRef}>
+      <header className="jd-header" ref={headerRef}>
+        <div className="jd-header-inner">
           <div className="jd-header-row">
+            <Link to="/" className="jd-back-btn" aria-label="Back to jobs">
+              <BackArrowIcon />
+            </Link>
             <h1 className="jd-title">{title}</h1>
             <span className="jd-status-badge">Published</span>
           </div>
-        </header>
-
-        <div className="job-pagetabs">
-          <Tabs
-            ariaLabel="Job sections"
-            active={activeTab}
-            onChange={(next) => {
-              const tab = JOB_TABS.find((t) => t.id === next);
-              if (tab) navigate(`/jobs/${id}${tab.path ? `/${tab.path}` : ""}`);
-            }}
-            tabs={JOB_TABS.map((t) => ({ id: t.id, label: t.label }))}
-          />
+          <div className="job-pagetabs">
+            <Tabs
+              ariaLabel="Job sections"
+              active={activeTab}
+              onChange={(next) => {
+                const tab = JOB_TABS.find((t) => t.id === next);
+                if (tab) navigate(`/jobs/${id}${tab.path ? `/${tab.path}` : ""}`);
+              }}
+              tabs={JOB_TABS.map((t) => ({ id: t.id, label: t.label }))}
+            />
+          </div>
         </div>
+      </header>
 
+      {/* The kanban wants every pixel it can get, so it opts out of the 1200px page measure. */}
+      <main className={`preview-main${activeTab === "pipeline" ? " is-wide" : ""}`}>
         <div className="job-tab-body">
           <Outlet context={{ jobId: id, job, draft, title }} />
         </div>
@@ -118,6 +137,21 @@ export function JobDetailsPage() {
         />
       ) : null}
     </div>
+  );
+}
+
+/** Mirrors AppShell's wizard-header back arrow, for the same icon-only back affordance here. */
+function BackArrowIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M16 10H5M9.25 5.75 4.5 10l4.75 4.25"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

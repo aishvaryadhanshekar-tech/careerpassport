@@ -195,26 +195,53 @@
   min-height: 420px;
 }
 
-/* Greeked résumé lines — this is a mock document, there is no real PDF to embed. */
-.resume-line {
-  height: 9px;
-  border-radius: 3px;
-  background: #eceef1;
-  margin-bottom: 9px;
+.resume-mock-name {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1f1b16;
 }
 
-.resume-line.title {
-  height: 15px;
-  width: 42%;
-  background: #dfe3e8;
-  margin-bottom: 16px;
+.resume-mock-summary {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #44546f;
 }
 
-.resume-line.heading {
-  height: 11px;
-  width: 26%;
-  background: #d9dee4;
-  margin: 22px 0 12px;
+.resume-mock-heading {
+  margin: 20px 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #667085;
+}
+
+.resume-mock-job + .resume-mock-job {
+  margin-top: 14px;
+}
+
+.resume-mock-job-head {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: #1f1b16;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.resume-mock-job-head span {
+  font-weight: 400;
+  color: #667085;
+}
+
+.resume-mock-job ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #44546f;
 }
 
 .drawer-panel {
@@ -324,6 +351,34 @@
   background: #0f766e;
   border-color: #0f766e;
   color: #fff;
+}
+
+/* --- application form --- */
+
+.drawer-origin-note {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #667085;
+}
+
+.application-qa + .application-qa {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #eceae4;
+}
+
+.application-qa-question {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.application-qa-answer {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #44546f;
 }
 
 /* --- skill matrix --- */

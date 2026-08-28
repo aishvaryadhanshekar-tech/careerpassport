@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -)",
+      "Bash(node /Users/aishvarya.dhansheka/Desktop/careerpassport/verify_trips.tmp.mjs)",
+      "Bash(npm run *)",
+      "Bash(nohup npm run dev)",
+      "Bash(curl -sf http://localhost:5173)",
+      "Bash(break)"
+    ]
+  }
+}

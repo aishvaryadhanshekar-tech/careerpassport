@@ -66,15 +66,17 @@ export function JobOverviewTab() {
         }
       />
       <div className="preview-content">
-        <Tabs
-          ariaLabel="Job overview sections"
-          active={tab}
-          onChange={(nextTab) => setTab(nextTab as "details" | "application")}
-          tabs={[
-            { id: "details", label: "Role Details" },
-            { id: "application", label: "Application Summary" },
-          ]}
-        />
+        <div className="jo-subtabs-sticky">
+          <Tabs
+            ariaLabel="Job overview sections"
+            active={tab}
+            onChange={(nextTab) => setTab(nextTab as "details" | "application")}
+            tabs={[
+              { id: "details", label: "Role Details" },
+              { id: "application", label: "Application Summary" },
+            ]}
+          />
+        </div>
         <TabPanel id="details" active={tab === "details"}>
           <RoleDetailsTab draft={draft} />
         </TabPanel>

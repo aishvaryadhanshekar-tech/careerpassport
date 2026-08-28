@@ -13,8 +13,8 @@ import {
 } from "../types";
 import "./drawer.css";
 
-type DocTab = "resume" | "application" | "trip" | "evaluation" | "communications";
-type SideTab = "feedback" | "timeline" | "notes";
+type DocTab = "resume" | "application" | "trip" | "communications";
+type SideTab = "feedback" | "timeline";
 
 function formatWhen(at: number): string {
   return new Date(at).toLocaleString(undefined, {
@@ -178,6 +178,32 @@ function SkillMatrix({
   );
 }
 
+// Mock content for the prototype — no real resume parsing yet.
+const MOCK_RESUME = {
+  summary:
+    "Product-minded engineer with a track record of shipping full-stack features end to end, from data modeling to polished UI.",
+  experience: [
+    {
+      title: "Senior Software Engineer, Loopwave",
+      period: "2023 — Present",
+      bullets: [
+        "Led migration of the billing pipeline to event-driven architecture, cutting reconciliation errors by 40%.",
+        "Mentored two junior engineers and ran the frontend guild's weekly review.",
+      ],
+    },
+    {
+      title: "Software Engineer, Northbeam",
+      period: "2020 — 2023",
+      bullets: [
+        "Built the customer-facing analytics dashboard from scratch, adopted by 80% of active accounts.",
+        "Owned CI/CD for the monorepo, reducing average deploy time from 25 to 6 minutes.",
+      ],
+    },
+  ],
+  education: "B.Tech, Computer Science — VIT Vellore",
+  skills: ["TypeScript", "React", "Node.js", "PostgreSQL", "System Design"],
+};
+
 function ResumeViewer({ candidate }: { candidate: Candidate }): JSX.Element {
   return (
     <div className="resume-frame">
@@ -187,22 +213,55 @@ function ResumeViewer({ candidate }: { candidate: Candidate }): JSX.Element {
           Open CV
         </button>
       </div>
-      {/* Prototype: there is no real PDF to embed, so this is a greeked stand-in. */}
+      {/* Mock data for the prototype — resume parsing isn't wired up yet. */}
       <div className="resume-page" aria-label={`Preview of ${candidate.resumeFileName}`}>
-        <div className="resume-line title" />
-        <div className="resume-line" style={{ width: "58%" }} />
-        <div className="resume-line heading" />
-        <div className="resume-line" />
-        <div className="resume-line" style={{ width: "92%" }} />
-        <div className="resume-line" style={{ width: "76%" }} />
-        <div className="resume-line heading" />
-        <div className="resume-line" style={{ width: "88%" }} />
-        <div className="resume-line" style={{ width: "94%" }} />
-        <div className="resume-line" style={{ width: "63%" }} />
+        <h3 className="resume-mock-name">{candidate.name}</h3>
+        <p className="resume-mock-summary">{MOCK_RESUME.summary}</p>
+        <h4 className="resume-mock-heading">Experience</h4>
+        {MOCK_RESUME.experience.map((job) => (
+          <div className="resume-mock-job" key={job.title}>
+            <p className="resume-mock-job-head">
+              <strong>{job.title}</strong> <span>{job.period}</span>
+            </p>
+            <ul>
+              {job.bullets.map((bullet) => (
+                <li key={bullet}>{bullet}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <h4 className="resume-mock-heading">Education</h4>
+        <p>{MOCK_RESUME.education}</p>
+        <h4 className="resume-mock-heading">Skills</h4>
+        <div className="tag-grid">
+          {MOCK_RESUME.skills.map((skill) => (
+            <span className="tag-toggle on" key={skill}>
+              {skill}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
+
+// Mock Q&A for the prototype — submitted application answers aren't wired up yet.
+const MOCK_APPLICATION_ANSWERS: { question: string; answer: string }[] = [
+  {
+    question: "Why are you interested in this role?",
+    answer:
+      "I've followed the team's product for a while and I'm drawn to the pace of shipping and the ownership engineers get here.",
+  },
+  {
+    question: "What's a project you're proud of?",
+    answer:
+      "Rebuilding our billing pipeline to be event-driven — it removed an entire class of reconciliation bugs and I got to own it end to end.",
+  },
+  {
+    question: "What's your notice period?",
+    answer: "4 weeks.",
+  },
+];
 
 export function CandidateDrawer({
   jobId,
@@ -244,7 +303,6 @@ export function CandidateDrawer({
     { id: "resume", label: "Résumé" },
     { id: "application", label: "Application form" },
     { id: "trip", label: "Trip" },
-    { id: "evaluation", label: "Evaluation" },
     { id: "communications", label: "Communications" },
   ];
 
@@ -325,10 +383,13 @@ export function CandidateDrawer({
               {docTab === "application" ? (
                 <div className="drawer-panel">
                   <h3>Application form</h3>
-                  <p className="drawer-empty">
-                    Submitted {formatWhen(candidate.appliedAt)}. Answers will render here once the
-                    candidate-facing form is wired to real submissions.
-                  </p>
+                  <p className="drawer-origin-note">Submitted {formatWhen(candidate.appliedAt)}</p>
+                  {MOCK_APPLICATION_ANSWERS.map((qa) => (
+                    <div className="application-qa" key={qa.question}>
+                      <p className="application-qa-question">{qa.question}</p>
+                      <p className="application-qa-answer">{qa.answer}</p>
+                    </div>
+                  ))}
                 </div>
               ) : null}
               {docTab === "trip" ? (
@@ -349,18 +410,6 @@ export function CandidateDrawer({
                   )}
                 </div>
               ) : null}
-              {docTab === "evaluation" ? (
-                <div className="drawer-panel">
-                  <h3>Evaluation</h3>
-                  <SkillMatrix
-                    criteria={criteria}
-                    candidate={candidate}
-                    onRate={(criterionId, rating) =>
-                      onBoardChange(setRating(jobId, candidate.id, criterionId, rating))
-                    }
-                  />
-                </div>
-              ) : null}
               {docTab === "communications" ? (
                 <div className="drawer-panel">
                   <h3>Communications</h3>
@@ -376,7 +425,6 @@ export function CandidateDrawer({
                 [
                   { id: "feedback", label: "Feedback" },
                   { id: "timeline", label: "Timeline" },
-                  { id: "notes", label: "Notes" },
                 ] as { id: SideTab; label: string }[]
               ).map((t) => (
                 <button
@@ -396,7 +444,8 @@ export function CandidateDrawer({
               {sideTab === "feedback" ? (
                 <>
                   <div className="drawer-panel">
-                    <h3>Add a note</h3>
+                    <h3>Notes</h3>
+                    <NoteList notes={candidate.notes} />
                     <NoteComposer
                       onSubmit={(body) =>
                         onBoardChange(addNote(jobId, candidate.id, body, PROFILE.name))
@@ -439,18 +488,6 @@ export function CandidateDrawer({
                 <div className="drawer-panel">
                   <h3>Timeline</h3>
                   <TimelineList events={candidate.timeline} />
-                </div>
-              ) : null}
-
-              {sideTab === "notes" ? (
-                <div className="drawer-panel">
-                  <h3>Notes</h3>
-                  <NoteList notes={candidate.notes} />
-                  <NoteComposer
-                    onSubmit={(body) =>
-                      onBoardChange(addNote(jobId, candidate.id, body, PROFILE.name))
-                    }
-                  />
                 </div>
               ) : null}
             </div>

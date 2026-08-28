@@ -1,7 +1,8 @@
 import { DEFAULT_ROUND_TYPES } from "./tripAIBuild";
 import { uid } from "./files";
 import { deriveInferenceCards } from "./tripInference";
-import type { JobDraft, Stage, Trip } from "./types";
+import { DEFAULT_DURATION_BY_TYPE } from "./tripStages";
+import type { Difficulty, JobDraft, Stage, Trip } from "./types";
 
 function emptyStages(): Stage[] {
   return DEFAULT_ROUND_TYPES.map((type) => ({
@@ -9,6 +10,7 @@ function emptyStages(): Stage[] {
     type,
     spokenInstructions: "",
     items: [],
+    durationMinutes: DEFAULT_DURATION_BY_TYPE[type],
   }));
 }
 
@@ -26,6 +28,8 @@ export function createTrip(draft: JobDraft): { draft: JobDraft; tripId: string }
     spineGenerated: false,
     stages: emptyStages(),
     aiPrefilled: false,
+    difficulty: "medium",
+    pipelineStageId: null,
   };
   return {
     draft: { ...draft, trips: [...draft.trips, trip] },
@@ -33,7 +37,10 @@ export function createTrip(draft: JobDraft): { draft: JobDraft; tripId: string }
   };
 }
 
-export function createTripShellForAI(draft: JobDraft): { draft: JobDraft; tripId: string } {
+export function createTripShellForAI(
+  draft: JobDraft,
+  opts: { difficulty: Difficulty; pipelineStageId: string },
+): { draft: JobDraft; tripId: string } {
   const now = Date.now();
   const trip: Trip = {
     id: uid(),
@@ -47,6 +54,8 @@ export function createTripShellForAI(draft: JobDraft): { draft: JobDraft; tripId
     spineGenerated: false,
     stages: [],
     aiPrefilled: true,
+    difficulty: opts.difficulty,
+    pipelineStageId: opts.pipelineStageId,
   };
   return {
     draft: { ...draft, trips: [...draft.trips, trip] },

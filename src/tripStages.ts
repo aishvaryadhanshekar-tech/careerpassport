@@ -54,6 +54,19 @@ export const STAGE_TYPE_META: Record<StageType, { label: string; blurb: string; 
   },
 };
 
+export const DEFAULT_DURATION_BY_TYPE: Record<StageType, number> = {
+  rapid_fire: 5,
+  do_a_demo: 15,
+  pick_and_defend: 10,
+  multiple_choice: 10,
+  binary_choice: 5,
+  rank_order: 10,
+  ai_critic: 10,
+  coding_round: 30,
+  case_study: 15,
+  flaunt_or_flex: 10,
+};
+
 function move<T>(items: T[], from: number, to: number): T[] {
   if (from === to || from < 0 || from >= items.length) return items;
   const next = items.slice();
@@ -66,7 +79,7 @@ function move<T>(items: T[], from: number, to: number): T[] {
 export function addStage(stages: Stage[], type: StageType): Stage[] {
   return [
     ...stages,
-    { id: uid(), type, spokenInstructions: "", items: [] },
+    { id: uid(), type, spokenInstructions: "", items: [], durationMinutes: DEFAULT_DURATION_BY_TYPE[type] },
   ];
 }
 

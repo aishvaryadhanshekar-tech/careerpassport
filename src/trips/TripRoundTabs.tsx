@@ -2,8 +2,9 @@ import { useState, type JSX } from "react";
 import { SparkleIcon } from "../shared/icons";
 import { useBuildPhase } from "../shared/useBuildPhase";
 import { rewriteRoundQuestions } from "../tripAIBuild";
-import { STAGE_TYPE_META } from "../tripStages";
-import type { CustomQuestion, JobDraft, Stage, Trip } from "../types";
+import { addStage, STAGE_TYPE_META } from "../tripStages";
+import { DIFFICULTIES, DIFFICULTY_LABELS } from "../types";
+import type { CustomQuestion, Difficulty, JobDraft, Stage, StageType, Trip } from "../types";
 import { RoundQuestionsCard } from "./RoundQuestionsCard";
 
 const BUILD_PHASES = [
@@ -29,6 +30,7 @@ export type TripRoundTabsProps = {
 export function TripRoundTabs({ trip, draft, onChange }: TripRoundTabsProps): JSX.Element {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [rewritingId, setRewritingId] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
   const buildPhase = useBuildPhase(rewritingId !== null);
 
   const activeStage = trip.stages.find((s) => s.id === activeId) ?? trip.stages[0] ?? null;
@@ -39,11 +41,29 @@ export function TripRoundTabs({ trip, draft, onChange }: TripRoundTabsProps): JS
     });
   }
 
+  function updateStageDuration(stageId: string, durationMinutes: number) {
+    onChange({
+      stages: trip.stages.map((stage) =>
+        stage.id === stageId ? { ...stage, durationMinutes } : stage,
+      ),
+    });
+  }
+
+  function onAddStage(type: StageType) {
+    const nextStages = addStage(trip.stages, type);
+    onChange({ stages: nextStages });
+    const newStage = nextStages[nextStages.length - 1];
+    if (newStage) {
+      setActiveId(newStage.id);
+    }
+    setAddOpen(false);
+  }
+
   async function onRewrite(stage: Stage) {
     if (rewritingId) return;
     setRewritingId(stage.id);
     await new Promise((r) => setTimeout(r, 1800));
-    const items = rewriteRoundQuestions(stage, trip.inferenceCards, draft);
+    const items = rewriteRoundQuestions(stage, trip.inferenceCards, draft, trip.difficulty);
     updateStageItems(stage.id, items);
     setRewritingId(null);
   }
@@ -67,12 +87,59 @@ export function TripRoundTabs({ trip, draft, onChange }: TripRoundTabsProps): JS
             onClick={() => setActiveId(stage.id)}
           >
             {STAGE_TYPE_META[stage.type].label}
+            <span className="trip-round-tab-duration">{stage.durationMinutes}m</span>
           </button>
         ))}
+        <button
+          type="button"
+          className="trip-round-tab trip-round-tab-add"
+          onClick={() => setAddOpen((v) => !v)}
+        >
+          + Add lever
+        </button>
       </div>
+
+      {addOpen && (
+        <div className="stage-picker-grid">
+          {Object.entries(STAGE_TYPE_META).map(([type, meta]) => {
+            if (!meta.live) {
+              return (
+                <div key={type} className="stage-picker-card disabled-stage-card">
+                  <span className="stage-picker-card-label">{meta.label}</span>
+                  <span className="stage-picker-card-blurb">{meta.blurb}</span>
+                </div>
+              );
+            }
+            return (
+              <button
+                key={type}
+                type="button"
+                className="stage-picker-card"
+                onClick={() => onAddStage(type as StageType)}
+              >
+                <span className="stage-picker-card-label">{meta.label}</span>
+                <span className="stage-picker-card-blurb">{meta.blurb}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="trip-round-tab-panel" role="tabpanel">
         <p className="trip-round-tab-blurb">{STAGE_TYPE_META[activeStage.type].blurb}</p>
+
+        <label className="trip-round-duration-field">
+          <span>Time limit (minutes)</span>
+          <input
+            type="number"
+            min={1}
+            className="trip-round-duration-input"
+            value={activeStage.durationMinutes}
+            onChange={(e) =>
+              updateStageDuration(activeStage.id, Math.max(1, Number(e.target.value) || 1))
+            }
+          />
+        </label>
 
         <div className="trip-round-rewrite-row">
           {isRewriting ? (
@@ -83,14 +150,28 @@ export function TripRoundTabs({ trip, draft, onChange }: TripRoundTabsProps): JS
               </span>
             </span>
           ) : (
-            <button
-              type="button"
-              className="trip-generate-btn btn ghost"
-              onClick={() => onRewrite(activeStage)}
-            >
-              <SparkleIcon />
-              Rewrite with AI
-            </button>
+            <>
+              <select
+                className="pill-select select-icon"
+                aria-label="Difficulty"
+                value={trip.difficulty}
+                onChange={(e) => onChange({ difficulty: e.target.value as Difficulty })}
+              >
+                {DIFFICULTIES.map((d) => (
+                  <option key={d} value={d}>
+                    {DIFFICULTY_LABELS[d]}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="trip-generate-btn btn ghost"
+                onClick={() => onRewrite(activeStage)}
+              >
+                <SparkleIcon />
+                Rewrite with AI
+              </button>
+            </>
           )}
         </div>
 

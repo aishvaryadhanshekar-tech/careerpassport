@@ -35,6 +35,15 @@ export type Stage = {
   type: StageType;
   spokenInstructions: string;
   items: CustomQuestion[];
+  durationMinutes: number;
+};
+
+export const DIFFICULTIES = ["easy", "medium", "hard"] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
 };
 
 export type Trip = {
@@ -49,4 +58,6 @@ export type Trip = {
   spineGenerated: boolean;
   stages: Stage[];
   aiPrefilled: boolean;
+  difficulty: Difficulty;
+  pipelineStageId: string | null;
 };
