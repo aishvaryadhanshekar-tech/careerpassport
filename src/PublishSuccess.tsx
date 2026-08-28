@@ -3,7 +3,7 @@ import "./PublishSuccess.css";
 import type { PublishDestinations } from "./types";
 
 /** How long the celebration holds before handing off to the share composer. */
-export const PUBLISH_SUCCESS_MS = 3000;
+export const PUBLISH_SUCCESS_MS = 1500;
 
 /**
  * Fixed confetti geometry. Deliberately a constant rather than Math.random() so the burst is

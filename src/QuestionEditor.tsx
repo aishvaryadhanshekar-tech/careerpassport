@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import {
   addGridColumn,
   addGridRow,
@@ -81,13 +82,13 @@ export function QuestionBlock({
         <span className="drag-handle" aria-hidden="true">
           ⋮⋮
         </span>
-        <input
+        <AutoGrowTextarea
           className="question-prompt"
           value={question.prompt}
           placeholder="Question"
           aria-label="Question"
-          onChange={(e) =>
-            onChange(updateQuestionPrompt(items, question.id, e.target.value))
+          onValueChange={(value) =>
+            onChange(updateQuestionPrompt(items, question.id, value))
           }
         />
         <select
@@ -514,20 +515,20 @@ export function SectionBlock({
       <p className="section-badge">
         Section {sectionNumber} of {sectionTotal}
       </p>
-      <input
+      <AutoGrowTextarea
         className="section-title"
         value={section.title}
         placeholder="Section title"
         aria-label="Section title"
-        onChange={(e) => onChange(setSectionTitle(items, section.id, e.target.value))}
+        onValueChange={(value) => onChange(setSectionTitle(items, section.id, value))}
       />
-      <input
+      <AutoGrowTextarea
         className="section-description"
         value={section.description}
         placeholder="Description (optional)"
         aria-label="Section description"
-        onChange={(e) =>
-          onChange(setSectionDescription(items, section.id, e.target.value))
+        onValueChange={(value) =>
+          onChange(setSectionDescription(items, section.id, value))
         }
       />
       <div className="question-footer">
@@ -551,6 +552,48 @@ export function SectionBlock({
         </button>
       </div>
     </div>
+  );
+}
+
+/* Single-line-feel textarea that grows with its content, so long prompts wrap
+ * instead of scrolling out of view inside a fixed-width input. */
+function AutoGrowTextarea({
+  className,
+  value,
+  placeholder,
+  ariaLabel,
+  onValueChange,
+  "aria-label": ariaLabelProp,
+}: {
+  className: string;
+  value: string;
+  placeholder: string;
+  ariaLabel?: string;
+  onValueChange: (value: string) => void;
+  "aria-label"?: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      className={`autogrow ${className}`}
+      rows={1}
+      value={value}
+      placeholder={placeholder}
+      aria-label={ariaLabelProp ?? ariaLabel}
+      onChange={(e) => onValueChange(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.preventDefault();
+      }}
+    />
   );
 }
 

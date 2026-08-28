@@ -216,7 +216,8 @@
 
 .question-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -286,8 +287,10 @@
 }
 
 .type-select {
-  min-width: 172px;
-  flex: 0 0 auto;
+  /* Shrinks before wrapping; never pushes the prompt down to a sliver. */
+  flex: 0 1 172px;
+  min-width: 132px;
+  max-width: 100%;
   appearance: none;
   -webkit-appearance: none;
   padding-right: 30px;

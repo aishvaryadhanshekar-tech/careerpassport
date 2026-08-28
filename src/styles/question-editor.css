@@ -6,8 +6,21 @@
   border-top: 1px solid #e1e3e5;
 }
 
+/* Grows to fit its text (height set in JS) and wraps rather than clipping. */
+.autogrow {
+  display: block;
+  width: 100%;
+  resize: none;
+  overflow: hidden;
+  font: inherit;
+  line-height: 1.4;
+  background: transparent;
+}
+
 .question-prompt {
-  flex: 1;
+  /* Wraps below the type select once the row is too narrow for both. */
+  flex: 1 1 240px;
+  min-width: 0;
   border: 0;
   font-weight: 700;
   font-size: 14px;

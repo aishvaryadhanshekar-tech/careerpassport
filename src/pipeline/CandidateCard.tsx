@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState, type JSX } from "react";
+import { SendMessageMenu } from "../communications/SendMessageMenu";
 import {
   AI_FLAG_LABELS,
-  APPLIED_STAGE_ID,
+  AI_FLAG_SHORT_LABELS,
+  ARCHIVE_STAGE_ID,
   type Candidate,
+  type MessageTemplate,
   type PipelineStage,
+  type TemplateValues,
 } from "../types";
 
 function originLabel(candidate: Candidate): string {
@@ -107,6 +111,23 @@ function CardMenu({
   );
 }
 
+/** Marks the verdict as AI-produced. Same four-point sparkle the AI build loader uses, so
+ * provenance reads the same way across the app. */
+function SparkleIcon(): JSX.Element {
+  return (
+    <svg
+      className="candidate-verdict-star"
+      width="11"
+      height="11"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M8 1c.5 3.1 1.2 4.5 2.4 5.3C11.4 7 12.9 7.5 15 8c-3.1.5-4.5 1.2-5.3 2.4C9 11.4 8.5 12.9 8 15c-.5-3.1-1.2-4.5-2.4-5.3C4.6 9 3.1 8.5 1 8c3.1-.5 4.5-1.2 5.3-2.4C7 4.6 7.5 3.1 8 1Z" />
+    </svg>
+  );
+}
+
 export function CandidateCard({
   candidate,
   stages,
@@ -114,6 +135,8 @@ export function CandidateCard({
   onMove,
   onSendTrip,
   onSchedule,
+  onSendMessage,
+  templateValues,
   onDragStateChange,
 }: {
   candidate: Candidate;
@@ -122,11 +145,19 @@ export function CandidateCard({
   onMove: (stageId: string) => void;
   onSendTrip: () => void;
   onSchedule: () => void;
+  onSendMessage: (template: MessageTemplate) => void;
+  templateValues: TemplateValues;
   onDragStateChange: (dragging: boolean) => void;
 }): JSX.Element {
   const [dragging, setDragging] = useState(false);
-  const isApplied = candidate.stageId === APPLIED_STAGE_ID;
-  const isInterviewing = candidate.stageId === "interviewing";
+  // One primary action per card, by precedence. A candidate with no Trip yet needs one
+  // whatever column they were dragged into, so this is no longer gated on Applied — moving
+  // someone to Screened or Interviewing surfaces the CTA there instead of hiding it.
+  // Archive is terminal, so it gets no primary action at all.
+  const needsTrip =
+    candidate.tripStatus === "none" && candidate.stageId !== ARCHIVE_STAGE_ID;
+  const needsInterview =
+    !needsTrip && candidate.stageId === "interviewing" && !candidate.interviewAt;
 
   return (
     <div
@@ -155,6 +186,18 @@ export function CandidateCard({
     >
       <div className="candidate-card-top">
         <span className="candidate-card-name">{candidate.name}</span>
+        {/* Beside the name: the AI verdict is the second thing a hiring manager needs, and
+          * down in the chip row it had the same shape and weight as the neutral origin and
+          * score chips, so nothing won the eye. */}
+        {candidate.aiFlag ? (
+          <span
+            className={`candidate-verdict verdict-${candidate.aiFlag}`}
+            title={AI_FLAG_LABELS[candidate.aiFlag]}
+          >
+            <SparkleIcon />
+            {AI_FLAG_SHORT_LABELS[candidate.aiFlag]}
+          </span>
+        ) : null}
         <CardMenu
           candidate={candidate}
           stages={stages}
@@ -165,7 +208,11 @@ export function CandidateCard({
       </div>
 
       <p className="candidate-card-meta">{candidate.location}</p>
-      <span className="candidate-card-origin">{originLabel(candidate)}</span>
+      {/* "Application submitted" is true of every applicant, so the chip carried no signal
+        * and just added a row. A referral is worth surfacing, so that variant stays. */}
+      {candidate.origin.kind === "submitted_by" ? (
+        <span className="candidate-card-origin">{originLabel(candidate)}</span>
+      ) : null}
 
       {candidate.tripStatus !== "none" ? (
         <div className="candidate-card-chips">
@@ -173,41 +220,48 @@ export function CandidateCard({
             <span className="trip-pending">Trip sent</span>
           ) : null}
           {typeof candidate.tripScore === "number" ? (
-            <span className="candidate-score">Trip {candidate.tripScore}</span>
-          ) : null}
-          {candidate.aiFlag ? (
-            <span className={`ai-flag ai-flag-${candidate.aiFlag}`}>
-              {AI_FLAG_LABELS[candidate.aiFlag]}
-            </span>
+            <span className="candidate-score">Trip Score: {candidate.tripScore}</span>
           ) : null}
         </div>
       ) : null}
 
-      {isApplied && candidate.tripStatus === "none" ? (
-        <button
-          type="button"
-          className="btn primary candidate-card-action"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSendTrip();
-          }}
-        >
-          Send Trip
-        </button>
-      ) : null}
+      {/* One action row on every card, so the primary action — whichever stage supplies it —
+        * always sits in the same place and Message is a consistent secondary beside it. */}
+      <div className="candidate-card-actions">
+        {needsTrip ? (
+          <button
+            type="button"
+            className="btn primary candidate-card-action"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSendTrip();
+            }}
+          >
+            Send Trip
+          </button>
+        ) : null}
 
-      {isInterviewing && !candidate.interviewAt ? (
-        <button
-          type="button"
-          className="btn ghost candidate-card-action"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSchedule();
-          }}
-        >
-          Schedule interview
-        </button>
-      ) : null}
+        {needsInterview ? (
+          <button
+            type="button"
+            className="btn primary candidate-card-action"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSchedule();
+            }}
+          >
+            Schedule interview
+          </button>
+        ) : null}
+
+        <SendMessageMenu
+          stageId={candidate.stageId}
+          values={templateValues}
+          buttonClassName="btn candidate-card-icon"
+          iconOnly
+          onSend={onSendMessage}
+        />
+      </div>
     </div>
   );
 }

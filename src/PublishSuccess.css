@@ -114,7 +114,7 @@
   background: #0f766e;
   transform-origin: left center;
   /* Duration tracks PUBLISH_SUCCESS_MS in PublishSuccess.tsx — keep the two in sync. */
-  animation: publish-progress 3000ms linear both;
+  animation: publish-progress 1500ms linear both;
 }
 
 @keyframes publish-progress {

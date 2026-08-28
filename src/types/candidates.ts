@@ -1,3 +1,4 @@
+import type { SentMessage } from "./communications";
 import type { FieldSource } from "./shared";
 
 /**
@@ -34,6 +35,18 @@ export const AI_FLAG_LABELS: Record<AiFlag, string> = {
   recommended: "Recommended for next round",
   borderline: "Borderline",
   hold: "Hold",
+};
+
+/**
+ * One-word verdicts for the pipeline card, where the pill sits beside the name in a column
+ * only so wide. Reads as a strength scale rather than as an instruction — the card states
+ * how the candidate did and leaves the call to the hiring manager. The long labels above
+ * stay for the drawer, which has room for the full sentence.
+ */
+export const AI_FLAG_SHORT_LABELS: Record<AiFlag, string> = {
+  recommended: "Strong",
+  borderline: "Decent",
+  hold: "Weak",
 };
 
 export type TripStatus = "none" | "sent" | "completed";
@@ -81,6 +94,8 @@ export type Candidate = {
   notes: CandidateNote[];
   timeline: TimelineEvent[];
   interviewAt?: number;
+  /** Templates sent to this candidate. Optional so older stored boards still parse. */
+  messages?: SentMessage[];
 };
 
 export type PipelineBoard = {

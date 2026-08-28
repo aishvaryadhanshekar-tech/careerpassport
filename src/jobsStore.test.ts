@@ -6,10 +6,13 @@ import {
   JOBS_KEY,
   CURRENT_JOB_ID_KEY,
   deleteJobs,
+  ensureSeedJobs,
+  getJob,
   listJobs,
   upsertJobFromDraft,
   startNewJob,
 } from "./jobsStore";
+import { SEEDED_JOB_ID } from "./seedJobs";
 
 describe("jobsStore", () => {
   beforeEach(() => {
@@ -111,5 +114,58 @@ describe("jobsStore", () => {
 describe("jobsStore keys", () => {
   it("uses stable storage keys", () => {
     expect(JOBS_KEY).toBe("cp.jobs.v1");
+  });
+});
+
+describe("seeded demo job", () => {
+  beforeEach(() => {
+    memoryStorage.clear();
+  });
+
+  it("adds one published job the first time it runs", () => {
+    ensureSeedJobs();
+    const jobs = listJobs();
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0].id).toBe(SEEDED_JOB_ID);
+    expect(jobs[0].status).toBe("Published");
+    expect(jobs[0].title).toBe("Senior Backend Engineer, Payments");
+    expect(jobs[0].location).toBe("Bangalore");
+    expect(jobs[0].salaryLabel).toContain("INR");
+  });
+
+  it("is idempotent", () => {
+    ensureSeedJobs();
+    ensureSeedJobs();
+    expect(listJobs()).toHaveLength(1);
+  });
+
+  it("carries a full snapshot so the details page has something to render", () => {
+    ensureSeedJobs();
+    const job = getJob(SEEDED_JOB_ID);
+    expect(job?.snapshot.application?.items.length).toBeGreaterThan(0);
+    expect(job?.snapshot.roleProfile.evaluationFramework.length).toBeGreaterThan(0);
+    expect(job?.snapshot.previewGenerated).toBe(true);
+  });
+
+  it("stays deleted — a later ensureSeedJobs does not bring it back", () => {
+    ensureSeedJobs();
+    deleteJobs([SEEDED_JOB_ID]);
+    expect(listJobs()).toEqual([]);
+    ensureSeedJobs();
+    expect(listJobs()).toEqual([]);
+  });
+
+  it("leaves user-created jobs alone", () => {
+    ensureSeedJobs();
+    const draft = createDraft();
+    draft.fields.designation.value = "PM";
+    const id = startNewJob();
+    upsertJobFromDraft(id, draft);
+
+    deleteJobs([SEEDED_JOB_ID]);
+
+    const jobs = listJobs();
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0].id).toBe(id);
   });
 });

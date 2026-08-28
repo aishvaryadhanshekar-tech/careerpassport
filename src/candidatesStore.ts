@@ -3,12 +3,17 @@ import { memoryStorage } from "./memoryStore";
 import { seedBoard } from "./seedCandidates";
 import {
   ARCHIVE_STAGE_ID,
+  MESSAGE_CHANNEL_LABELS,
   flagForScore,
   type Candidate,
+  type MessageTemplate,
   type PipelineBoard,
+  type SentMessage,
+  type TemplateValues,
   type TimelineEvent,
   type TripStatus,
 } from "./types";
+import { renderTemplate } from "./types";
 
 /**
  * Pipeline board storage, keyed by job id.
@@ -274,4 +279,39 @@ export function scheduleInterview(
   return patchCandidate(jobId, candidateId, (candidate) =>
     withEvent({ ...candidate, interviewAt: at }, event("Interview scheduled", "team")),
   );
+}
+
+// --- communications ---------------------------------------------------------
+
+/**
+ * Records a template send against a candidate.
+ *
+ * The prototype does not actually deliver anything — it renders the template with the
+ * candidate's values and files the result, so the drawer timeline and the message history
+ * show exactly what would have gone out. When the Communications module lands, this is the
+ * single place that has to start calling it.
+ */
+export function sendMessage(
+  jobId: string,
+  candidateId: string,
+  template: MessageTemplate,
+  values: TemplateValues,
+): PipelineBoard {
+  return patchCandidate(jobId, candidateId, (candidate) => {
+    const message: SentMessage = {
+      id: uid(),
+      templateId: template.id,
+      templateName: template.name,
+      channel: template.channel,
+      intent: template.intent,
+      subject: renderTemplate(template.subject, values),
+      body: renderTemplate(template.body, values),
+      sentAt: Date.now(),
+      sentBy: values.sender_name,
+    };
+    return withEvent(
+      { ...candidate, messages: [...(candidate.messages ?? []), message] },
+      event(`Sent “${template.name}”`, "team", MESSAGE_CHANNEL_LABELS[template.channel]),
+    );
+  });
 }

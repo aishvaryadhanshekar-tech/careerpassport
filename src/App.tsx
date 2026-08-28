@@ -3,6 +3,7 @@ import { AppShell } from "./AppShell";
 import { ApplicationPage } from "./ApplicationPage";
 import { CollectJobPage } from "./CollectJobPage";
 import { JobDetailsPage } from "./JobDetailsPage";
+import { CommunicationsTab } from "./job/CommunicationsTab";
 import { JobOverviewTab } from "./job/JobOverviewTab";
 import { ProspectsTab } from "./job/ProspectsTab";
 import { SetupTab } from "./job/SetupTab";
@@ -31,6 +32,7 @@ export function App() {
             <Route path="trips" element={<TripsListPage />} />
             <Route path="pipeline" element={<PipelineTab />} />
             <Route path="prospects" element={<ProspectsTab />} />
+            <Route path="communications" element={<CommunicationsTab />} />
             <Route path="setup" element={<SetupTab />} />
           </Route>
           {/* Full-page, outside the tab shell — a focused editor with its own chrome. */}

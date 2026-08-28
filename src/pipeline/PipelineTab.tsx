@@ -5,13 +5,18 @@ import {
   getBoard,
   moveCandidate,
   scheduleInterview,
+  sendMessage,
   setTripStatus,
 } from "../candidatesStore";
 import { useJobContext } from "../job/jobContext";
-import type { Candidate, PipelineBoard, PipelineStage } from "../types";
+import { PROFILE } from "../profile";
+import type { Candidate, PipelineBoard, PipelineStage, TemplateValues } from "../types";
 import { CandidateCard } from "./CandidateCard";
 import { CandidateDrawer } from "./CandidateDrawer";
 import "./pipeline.css";
+
+/** Placeholder until the workspace/org model carries a real company name. */
+const COMPANY_NAME = "Conte";
 
 function StageColumn({
   stage,
@@ -138,6 +143,19 @@ export function PipelineTab(): JSX.Element {
   const [openCandidateId, setOpenCandidateId] = useState<string | null>(null);
 
   const counts = countsByStage(board);
+  const jobTitle = draft.fields.designation.value.trim() || "this role";
+
+  /** Token values for a message template. Stage label, not id — it renders in the body. */
+  function templateValuesFor(candidate: Candidate): TemplateValues {
+    const stage = board.stages.find((s) => s.id === candidate.stageId);
+    return {
+      candidate_name: candidate.name,
+      job_title: jobTitle,
+      company: COMPANY_NAME,
+      sender_name: PROFILE.name,
+      stage: stage?.label ?? "current",
+    };
+  }
   const openCandidate = openCandidateId
     ? (board.candidates.find((c) => c.id === openCandidateId) ?? null)
     : null;
@@ -171,6 +189,12 @@ export function PipelineTab(): JSX.Element {
                 onOpen={() => setOpenCandidateId(candidate.id)}
                 onMove={(toStageId) => setBoard(moveCandidate(jobId, candidate.id, toStageId))}
                 onSendTrip={() => setBoard(setTripStatus(jobId, candidate.id, "sent"))}
+                onSendMessage={(template) =>
+                  setBoard(
+                    sendMessage(jobId, candidate.id, template, templateValuesFor(candidate)),
+                  )
+                }
+                templateValues={templateValuesFor(candidate)}
                 onSchedule={() =>
                   // Prototype: schedule two days out rather than opening a date picker.
                   setBoard(

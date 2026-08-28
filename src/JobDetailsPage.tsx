@@ -23,6 +23,7 @@ const JOB_TABS = [
   { id: "trips", label: "Trips", path: "trips" },
   { id: "pipeline", label: "Pipeline", path: "pipeline" },
   { id: "prospects", label: "Prospects", path: "prospects" },
+  { id: "communications", label: "Communications", path: "communications" },
   { id: "setup", label: "Setup", path: "setup" },
 ] as const;
 
