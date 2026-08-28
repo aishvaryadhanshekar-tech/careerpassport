@@ -1,24 +1,12 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import "../JobDetailsPage.css";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./trips.css";
-import { getJob, openJob, upsertJobFromDraft } from "../jobsStore";
-import { loadDraft, saveDraft } from "../storage";
+import { useJobContext } from "../job/jobContext";
+import { upsertJobFromDraft } from "../jobsStore";
+import { saveDraft } from "../storage";
 import { createTrip } from "../tripsStore";
 import type { JobDraft, Trip } from "../types";
-
-function hydrateFromJob(id: string): JobDraft | null {
-  if (!openJob(id)) return null;
-  return loadDraft();
-}
-
-function TripStatusBadge({ status }: { status: Trip["status"] }) {
-  return (
-    <span className={`trip-status-badge ${status}`}>
-      {status === "published" ? "Published" : "Draft"}
-    </span>
-  );
-}
+import { TripStatusBadge } from "./TripStatusBadge";
 
 function TripRow({ jobId, trip }: { jobId: string; trip: Trip }) {
   return (
@@ -35,29 +23,17 @@ function TripRow({ jobId, trip }: { jobId: string; trip: Trip }) {
   );
 }
 
+/**
+ * Trips tab body. The job header and tab bar are owned by the JobDetailsPage shell, and the
+ * draft arrives through outlet context — this component used to hydrate its own copy, which
+ * re-ran `openJob`'s write side effect on every tab switch.
+ */
 export function TripsListPage() {
-  const { id } = useParams<{ id: string }>();
+  const { jobId: id, draft: initialDraft } = useJobContext();
   const navigate = useNavigate();
-  const job = id ? getJob(id) : null;
-  const [draft, setDraft] = useState<JobDraft | null>(() => (id ? hydrateFromJob(id) : null));
-
-  useEffect(() => {
-    document.querySelector(".layout-content")?.scrollTo(0, 0);
-  }, []);
-
-  if (!id || !job || !draft) {
-    return (
-      <div className="app-shell jd-not-found">
-        <p>Job not found.</p>
-        <Link to="/">Back to jobs</Link>
-      </div>
-    );
-  }
-
-  const title = draft.fields.designation.value || job.title;
+  const [draft, setDraft] = useState<JobDraft>(initialDraft);
 
   function handleCreateTrip() {
-    if (!draft || !id) return;
     const { draft: next, tripId } = createTrip(draft);
     saveDraft(next);
     upsertJobFromDraft(id, next);
@@ -66,19 +42,8 @@ export function TripsListPage() {
   }
 
   return (
-    <div className="app-shell jd-page">
-      <main className="preview-main">
-        <header className="jd-header">
-          <Link to={`/jobs/${id}`} className="jd-back-link">
-            ← Back to job details
-          </Link>
-          <div className="jd-header-row">
-            <h1 className="jd-title">Trips</h1>
-          </div>
-          <p className="jd-subline">{title}</p>
-        </header>
-
-        {draft.trips.length === 0 ? (
+    <>
+      {draft.trips.length === 0 ? (
           <div className="trips-empty">
             <h2>No trips yet</h2>
             <p>
@@ -103,7 +68,6 @@ export function TripsListPage() {
             </div>
           </>
         )}
-      </main>
-    </div>
+    </>
   );
 }

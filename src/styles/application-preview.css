@@ -1,0 +1,704 @@
+.preview-scale {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #667085;
+}
+
+.preview-scale-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.preview-rating {
+  display: flex;
+  gap: 6px;
+  font-size: 20px;
+  color: #98a2b3;
+}
+
+.preview-grid {
+  border-collapse: collapse;
+  font-size: 13px;
+  color: #1f1b16;
+}
+
+.preview-grid th,
+.preview-grid td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e1e3e5;
+  text-align: center;
+}
+
+.preview-grid th:first-child,
+.preview-grid td:first-child {
+  text-align: left;
+}
+
+.preview-section {
+  padding: 4px 0 8px;
+}
+
+.preview-section h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.preview-section p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #667085;
+}
+
+.preview-question-image {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 8px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.preview-pane {
+  position: sticky;
+  top: 16px;
+}
+
+.preview-toolbar {
+  display: flex;
+  /* Centred over the device it controls. It used to be flex-end, which read fine when the
+   * preview was the right-hand column but left the toggle stranded against the editors
+   * once the preview moved to the left. */
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #667085;
+}
+
+.device-toggle {
+  display: flex;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.device-toggle button {
+  border: 0;
+  background: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #667085;
+}
+
+.device-toggle button.on {
+  background: #1f1b16;
+  color: #fff;
+}
+
+.phone-stage {
+  display: flex;
+  justify-content: center;
+  padding: 4px 8px 18px;
+}
+
+/*
+ * Device previews render at true logical viewport widths and are scaled down
+ * with CSS `zoom` (never `transform: scale()`), so scrollTop, getBoundingClientRect
+ * deltas, `position: sticky` and `calc(100vh - ...)` all stay in one coordinate
+ * space and src/previewScroll.ts keeps working unchanged.
+ */
+.phone-device {
+  /* 390px logical (iPhone-class) painted into a 298px-wide screen. */
+  --phone-logical-w: 390;
+  --phone-screen-w: 298;
+  --phone-zoom: calc(var(--phone-screen-w) / var(--phone-logical-w));
+  --phone-bezel-x: 11px;
+  --phone-bezel-y: 12px;
+  --phone-device-h: min(640px, calc(100vh - 168px));
+  position: relative;
+  /* screen width + both bezels */
+  width: calc((var(--phone-screen-w) * 1px) + (2 * var(--phone-bezel-x)));
+  height: var(--phone-device-h);
+}
+
+.phone-btn {
+  position: absolute;
+  background: linear-gradient(180deg, #b8b8bc, #9e9ea3);
+  box-shadow: inset 0 0 0 0.5px rgba(70, 70, 74, 0.45);
+}
+
+.phone-btn.silent {
+  left: -3px;
+  top: 86px;
+  width: 3px;
+  height: 16px;
+  border-radius: 2px 0 0 2px;
+}
+
+.phone-btn.vol-up,
+.phone-btn.vol-down {
+  left: -3px;
+  width: 3px;
+  height: 32px;
+  border-radius: 2px 0 0 2px;
+}
+
+.phone-btn.vol-up {
+  top: 114px;
+}
+
+.phone-btn.vol-down {
+  top: 152px;
+}
+
+.phone-btn.power {
+  right: -3px;
+  top: 128px;
+  width: 3px;
+  height: 52px;
+  border-radius: 0 2px 2px 0;
+}
+
+.phone-chassis {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: var(--phone-bezel-y) var(--phone-bezel-x);
+  border-radius: 50px;
+  background: linear-gradient(180deg, #f7f7f8 0%, #ececee 55%, #e4e4e7 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1.5px #c9c9cd,
+    0 1px 2px rgba(31, 27, 22, 0.06),
+    0 18px 40px rgba(31, 27, 22, 0.14);
+}
+
+.phone-island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 4;
+  width: 96px;
+  height: 26px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #0b0b0d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.phone-home-indicator {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 3;
+  width: 108px;
+  height: 4px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #1c1c1e;
+}
+
+.phone-screen {
+  /*
+   * Laid out at the phone's logical viewport width, then zoomed down to the
+   * physical bezel opening. Sizes are given in local (logical) px and divided
+   * by the zoom factor so the painted box lands exactly on the bezel.
+   */
+  zoom: var(--phone-zoom);
+  flex: none;
+  width: calc(var(--phone-logical-w) * 1px);
+  height: calc(
+    (var(--phone-device-h) - (2 * var(--phone-bezel-y))) *
+      var(--phone-logical-w) / var(--phone-screen-w)
+  );
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 44px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.phone-status-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 34px;
+  padding: 0 20px;
+  background: #fff;
+  color: #1f1b16;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-status-time {
+  letter-spacing: -0.01em;
+}
+
+.phone-status-glyphs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #1f1b16;
+}
+
+.phone-status-battery {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.phone-status-battery-shell {
+  width: 20px;
+  height: 10px;
+  border: 1px solid currentColor;
+  border-radius: 2.5px;
+  padding: 1.5px;
+  box-sizing: border-box;
+}
+
+.phone-status-battery-fill {
+  display: block;
+  width: 80%;
+  height: 100%;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.phone-status-battery-cap {
+  width: 1.5px;
+  height: 4px;
+  border-radius: 0 1px 1px 0;
+  background: currentColor;
+}
+
+.monitor-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 8px 18px;
+}
+
+.monitor-device {
+  /* Logical viewport painted into a physical screen; zoom is derived so the two
+   * can never drift apart.
+   *
+   * The logical width is a legibility/fidelity trade-off, not a real device size.
+   * A literal 1280px desktop inside a ~520px column lands at 0.41 zoom, which
+   * renders 13px body text at ~5px — accurate but unreadable. 768 keeps the
+   * desktop layout (no mobile tab bar, autofill card visible) while leaving
+   * enough zoom budget to actually read the preview. Pages with more room
+   * override --monitor-screen-w below rather than changing the logical width,
+   * so the layout stays identical everywhere and only the scale changes. */
+  --monitor-logical-w: 768;
+  --monitor-logical-h: 480;
+  --monitor-screen-w: 500;
+  --monitor-zoom: calc(var(--monitor-screen-w) / var(--monitor-logical-w));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+}
+
+.monitor-chassis {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 12px 22px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f7f7f8 0%, #ececee 55%, #e4e4e7 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1.5px #c9c9cd,
+    0 1px 2px rgba(31, 27, 22, 0.06),
+    0 18px 40px rgba(31, 27, 22, 0.14);
+}
+
+.monitor-chassis::after {
+  /* brand dot on the chin */
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #c2c2c7;
+}
+
+.monitor-screen {
+  zoom: var(--monitor-zoom);
+  flex: none;
+  width: calc(var(--monitor-logical-w) * 1px);
+  height: calc(var(--monitor-logical-h) * 1px);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.monitor-neck {
+  width: 78px;
+  height: 26px;
+  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, #e9e9ec 0%, #dcdce0 100%);
+}
+
+.monitor-base {
+  width: 190px;
+  height: 9px;
+  border-radius: 0 0 8px 8px / 0 0 14px 14px;
+  background: linear-gradient(180deg, #e4e4e7 0%, #cfcfd4 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 8px 16px rgba(31, 27, 22, 0.12);
+}
+
+.preview-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+}
+
+.phone-screen .preview-screen {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  padding-bottom: 18px;
+}
+
+.monitor-screen .preview-screen {
+  min-height: 0;
+  flex: 1;
+  height: 100%;
+  overflow: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  /* matches .preview-body so the centered column blends into the page */
+  background: #f4f5f7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-screen .preview-screen,
+  .monitor-screen .preview-screen {
+    scroll-behavior: auto;
+  }
+}
+
+.monitor-screen .preview-body {
+  overflow: visible;
+  padding: 20px 24px 28px;
+  /* keep line lengths readable across the 1280px logical viewport */
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.monitor-screen .preview-job {
+  padding: 28px 24px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e6e8eb;
+}
+
+.preview-tabbar {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 0 16px;
+  background: #fff;
+  border-bottom: 1px solid #e2e6e9;
+}
+
+.preview-tab-btn {
+  border: 0;
+  background: none;
+  padding: 12px 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #98a2b3;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.preview-tab-btn.active {
+  color: #1f1b16;
+  border-bottom-color: #1f1b16;
+}
+
+.preview-job,
+.preview-copy,
+.preview-fields,
+.preview-questions {
+  scroll-margin-top: 12px;
+}
+
+.preview-job {
+  flex-shrink: 0;
+}
+
+.preview-job {
+  padding: 10px 16px 4px;
+  text-align: center;
+}
+
+.preview-brand {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f766e;
+}
+
+.preview-job h3 {
+  margin: 4px 0 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #111;
+}
+
+.preview-job p,
+.preview-copy p,
+.preview-req,
+.preview-empty {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #667085;
+}
+
+.preview-meta-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #667085;
+}
+
+.preview-meta-dot {
+  color: #8a9099;
+  margin-right: 4px;
+}
+
+.preview-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 14px 14px 20px;
+  background: #f4f5f7;
+}
+
+.preview-section-card {
+  padding: 12px;
+  border: 1px solid #e6e8eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.preview-copy {
+  padding: 12px;
+  border: 1px solid #e6e8eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.preview-eyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a9099;
+}
+
+.preview-copy .preview-eyebrow {
+  color: #1f1b16;
+}
+
+.preview-salary {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f766e !important;
+}
+
+.preview-autofill {
+  padding: 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.preview-autofill-kicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #344054;
+}
+
+.preview-autofill p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #475467;
+}
+
+.preview-import {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 14px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: default;
+}
+
+.preview-import:disabled {
+  opacity: 1;
+  color: #fff;
+}
+
+.preview-fields,
+.preview-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-req {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: #8a9099;
+}
+
+.preview-required-mark {
+  color: #d92d20;
+  margin-right: 2px;
+  font-weight: 700;
+}
+
+.preview-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f1b16;
+}
+
+.preview-field input,
+.preview-field textarea {
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  font-weight: 400;
+}
+
+.preview-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-weight: 400;
+}
+
+.preview-options li {
+  margin: 6px 0;
+}
+
+.preview-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 14px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: default;
+}
+
+@media (max-width: 960px) {
+  .application-split > .preview-pane,
+  .application-editors {
+    grid-column: span 12;
+  }
+  .preview-pane {
+    position: static;
+  }
+}
+
+/* Below the widened preview column, shrink the devices rather than overflow. */
+@media (max-width: 640px) {
+  .phone-device {
+    --phone-screen-w: 246;
+  }
+  .monitor-device {
+    --monitor-screen-w: 400;
+  }
+  .monitor-base {
+    width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .monitor-device {
+    --monitor-screen-w: 300;
+  }
+  .monitor-neck {
+    width: 60px;
+  }
+  .monitor-base {
+    width: 120px;
+  }
+}
+
+/* On Step 4 and Job Details the preview sits in a tab panel rather than beside the
+ * editors, so there is more room — give the monitor a bigger physical screen. The
+ * logical viewport is unchanged, so the layout is identical and only the scale
+ * differs (zoom is derived from --monitor-screen-w). */
+.preview-content .monitor-device {
+  --monitor-screen-w: 660;
+}

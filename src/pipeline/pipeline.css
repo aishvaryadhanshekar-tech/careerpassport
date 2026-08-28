@@ -1,0 +1,356 @@
+/* Pipeline kanban. Component-scoped — imported by PipelineTab.tsx, not via the styles barrel. */
+
+.pipeline-board {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 12px;
+  scroll-behavior: smooth;
+  /* Columns snap into place when flicking through a long pipeline. */
+  scroll-snap-type: x proximity;
+  /* Cancel the page gutter so the board can bleed to the edges while scrolling. */
+  margin: 0 calc(-1 * var(--page-pad));
+  padding-left: var(--page-pad);
+  padding-right: var(--page-pad);
+}
+
+.pipeline-column {
+  flex: none;
+  width: 288px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  background: #f0f1f3;
+  border: 1px solid #e2e6e9;
+  border-radius: 12px;
+}
+
+.pipeline-column.is-drop-target {
+  background: #e8f5f3;
+  border-color: #0f766e;
+}
+
+.pipeline-column-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 10px;
+}
+
+.pipeline-column-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f1b16;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dashed ring when empty, solid fill once the stage has people in it. */
+.pipeline-count {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border: 1px dashed #b6bcc3;
+  color: #98a2b3;
+  background: transparent;
+}
+
+.pipeline-count.is-filled {
+  border: 1px solid transparent;
+  background: #0f766e;
+  color: #fff;
+}
+
+.pipeline-column-menu {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: #98a2b3;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+
+.pipeline-column-menu:hover {
+  background: #e2e6e9;
+  color: #1f1b16;
+}
+
+.pipeline-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 10px 12px;
+  min-height: 80px;
+}
+
+.pipeline-empty-slot {
+  border: 1px dashed #cfd4d9;
+  border-radius: 10px;
+  padding: 18px 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #98a2b3;
+}
+
+/* --- candidate card --- */
+
+.candidate-card {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 10px;
+  padding: 10px 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 2px rgba(31, 27, 22, 0.04);
+}
+
+.candidate-card:hover {
+  border-color: #cfd4d9;
+  box-shadow: 0 2px 8px rgba(31, 27, 22, 0.08);
+}
+
+.candidate-card:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
+}
+
+.candidate-card.is-dragging {
+  opacity: 0.45;
+}
+
+.candidate-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.candidate-card-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.candidate-card-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #667085;
+}
+
+.candidate-card-origin {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5c5347;
+  background: #f2f4f7;
+  border-radius: 999px;
+  padding: 3px 8px;
+  align-self: flex-start;
+}
+
+.candidate-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.candidate-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #eef0f2;
+  color: #44546f;
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.ai-flag-recommended {
+  background: #dcfae6;
+  color: #1a7f4e;
+}
+
+.ai-flag-borderline {
+  background: #fdf0d5;
+  color: #b45f19;
+}
+
+.ai-flag-hold {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.trip-pending {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.candidate-card-action {
+  width: 100%;
+  justify-content: center;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* --- card menu --- */
+
+.card-menu-wrap {
+  position: relative;
+  flex: none;
+}
+
+.card-menu-btn {
+  border: 0;
+  background: transparent;
+  color: #98a2b3;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+
+.card-menu-btn:hover {
+  background: #f2f4f7;
+  color: #1f1b16;
+}
+
+.card-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  min-width: 210px;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(31, 27, 22, 0.16);
+  padding: 6px;
+}
+
+.card-menu-label {
+  display: block;
+  padding: 6px 10px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #98a2b3;
+}
+
+.card-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1f1b16;
+  cursor: pointer;
+}
+
+.card-menu button:hover:not(:disabled) {
+  background: #f4f5f7;
+}
+
+.card-menu button:disabled {
+  color: #b6bcc3;
+  cursor: default;
+}
+
+/* --- add stage --- */
+
+.pipeline-add-stage {
+  flex: none;
+  width: 240px;
+  scroll-snap-align: start;
+}
+
+.pipeline-add-stage-btn {
+  width: 100%;
+  border: 1px dashed #cfd4d9;
+  background: transparent;
+  border-radius: 12px;
+  padding: 14px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #667085;
+  cursor: pointer;
+}
+
+.pipeline-add-stage-btn:hover {
+  border-color: #0f766e;
+  color: #0f766e;
+  background: #f0fdfa;
+}
+
+.pipeline-add-stage-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.pipeline-add-stage-form .pill-input {
+  width: 100%;
+}
+
+.pipeline-add-stage-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pipeline-add-stage-actions .btn {
+  flex: 1;
+  justify-content: center;
+  padding: 6px 10px;
+  font-size: 12px;
+}

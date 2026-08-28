@@ -1,5 +1,7 @@
-import { useEffect, useState, type JSX } from "react";
+import { useState, type JSX } from "react";
 import { EditableField } from "../EditableField";
+import { SparkleIcon } from "../shared/icons";
+import { useBuildPhase } from "../shared/useBuildPhase";
 import { deriveInferenceCards, updateInferenceCard } from "../tripInference";
 import type { JobDraft, Trip } from "../types";
 
@@ -21,18 +23,7 @@ export function InferenceCardsSection({
   onChange,
 }: InferenceCardsSectionProps): JSX.Element {
   const [analysing, setAnalysing] = useState(false);
-  const [buildPhase, setBuildPhase] = useState(0);
-
-  useEffect(() => {
-    if (!analysing) {
-      setBuildPhase(0);
-      return;
-    }
-    const id = window.setInterval(() => {
-      setBuildPhase((p) => p + 1);
-    }, 850);
-    return () => window.clearInterval(id);
-  }, [analysing]);
+  const buildPhase = useBuildPhase(analysing);
 
   const hasContent = trip.inferenceCards.some((c) => c.content.trim() !== "");
 
@@ -123,20 +114,5 @@ export function InferenceCardsSection({
         </div>
       </div>
     </section>
-  );
-}
-
-function SparkleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M8 1.5 9.3 5 12.8 6.3 9.3 7.6 8 11.1 6.7 7.6 3.2 6.3 6.7 5 8 1.5Z"
-        fill="currentColor"
-      />
-      <path
-        d="M13 9.5 13.6 11.1 15.2 11.7 13.6 12.3 13 13.9 12.4 12.3 10.8 11.7 12.4 11.1 13 9.5Z"
-        fill="currentColor"
-      />
-    </svg>
   );
 }

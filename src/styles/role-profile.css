@@ -1,0 +1,433 @@
+.role-summary-card {
+  margin-bottom: 4px;
+}
+
+.role-summary-card .app-card-body {
+  padding: 24px 26px 26px;
+}
+
+.jd-summary-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jd-summary-name {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.jd-summary-view-head,
+.jd-summary-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jd-summary-name-input {
+  font-size: 20px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.jd-summary-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jd-summary-subline {
+  margin: 0;
+  font-size: 13px;
+  color: #667085;
+}
+
+.jd-summary-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 32px;
+}
+
+.jd-summary-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.jd-summary-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jd-summary-stat-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #667085;
+  font-weight: 600;
+}
+
+.jd-summary-stat-value {
+  font-size: 14px;
+  color: #1f1b16;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .jd-summary-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Role Profile page */
+
+.role-profile-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.editable-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.editable-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475467;
+}
+
+.editable-field-pencil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: #9aa0a6;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.editable-field-pencil:hover {
+  background: #f2f0ec;
+  color: #1f1b16;
+}
+
+.editable-field-pencil[aria-pressed="true"] {
+  color: #0f766e;
+}
+
+.editable-field-display p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #1f1b16;
+  white-space: pre-wrap;
+}
+
+.editable-field-control {
+  margin-top: 6px;
+}
+
+.importance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.importance-critical {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.importance-important {
+  background: #fef0c7;
+  color: #b54708;
+}
+
+.importance-nice-to-have {
+  background: #eaecf0;
+  color: #475467;
+}
+
+.criterion-card {
+  border: 1px solid #e4e1da;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.criterion-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.criterion-label {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid #d7d4cd;
+  padding: 4px 2px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.criterion-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.criterion-subfields {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.criterion-subfields .pill-input,
+.criterion-subfields .type-select {
+  max-width: 160px;
+}
+
+.criterion-grades {
+  margin-top: 2px;
+}
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eaecf0;
+  color: #475467;
+}
+
+.criterion-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #e4e1da;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.criterion-row .drag-handle {
+  margin-top: 3px;
+}
+
+.criterion-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.criterion-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.criterion-row-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f1b16;
+}
+
+.criterion-row-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #7a7468;
+}
+
+.criterion-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.importance-dropdown,
+.unit-combobox {
+  position: relative;
+  display: inline-flex;
+}
+
+.importance-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(16, 24, 40, 0.12);
+  padding: 7px 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.importance-dropdown-trigger:hover {
+  filter: brightness(0.97);
+}
+
+.importance-dropdown-trigger:focus-visible {
+  outline: 2px solid #1f1b16;
+  outline-offset: 1px;
+}
+
+.importance-dropdown-trigger-label {
+  white-space: nowrap;
+}
+
+.importance-dropdown-caret {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.importance-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 180px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.importance-dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.importance-dropdown-option:hover,
+.importance-dropdown-option.active {
+  background: #f7f8f9;
+}
+
+.importance-dropdown-check {
+  color: #2f5d50;
+  font-weight: 700;
+}
+
+.unit-combobox-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.unit-combobox-value {
+  color: inherit;
+}
+
+.unit-combobox-menu {
+  min-width: 160px;
+}
+
+.unit-combobox-custom-option {
+  cursor: default;
+  padding: 4px;
+}
+
+.unit-combobox-custom-option:hover {
+  background: transparent;
+}
+
+.unit-combobox-add {
+  border: 0;
+  background: transparent;
+  color: #2f5d50;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+  width: 100%;
+  text-align: left;
+}
+
+.unit-combobox-custom-input {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Editable sidebar (Role Profile).
+ *
+ * The sidebar card itself is shared with Step 4 / Job Details and lives in
+ * role-detail.css. These rules are the Role-Profile-only editing variant, and
+ * rely on role-detail.css being imported earlier in the barrel so they win.
+ * ------------------------------------------------------------------------- */
+
+.preview-sidebar-edit-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.preview-sidebar-edit-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #667085;
+  font-weight: 600;
+}
+
+/* Form controls need left-aligned labels; the read-only card is centred. */
+.preview-sidebar-card.is-editing {
+  align-items: stretch;
+  text-align: left;
+  gap: 14px;
+}
+
+.preview-sidebar-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preview-sidebar-edit-field .pill-input,
+.preview-sidebar-edit-field .pill-select {
+  width: 100%;
+}
+
+.preview-sidebar-edit-field .area-input {
+  resize: vertical;
+  min-height: 76px;
+}

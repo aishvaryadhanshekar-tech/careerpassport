@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "../JobDetailsPage.css";
 import "./trips.css";
-import { getJob, openJob, upsertJobFromDraft } from "../jobsStore";
-import { loadDraft, saveDraft } from "../storage";
+import { getJob, upsertJobFromDraft } from "../jobsStore";
+import { hydrateFromJob } from "../shared/hydrateFromJob";
+import { saveDraft } from "../storage";
 import {
   duplicateTrip,
   getTrip,
@@ -16,19 +17,7 @@ import { SpineEditor } from "./SpineEditor";
 import { StagePicker } from "./StagePicker";
 import { StageList } from "./StageList";
 import { TripPublishBar } from "./TripPublishBar";
-
-function hydrateFromJob(id: string): JobDraft | null {
-  if (!openJob(id)) return null;
-  return loadDraft();
-}
-
-function TripStatusBadge({ status }: { status: Trip["status"] }) {
-  return (
-    <span className={`trip-status-badge ${status}`}>
-      {status === "published" ? "Published" : "Draft"}
-    </span>
-  );
-}
+import { TripStatusBadge } from "./TripStatusBadge";
 
 export function TripBuilderPage() {
   const { id, tripId } = useParams<{ id: string; tripId: string }>();

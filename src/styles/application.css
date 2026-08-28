@@ -1,0 +1,316 @@
+.application-page {
+  max-width: none;
+}
+
+/* Same 12-column grid and measure as `.preview-page .preview-main` (role-detail.css), so
+ * Step 2, Step 3 and Step 4 line up exactly. Preview 6 cols, editors 6.
+ * Preview is first in both the grid and the JSX so visual order and tab order agree. */
+.application-split {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--grid-gutter);
+  max-width: var(--page-max);
+  padding: 0 var(--page-pad);
+  margin: 0 auto;
+  align-items: start;
+}
+
+.application-split > .preview-pane {
+  grid-column: span 6;
+  min-width: 0;
+}
+
+.application-editors {
+  grid-column: span 6;
+  min-width: 0;
+}
+
+.application-editors {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-card {
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 12px;
+  padding: 0 0 8px;
+}
+
+.app-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 22px;
+  background: #f7f8f9;
+  border-bottom: 1px solid #e1e3e5;
+  border-radius: 12px 12px 0 0;
+}
+
+.app-card-head h2 {
+  margin: 0;
+  font-size: 14px;
+  color: #1f1b16;
+  font-weight: 600;
+}
+
+.app-card-head-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-card-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tab-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-edit-actions .btn-sm {
+  padding: 5px 12px;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.tab-edit-actions .btn.ghost.btn-sm {
+  border-color: #d0d5dd;
+  background: #fff;
+  font-weight: 500;
+}
+
+.tab-edit-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #9aa0a6;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.tab-edit-toggle:hover {
+  background: #eef0f2;
+  color: #1f1b16;
+}
+
+.tab-edit-toggle.active {
+  color: #0f766e;
+}
+
+.app-card-count {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #667085;
+  font-weight: 600;
+}
+
+.app-card-body {
+  padding: 8px 22px;
+}
+
+.context-block {
+  padding: 16px 0;
+  border-bottom: 1px solid #e1e3e5;
+}
+
+.context-block:last-child {
+  border-bottom: 0;
+}
+
+.context-block-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.context-block:has(.context-text) .context-block-head {
+  margin-bottom: 10px;
+}
+
+.context-block-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.context-text {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 96px;
+  resize: vertical;
+  color: #1f1b16;
+}
+
+.switch-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #667085;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.switch {
+  width: 36px;
+  height: 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #d0d5dd;
+  padding: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.switch.on {
+  background: #2f5d50;
+}
+
+.switch-knob {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translateX(0);
+}
+
+.switch.on .switch-knob {
+  transform: translateX(16px);
+}
+
+.field-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  padding: 16px 0;
+}
+
+.field-row + .field-row {
+  border-top: 1px solid #e1e3e5;
+}
+
+.question-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.question-star {
+  width: 10px;
+  flex: none;
+  font-weight: 700;
+  color: #1f1b16;
+  text-align: center;
+}
+
+.field-copy {
+  min-width: 0;
+}
+
+.field-copy strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.field-required {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drag-handle {
+  color: #c5c0b8;
+  cursor: grab;
+  font-size: 14px;
+  letter-spacing: -2px;
+  width: 16px;
+  text-align: center;
+}
+
+.icon-x {
+  border: 0;
+  background: transparent;
+  color: #98a2b3;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.add-field {
+  padding: 16px 0;
+}
+
+.add-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2f5d50;
+}
+
+.add-field select,
+.type-select {
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+}
+
+.type-select {
+  min-width: 172px;
+  flex: 0 0 auto;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23667085' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+.text-add {
+  border: 0;
+  background: transparent;
+  color: #2f5d50;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Keep in sync with `.preview-page .preview-main` in role-detail.css — the two must stay
+ * equal for Step 2/3/4 to line up. */
+@media (max-width: 640px) {
+  .application-split {
+    padding: 0 16px;
+  }
+}

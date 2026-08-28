@@ -140,11 +140,8 @@ export function ApplicationPage() {
   return (
     <div className="app-shell create-job application-page">
       <div className="application-split">
-        <div className="application-editors" ref={editorsRef}>
-          <ContextCard config={config} onChange={patch} />
-          <StandardFieldsCard config={config} onChange={patch} />
-          <CustomQuestionsCard config={config} onChange={patch} />
-        </div>
+        {/* Preview sits first in the DOM as well as visually, so keyboard tab order
+         * matches reading order. */}
         <ApplicationPreview
           draft={draft}
           config={config}
@@ -152,6 +149,11 @@ export function ApplicationPage() {
           onMode={setMode}
           activeAnchor={activeAnchor}
         />
+        <div className="application-editors" ref={editorsRef}>
+          <ContextCard config={config} onChange={patch} />
+          <StandardFieldsCard config={config} onChange={patch} />
+          <CustomQuestionsCard config={config} onChange={patch} />
+        </div>
       </div>
       <footer className="footer">
         <div className="meta">

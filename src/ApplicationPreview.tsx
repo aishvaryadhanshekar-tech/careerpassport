@@ -8,17 +8,12 @@ import {
   scrollChildIntoContainer,
   type PreviewAnchor,
 } from "./previewScroll";
+import { WORK_MODE_LABEL } from "./shared/labels";
 import type {
   ApplicationConfig,
   JobDraft,
   StandardFieldId,
 } from "./types";
-
-const WORK_MODE_LABEL: Record<string, string> = {
-  WFH: "Remote",
-  WFO: "On-site",
-  Hybrid: "Hybrid",
-};
 
 type PreviewTab = "overview" | "application";
 
@@ -67,9 +62,23 @@ export function ApplicationPreview({
       {mode === "mobile" ? (
         <PhoneDevice>{screen}</PhoneDevice>
       ) : (
-        <div className="desktop-frame">{screen}</div>
+        <MonitorDevice>{screen}</MonitorDevice>
       )}
     </aside>
+  );
+}
+
+function MonitorDevice({ children }: { children: ReactNode }) {
+  return (
+    <div className="monitor-stage">
+      <div className="monitor-device">
+        <div className="monitor-chassis">
+          <div className="monitor-screen">{children}</div>
+        </div>
+        <div className="monitor-neck" aria-hidden="true" />
+        <div className="monitor-base" aria-hidden="true" />
+      </div>
+    </div>
   );
 }
 

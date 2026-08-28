@@ -1,0 +1,66 @@
+/* Job page shell: the page-level tab bar under the job title, and shared tab empty states.
+ * Component-scoped (imported by JobDetailsPage.tsx), not part of the styles barrel. */
+
+/* Scoped so restyling the page-level bar cannot leak into the `.tabs`/`.tab-btn` rules in
+ * styles/role-detail.css, which Role Profile, Step 4 and the Overview sub-tabs all share. */
+.job-pagetabs {
+  margin-top: 18px;
+}
+
+.job-pagetabs .tabs {
+  gap: 2px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #d5d9dc;
+}
+
+.job-pagetabs .tab-btn {
+  padding: 12px 18px;
+  font-size: 14px;
+}
+
+.job-tab-body {
+  padding-top: 24px;
+}
+
+/* --- shared empty state for tabs that are not built out yet --- */
+
+.job-tab-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 320px;
+  padding: 48px 24px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 12px;
+}
+
+.job-tab-empty-icon {
+  font-size: 28px;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.job-tab-empty h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.job-tab-empty p {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #667085;
+}
+
+/* The Pipeline tab opts out of the shared 1200px page measure — a kanban needs the width,
+ * and its columns scroll horizontally rather than reflowing. */
+.preview-page .preview-main.is-wide {
+  max-width: none;
+}

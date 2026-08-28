@@ -5,48 +5,24 @@ import {
   revealMissingDetails,
 } from "./analysisScroll";
 import { applyExtraction } from "./applyAnalysis";
-import {
-  continueEnabled,
-  generateEnabled,
-  generateLabel,
-} from "./continueAction";
+import { continueEnabled, generateEnabled } from "./continueAction";
 import { extractFromTranscript } from "./extractJobFields";
-import {
-  ACCEPT,
-  formatBytes,
-  formatDuration,
-  ingestFiles,
-  kindFor,
-  uid,
-} from "./files";
 import { getCurrentJobId, startNewJob, upsertJobFromDraft } from "./jobsStore";
-import { liveInterimGap } from "./liveTranscript";
 import { loadDraft, saveDraft } from "./storage";
-import { ChoiceRow, PointList, SalaryInput, TagInput } from "./formControls";
+import { Composer } from "./collectJob/Composer";
+import { FieldGrid, FlagsChoice } from "./collectJob/JobFieldsForm";
+import { useAttachments } from "./collectJob/useAttachments";
+import { useSpeechRecording } from "./collectJob/useSpeechRecording";
 import {
-  COMPANY_TYPE_OPTIONS,
   COVERAGE_IDS,
-  COVERAGE_LABELS,
   REQUIRED_COVERAGE_IDS,
-  EXPERIENCE_TYPE_OPTIONS,
   FLAG_IDS,
-  FLAG_LABELS,
-  INDUSTRY_SUGGESTIONS,
-  LOCATION_SUGGESTIONS,
-  WORK_MODE_OPTIONS,
   coveredCount,
   isFieldCovered,
   type CoverageId,
-  type Currency,
   type FlagId,
   type JobDraft,
 } from "./types";
-
-const TRANSCRIPT_MAX = 20000;
-
-function speechCtor(): (new () => SpeechRecognition) | null {
-  return window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null;
-}
 
 function missingFrom(draft: JobDraft): CoverageId[] {
   if (!draft.analysedOnce) return [];
@@ -58,33 +34,35 @@ function missingFrom(draft: JobDraft): CoverageId[] {
 export function CollectJobPage() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<JobDraft>(() => loadDraft());
-  const [recording, setRecording] = useState(false);
-  const [interim, setInterim] = useState("");
-  const [elapsedMs, setElapsedMs] = useState(0);
   const [analysing, setAnalysing] = useState(false);
   const [buildPhase, setBuildPhase] = useState(0);
   const [missingIds, setMissingIds] = useState<CoverageId[]>(() =>
     missingFrom(loadDraft()),
   );
-  const [dragging, setDragging] = useState(false);
-  const [fileErrors, setFileErrors] = useState<string[]>([]);
-  const [micBlocked, setMicBlocked] = useState(false);
-  const [micFailed, setMicFailed] = useState(false);
-  const [noSpeechApi, setNoSpeechApi] = useState(false);
-  const [limitHit, setLimitHit] = useState(false);
   const [hintsOpen, setHintsOpen] = useState(false);
 
   const draftRef = useRef(draft);
   draftRef.current = draft;
-  const recordingRef = useRef(false);
-  const startedAtRef = useRef(0);
-  const streamRef = useRef<MediaStream | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const appendNewlineRef = useRef(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const hintsRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLTextAreaElement>(null);
-  const mirrorRef = useRef<HTMLDivElement>(null);
+
+  const {
+    recording,
+    interim,
+    elapsedMs,
+    micBlocked,
+    micFailed,
+    noSpeechApi,
+    limitHit,
+    recordingRef,
+    updateTranscript,
+    startRecording,
+    stopRecording,
+  } = useSpeechRecording({ draftRef, setDraft });
+
+  const { fileErrors, addFiles, removeAttachment } = useAttachments({
+    draftRef,
+    setDraft,
+    attachmentCount: draft.attachments.length,
+  });
 
   const covered = coveredCount(draft.fields, draft.salaryCurrency);
   const hasContent =
@@ -92,32 +70,11 @@ export function CollectJobPage() {
   const allCovered = covered === REQUIRED_COVERAGE_IDS.length;
   const canContinue = continueEnabled({ recording, analysing, allCovered });
   const canGenerate = generateEnabled({ recording, analysing, hasContent });
-  const speechAvailable = Boolean(speechCtor());
-
-  useEffect(() => {
-    if (!speechAvailable) setNoSpeechApi(true);
-  }, [speechAvailable]);
 
   useEffect(() => {
     const t = window.setTimeout(() => saveDraft(draftRef.current), 2000);
     return () => window.clearTimeout(t);
   }, [draft]);
-
-  useEffect(() => {
-    return () => {
-      draftRef.current.attachments.forEach((a) =>
-        URL.revokeObjectURL(a.blobUrl),
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!recording) return;
-    const id = window.setInterval(() => {
-      setElapsedMs(Date.now() - startedAtRef.current);
-    }, 200);
-    return () => window.clearInterval(id);
-  }, [recording]);
 
   useEffect(() => {
     if (!analysing) {
@@ -131,14 +88,6 @@ export function CollectJobPage() {
   }, [analysing]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const mirror = mirrorRef.current;
-    if (!canvas || !mirror) return;
-    mirror.scrollTop = canvas.scrollTop;
-    mirror.scrollLeft = canvas.scrollLeft;
-  }, [recording, interim, draft.transcript]);
-
-  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       setHintsOpen(false);
@@ -147,161 +96,6 @@ export function CollectJobPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  useEffect(() => {
-    if (!hintsOpen) return;
-    function onDoc(e: MouseEvent) {
-      if (hintsRef.current && !hintsRef.current.contains(e.target as Node)) {
-        setHintsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [hintsOpen]);
-
-  function updateTranscript(next: string) {
-    if (next.length > TRANSCRIPT_MAX) {
-      setLimitHit(true);
-      next = next.slice(0, TRANSCRIPT_MAX);
-    } else {
-      setLimitHit(false);
-    }
-    setDraft((d) => ({ ...d, transcript: next }));
-  }
-
-  async function startRecording() {
-    setMicFailed(false);
-    setMicBlocked(false);
-    let stream: MediaStream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (err) {
-      const name = err instanceof DOMException ? err.name : "";
-      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-        setMicBlocked(true);
-      } else {
-        setMicFailed(true);
-      }
-      return;
-    }
-    streamRef.current = stream;
-
-    const Ctor = speechCtor();
-    if (Ctor) {
-      const rec = new Ctor();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.lang = "en-IN";
-      rec.onresult = (event) => {
-        let finals = "";
-        let live = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const piece = event.results[i][0]?.transcript ?? "";
-          if (event.results[i].isFinal) finals += piece;
-          else live += piece;
-        }
-        if (finals.trim()) {
-          setDraft((d) => {
-            const prefix = appendNewlineRef.current && d.transcript.trim()
-              ? d.transcript.endsWith("\n")
-                ? ""
-                : "\n"
-              : "";
-            appendNewlineRef.current = false;
-            const gap =
-              d.transcript && !d.transcript.endsWith(" ") && !prefix ? " " : "";
-            return {
-              ...d,
-              transcript: `${d.transcript}${prefix}${gap}${finals.trim()}`.slice(
-                0,
-                TRANSCRIPT_MAX,
-              ),
-            };
-          });
-        }
-        setInterim(live.trim());
-      };
-      rec.onerror = (event) => {
-        if (event.error === "no-speech") return;
-        if (
-          event.error === "not-allowed" ||
-          event.error === "service-not-allowed"
-        ) {
-          setMicBlocked(true);
-          stopRecording();
-        }
-      };
-      rec.onend = () => {
-        if (recordingRef.current) {
-          try {
-            rec.start();
-          } catch {
-            /* already started */
-          }
-        }
-      };
-      try {
-        rec.start();
-        recognitionRef.current = rec;
-      } catch {
-        setNoSpeechApi(true);
-      }
-    } else {
-      setNoSpeechApi(true);
-    }
-
-    appendNewlineRef.current = draftRef.current.transcript.trim() !== "";
-    startedAtRef.current = Date.now();
-    setElapsedMs(0);
-    setInterim("");
-    recordingRef.current = true;
-    setRecording(true);
-  }
-
-  function stopRecording() {
-    recordingRef.current = false;
-    setRecording(false);
-    setInterim("");
-    try {
-      recognitionRef.current?.stop();
-    } catch {
-      /* ignore */
-    }
-    recognitionRef.current = null;
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-  }
-
-  function addFiles(list: File[]) {
-    const { accepted, errors } = ingestFiles(list, draft.attachments.length);
-    setFileErrors(errors);
-    if (!accepted.length) return;
-    setDraft((d) => ({
-      ...d,
-      attachments: [
-        ...d.attachments,
-        ...accepted.map((file) => ({
-          id: uid(),
-          name: file.name,
-          mime: file.type,
-          sizeBytes: file.size,
-          kind: kindFor(file),
-          blobUrl: URL.createObjectURL(file),
-        })),
-      ],
-    }));
-  }
-
-  function removeAttachment(id: string) {
-    setDraft((d) => {
-      const file = d.attachments.find((a) => a.id === id);
-      if (file) URL.revokeObjectURL(file.blobUrl);
-      return {
-        ...d,
-        attachments: d.attachments.filter((a) => a.id !== id),
-      };
-    });
-  }
 
   async function analyse(): Promise<JobDraft | null> {
     if (recording || analysing || !hasContent) return null;
@@ -352,6 +146,10 @@ export function CollectJobPage() {
     });
   }
 
+  function setExpectedSkills(next: string) {
+    setDraft((d) => ({ ...d, preview: { ...d.preview, expectedSkills: next } }));
+  }
+
   function setFlag(id: FlagId, value: boolean) {
     setDraft((d) => ({ ...d, flags: { ...d.flags, [id]: value } }));
   }
@@ -388,12 +186,6 @@ export function CollectJobPage() {
     window.setTimeout(() => document.getElementById(`field-${id}`)?.focus(), 0);
   }
 
-  const recordLabel = recording
-    ? "Stop recording"
-    : draft.transcript.trim() === ""
-      ? "Start recording"
-      : "Continue recording";
-
   return (
     <div className="app-shell create-job">
       {micBlocked && (
@@ -413,203 +205,27 @@ export function CollectJobPage() {
         </div>
       )}
 
-      <div className="composer-stage">
-      <div
-        className={`composer${dragging ? " drop" : ""}${recording ? " recording" : ""}`}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragging(false);
-          addFiles([...e.dataTransfer.files]);
-        }}
-      >
-        <div className="composer-head">
-          <div className="composer-status">
-            {recording ? (
-              <>
-                <span className="dot" />
-                <span className="timer" aria-live="polite">
-                  {formatDuration(elapsedMs)}
-                </span>
-                <span className="composer-status-label">Recording</span>
-              </>
-            ) : (
-              <span className="composer-status-label">Describe the role</span>
-            )}
-          </div>
-          <div className="hints-wrap" ref={hintsRef}>
-            <button
-              type="button"
-              className="hints-btn"
-              aria-label="Hints"
-              aria-expanded={hintsOpen}
-              aria-controls="hints-popover"
-              onClick={() => setHintsOpen((v) => !v)}
-            >
-              <BulbIcon />
-            </button>
-            {hintsOpen ? (
-              <div
-                id="hints-popover"
-                className="hints-popover"
-                role="dialog"
-                aria-label="Coverage hints"
-              >
-                <p className="hints-intro">
-                  Mention these while you talk — we’ll extract them when you
-                  Continue.
-                </p>
-                <ul className="hints-list">
-                  {REQUIRED_COVERAGE_IDS.map((id) => {
-                    const on = isFieldCovered(
-                      id,
-                      draft.fields,
-                      draft.salaryCurrency,
-                    );
-                    return (
-                      <li key={id}>
-                        <button
-                          type="button"
-                          className={`hint-item${on ? " covered" : draft.analysedOnce ? " missing" : ""}`}
-                          onClick={() => jumpToCoverage(id)}
-                        >
-                          {COVERAGE_LABELS[id]}
-                          {draft.analysedOnce ? (
-                            <span>{on ? "Covered" : "Missing"}</span>
-                          ) : null}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        {fileErrors.length > 0 || draft.attachments.length > 0 ? (
-          <div className="composer-attachments">
-            {fileErrors.map((err) => (
-              <p key={err} className="banner">
-                {err}
-              </p>
-            ))}
-            {draft.attachments.length > 0 ? (
-              <div className="chips">
-                {draft.attachments.map((file) => (
-                  <div className="chip" key={file.id}>
-                    <b title={file.name}>{file.name}</b>
-                    <span>{formatBytes(file.sizeBytes)}</span>
-                    {file.kind === "audio" ? (
-                      <audio src={file.blobUrl} controls preload="metadata" />
-                    ) : null}
-                    <button
-                      type="button"
-                      className="x"
-                      aria-label={`Remove ${file.name}`}
-                      onClick={() => removeAttachment(file.id)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        <div className="composer-canvas-wrap">
-          {recording && interim ? (
-            <>
-              <div ref={mirrorRef} className="composer-canvas-mirror" aria-hidden="true">{draft.transcript}<span className="interim-inline">{`${liveInterimGap(draft.transcript)}${interim}`}</span></div>
-              <span className="sr-only" aria-live="polite">
-                {interim}
-              </span>
-            </>
-          ) : null}
-          <textarea
-            ref={canvasRef}
-            className={`composer-canvas${recording && interim ? " live" : ""}`}
-            aria-label="Role notes"
-            placeholder="Example: Senior backend engineer, 5–8 years, Bangalore hybrid, ₹45–60L, ownership of payments services, on-call OK..."
-            value={draft.transcript}
-            onChange={(e) => updateTranscript(e.target.value)}
-            onScroll={() => {
-              const canvas = canvasRef.current;
-              const mirror = mirrorRef.current;
-              if (!canvas || !mirror) return;
-              mirror.scrollTop = canvas.scrollTop;
-              mirror.scrollLeft = canvas.scrollLeft;
-            }}
-            disabled={analysing}
-          />
-        </div>
-        {limitHit ? (
-          <p className="limit-note">Transcript limit reached</p>
-        ) : null}
-
-        <div className="composer-foot">
-          <input
-            ref={fileRef}
-            type="file"
-            hidden
-            multiple
-            accept={ACCEPT}
-            onChange={(e) => {
-              addFiles([...e.target.files ?? []]);
-              e.target.value = "";
-            }}
-          />
-          <div className="composer-actions">
-            <button
-              type="button"
-              className="composer-tool-btn"
-              disabled={recording || analysing}
-              onClick={() => fileRef.current?.click()}
-            >
-              <PaperclipIcon />
-              Upload
-            </button>
-            <button
-              type="button"
-              className={`composer-tool-btn${recording ? " on" : ""}`}
-              onClick={recording ? stopRecording : startRecording}
-              disabled={analysing}
-              aria-label={recordLabel}
-              title={recordLabel}
-            >
-              {recording ? <StopIcon /> : <MicIcon />}
-              {recording ? "Stop" : "Record"}
-            </button>
-          </div>
-          {analysing ? (
-            <span className="build-loading" aria-live="polite">
-              <SparkleIcon />
-              <span className="build-loading-text">
-                {generateLabel({ analysing, analysedOnce: draft.analysedOnce, buildPhase })}
-              </span>
-            </span>
-          ) : (
-            <button
-              type="button"
-              id="generate-btn"
-              className="btn primary"
-              disabled={!canGenerate}
-              aria-disabled={!canGenerate}
-              onClick={onGenerate}
-            >
-              <SparkleIcon />
-              {generateLabel({ analysing: false, analysedOnce: draft.analysedOnce })}
-            </button>
-          )}
-        </div>
-
-      </div>
-      </div>
+      <Composer
+        draft={draft}
+        recording={recording}
+        interim={interim}
+        elapsedMs={elapsedMs}
+        analysing={analysing}
+        buildPhase={buildPhase}
+        limitHit={limitHit}
+        fileErrors={fileErrors}
+        canGenerate={canGenerate}
+        hintsOpen={hintsOpen}
+        onHintsToggle={() => setHintsOpen((v) => !v)}
+        onHintsClose={() => setHintsOpen(false)}
+        onJumpToCoverage={jumpToCoverage}
+        addFiles={addFiles}
+        removeAttachment={removeAttachment}
+        updateTranscript={updateTranscript}
+        startRecording={startRecording}
+        stopRecording={stopRecording}
+        onGenerate={onGenerate}
+      />
 
       {draft.analysedOnce ? (
       <section className="follow-up">
@@ -626,6 +242,7 @@ export function CollectJobPage() {
             missingIds={missingVisible}
             onField={setField}
             onCurrency={(v) => setDraft((d) => ({ ...d, salaryCurrency: v }))}
+            onExpectedSkills={setExpectedSkills}
           />
         </section>
 
@@ -658,291 +275,5 @@ export function CollectJobPage() {
         </footer>
       ) : null}
     </div>
-  );
-}
-
-const FORM_SECTIONS: { title: string; fields: CoverageId[] }[] = [
-  {
-    title: "Role",
-    fields: [
-      "designation",
-      "experienceYears",
-      "workMode",
-      "experienceType",
-      "salary",
-    ],
-  },
-  {
-    title: "Company & location",
-    fields: ["location", "industryType", "companyType"],
-  },
-  {
-    title: "Must haves & red flags",
-    fields: ["mustHaves", "redFlags", "searchStrategy"],
-  },
-];
-
-const WIDE_FIELDS = new Set<CoverageId>(["searchStrategy"]);
-
-const POINT_FIELDS = new Set<CoverageId>(["mustHaves", "redFlags"]);
-
-const TAG_FIELDS: Partial<Record<CoverageId, readonly string[]>> = {
-  location: LOCATION_SUGGESTIONS,
-  industryType: INDUSTRY_SUGGESTIONS,
-};
-
-const CHOICE_FIELDS: Partial<Record<CoverageId, readonly string[]>> = {
-  workMode: WORK_MODE_OPTIONS,
-  experienceType: EXPERIENCE_TYPE_OPTIONS,
-};
-
-const SELECT_FIELDS: Partial<Record<CoverageId, readonly string[]>> = {
-  companyType: COMPANY_TYPE_OPTIONS,
-};
-
-function FlagsChoice({
-  draft,
-  onFlag,
-}: {
-  draft: JobDraft;
-  onFlag: (id: FlagId, value: boolean) => void;
-}) {
-  const selected = FLAG_IDS.filter((id) => draft.flags[id]).map(
-    (id) => FLAG_LABELS[id],
-  );
-  return (
-    <ChoiceRow
-      options={FLAG_IDS.map((id) => FLAG_LABELS[id])}
-      value={selected}
-      ariaLabel="Select to apply"
-      onSelect={(label) => {
-        const id = FLAG_IDS.find((item) => FLAG_LABELS[item] === label);
-        if (id) onFlag(id, !draft.flags[id]);
-      }}
-    />
-  );
-}
-
-function FieldGrid({
-  ids,
-  draft,
-  missingIds,
-  onField,
-  onCurrency,
-}: {
-  ids: readonly CoverageId[];
-  draft: JobDraft;
-  missingIds: CoverageId[];
-  onField: (id: CoverageId, value: string) => void;
-  onCurrency: (v: Currency | null) => void;
-}) {
-  if (ids.length === 0) return null;
-
-  function renderField(id: CoverageId) {
-    return (
-      <FieldControl
-        key={id}
-        id={id}
-        draft={draft}
-        missing={missingIds.includes(id)}
-        onField={onField}
-        onCurrency={onCurrency}
-      />
-    );
-  }
-
-  return (
-    <>
-      {FORM_SECTIONS.map((section) => {
-        const visible = section.fields.filter((id) => ids.includes(id));
-        if (visible.length === 0) return null;
-        return (
-          <section className="form-section" key={section.title}>
-            <h3 className="form-section-title">{section.title}</h3>
-            <div className="form-section-grid">
-              {visible.map(renderField)}
-            </div>
-          </section>
-        );
-      })}
-    </>
-  );
-}
-
-function FieldControl({
-  id,
-  draft,
-  missing,
-  onField,
-  onCurrency,
-}: {
-  id: CoverageId;
-  draft: JobDraft;
-  missing: boolean;
-  onField: (id: CoverageId, value: string) => void;
-  onCurrency: (v: Currency | null) => void;
-}) {
-  const inputId = `field-${id}`;
-  const value = draft.fields[id].value;
-  const choiceOptions = CHOICE_FIELDS[id];
-  const selectOptions = SELECT_FIELDS[id];
-  let control;
-  if (id === "salary") {
-    control = (
-      <SalaryInput
-        id={inputId}
-        value={value}
-        currency={draft.salaryCurrency}
-        onChange={(next) => onField(id, next)}
-        onCurrency={onCurrency}
-      />
-    );
-  } else if (id === "searchStrategy") {
-    control = (
-      <textarea
-        id={inputId}
-        className="pill-input area-input"
-        value={value}
-        onChange={(e) => onField(id, e.target.value)}
-      />
-    );
-  } else if (POINT_FIELDS.has(id)) {
-    control = (
-      <PointList
-        id={inputId}
-        value={value}
-        onChange={(next) => onField(id, next)}
-      />
-    );
-  } else if (id in TAG_FIELDS) {
-    control = (
-      <TagInput
-        id={inputId}
-        value={value}
-        suggestions={TAG_FIELDS[id] ?? []}
-        variant="dropdown"
-        onChange={(next) => onField(id, next)}
-      />
-    );
-  } else if (selectOptions) {
-    control = (
-      <select
-        id={inputId}
-        className={`pill-select select-icon${value ? "" : " is-placeholder"}`}
-        value={value}
-        onChange={(e) => onField(id, e.target.value)}
-      >
-        <option value="" disabled>
-          Select…
-        </option>
-        {selectOptions.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    );
-  } else if (choiceOptions) {
-    control = (
-      <ChoiceRow
-        id={inputId}
-        options={choiceOptions}
-        value={value}
-        ariaLabel={COVERAGE_LABELS[id]}
-        onSelect={(option) => onField(id, option)}
-      />
-    );
-  } else {
-    control = (
-      <input
-        id={inputId}
-        className="pill-input"
-        value={value}
-        onChange={(e) => onField(id, e.target.value)}
-      />
-    );
-  }
-  return (
-    <div
-      className={`field${WIDE_FIELDS.has(id) ? " field-wide" : ""}${missing ? " field-missing" : ""}`}
-    >
-      <label htmlFor={inputId}>{COVERAGE_LABELS[id]}</label>
-      {control}
-    </div>
-  );
-}
-
-function BulbIcon() {
-  return (
-    <svg
-      className="bulb-icon"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M8 2.5a4 4 0 0 0-2.2 7.3c.4.3.7.8.7 1.3v.4h3v-.4c0-.5.3-1 .7-1.3A4 4 0 0 0 8 2.5Z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
-      <path
-        d="M6.5 12.5h3M7 13.5h2"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function PaperclipIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M10.2 4.4 5.1 9.5a2.2 2.2 0 1 0 3.1 3.1l5.3-5.3a3.5 3.5 0 0 0-4.9-4.9L3.3 7.7"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function MicIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-      <rect x="6.5" y="2.5" width="5" height="8" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M4.5 8.5a4.5 4.5 0 0 0 9 0M9 13v2.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function StopIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <rect x="2.5" y="2.5" width="9" height="9" rx="1.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-function SparkleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M8 1.5c.3 2.2 1 3.3 3 3.6a.4.4 0 0 1 0 .8c-2 .3-2.7 1.4-3 3.6-.3-2.2-1-3.3-3-3.6a.4.4 0 0 1 0-.8c2-.3 2.7-1.4 3-3.6Z"
-        fill="currentColor"
-      />
-      <path
-        d="M13 8.8c.18 1.3.6 1.9 1.7 2.1a.28.28 0 0 1 0 .55c-1.1.2-1.52.8-1.7 2.1-.18-1.3-.6-1.9-1.7-2.1a.28.28 0 0 1 0-.55c1.1-.2 1.52-.8 1.7-2.1Z"
-        fill="currentColor"
-      />
-    </svg>
   );
 }

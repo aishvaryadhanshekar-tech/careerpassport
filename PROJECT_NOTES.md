@@ -5,7 +5,7 @@
 > make changes safely. **Update this file whenever the workflow, routes, data model, or file
 > layout changes** — treat it as part of the diff, not an afterthought.
 >
-> Last updated: 2026-08-27
+> Last updated: 2026-08-28
 
 ---
 
@@ -25,18 +25,26 @@ refresh wipes state by design (see commit `e3214a6`).
 Reference docs from the product side live in `reference-materials/` (PDFs/docx, not source of
 truth for code) and `docs/specs/` (implementation specs — currently one file,
 `docs/specs/2026-08-24-step-1-collect-job-information.md`, which is the authoritative spec for
-Step 1). Screenshots used during manual/visual QA are dumped in `.verify-screens/` (git-ignored
-scratch, not documentation — safe to ignore or clean).
+Step 1). Screenshots used during manual/visual QA are dumped in `.verify-screens/` (scratch, not
+documentation).
+
+⚠️ **`.verify-screens/` is NOT git-ignored, despite what this doc previously said** — it is tracked,
+with ~13,900 files / 569MB of PNGs, which is why `.git` is ~100MB. Adding it to `.gitignore` and
+`git rm -r --cached .verify-screens` would shrink the working tree massively (history would still
+carry the blobs unless rewritten). Left alone pending a call from the repo owner.
 
 ---
 
 ## 2. Tech stack
 
+> **Note (2026-08-28):** the codebase was restructured for parallel work — `index.css` and the two
+> largest page components were split up, and duplicated helpers were consolidated. See
+> **§2.5 Code layout** below before looking for a file where this doc used to say it was.
+
 - **React 19** + **TypeScript**, built with **Vite 7**.
 - **react-router-dom v7** for routing (`BrowserRouter`).
 - **Vitest** for unit tests (`*.test.ts` files sit next to the module they test).
-- No CSS framework — one large hand-written stylesheet: `src/index.css` (~56KB, grows with every
-  UI change).
+- No CSS framework — hand-written CSS, split into modules under `src/styles/` (see §2.5).
 - Deployed via Vercel (`vercel.json`, `.vercel/`).
 
 ### Scripts (`package.json`)
@@ -49,6 +57,57 @@ scratch, not documentation — safe to ignore or clean).
 
 ---
 
+## 2.5 Code layout & working in parallel
+
+The repo was restructured on 2026-08-28 so that separate pieces of work touch separate files. The
+refactor was behaviour-preserving: the production CSS bundle is byte-identical to before, and the
+rendered DOM of every route was diffed against the pre-refactor build and matched exactly.
+
+### Directories
+
+| Path | Contains |
+|---|---|
+| `src/styles/` | 11 CSS modules + `README.md`. `src/index.css` is now **only an ordered `@import` list** — never put rules in it. |
+| `src/shared/` | Cross-feature primitives: `icons.tsx`, `labels.ts` (`WORK_MODE_LABEL`), `useBuildPhase.ts`, `hydrateFromJob.ts`. |
+| `src/types/` | Domain types split by area (`shared`/`jobs`/`application`/`roleProfile`/`trips`/`draft`) behind a barrel `index.ts`. **`import … from "./types"` still works unchanged.** |
+| `src/roleProfile/` | Step 2 internals: one file per tab, plus `hydrate.ts`, `shared.tsx` (badges/tables reused by other pages), `readOnly.tsx` (shared read-only Role Details tab) and `RoleSidebar.tsx` (**shared by all three role pages**). |
+| `src/collectJob/` | Step 1 internals: `useSpeechRecording`, `useAttachments`, `Composer`, `CoverageHints`, `JobFieldsForm`, `icons`. |
+| `src/trips/` | Trips feature (unchanged location). |
+
+### Which areas are independent?
+
+These can be worked on at the same time without touching each other's files:
+
+| Area | Owns |
+|---|---|
+| **Jobs list / details** | `JobsPage.tsx`, `JobDetailsPage.tsx`, `jobsStore.ts`, `jobsListQuery.ts`, `styles/jobs.css` |
+| **Step 1 — collect** | `CollectJobPage.tsx`, `collectJob/*`, `extractJobFields.ts`, `styles/collect-job.css` |
+| **Step 2 — role profile** | `RoleProfilePage.tsx`, `roleProfile/*`, `deriveRoleProfile.ts`, `evaluationFramework.ts`, `styles/role-profile.css` |
+| **Step 3 — application form** | `ApplicationPage.tsx`, `ContextCard`/`StandardFieldsCard`/`CustomQuestionsCard`/`QuestionEditor`, `applicationForm.ts`, `styles/application.css`, `styles/question-editor.css` |
+| **Preview** | `ApplicationPreview.tsx`, `previewScroll.ts`, `styles/application-preview.css` |
+| **Trips** | `trips/*`, `tripsStore.ts`, `tripStages.ts`, `tripSpine.ts`, `tripInference.ts`, `trips/trips.css` |
+
+**Shared files — expect conflicts if two tasks both touch these:** `src/types/*`, `src/shared/*`,
+`src/storage.ts`, `src/AppShell.tsx`, `src/App.tsx`, `styles/base.css`, `styles/shell.css`,
+`styles/controls.css`, `styles/footer-responsive.css`, and `roleProfile/shared.tsx` +
+`roleProfile/readOnly.tsx` (both used by JobDetailsPage and Step3Page).
+
+### Known coupling that still exists
+
+- **Trips live inside `JobDraft`** (`JobDraft.trips`), so trip persistence changes ripple into
+  `storage.ts` and `applyAnalysis.ts`. There is no trips-only storage seam.
+- **`jobsStore` imports `storage`** — `openJob(id)` *writes* the singleton draft key as a side effect
+  of a read. `shared/hydrateFromJob.ts` documents this.
+- **No reactive store.** Pages `loadDraft()` once into `useState`, autosave on a 2s debounce, and
+  re-hydrate on navigation. Two mounted components never see each other's edits.
+- **`collectJob/icons.tsx` has its own `SparkleIcon`** whose path data differs from
+  `shared/icons.tsx` — they are genuinely different glyphs. Do not merge them.
+- **Wizard step order is encoded in three places**: `App.tsx`, `Stepper.tsx` (`stepPath`/`STEPS`),
+  and `wizardHeader.ts`.
+- `Step3Page` links to `/jobs/:id/apply`, **a route that does not exist**.
+
+---
+
 ## 3. The wizard — routes & steps
 
 Defined in [src/App.tsx](src/App.tsx). All wizard routes render inside `AppShell` (sidenav + wizard
@@ -57,7 +116,7 @@ header + stepper).
 | Step | Route | Page component | Purpose |
 |---|---|---|---|
 | 1 | `/create-job` | `CollectJobPage` | Capture role info via voice/text/files → extract 12 coverage fields → "Analyse"/"Build with AI" |
-| 2 | `/role-profile` | `RoleProfilePage` | Review/edit derived Role Profile: headline, portrait, department, evaluation framework, sourcing info (tabbed: Overview / Requirements / Sourcing / Evaluation) |
+| 2 | `/role-profile` | `RoleProfilePage` | Review/edit derived Role Profile. Sidebar (headline as heading, portrait as byline, editable role fields) + tabs: Requirements / Sourcing Playbook / Evaluation Framework |
 | 3 | `/step-2` (route path, **displayed as step 3**) | `ApplicationPage` | Build the candidate-facing application form (standard fields, custom questions, context card) with live mobile/desktop preview |
 | 4 | `/step-3` (route path, **displayed as step 4**) | `Step3Page` | Final read-only summary/preview before publishing |
 
@@ -80,7 +139,7 @@ Step numbering and back-navigation logic live in [src/wizardHeader.ts](src/wizar
 
 ---
 
-## 4. Data model (`src/types.ts`)
+## 4. Data model (`src/types/`)
 
 Central type file. Key shapes:
 
@@ -143,8 +202,13 @@ user touched.
   browser APIs, mocked downstream analysis).
 
 ### RoleProfilePage (`src/RoleProfilePage.tsx`) — Step 2 (`/role-profile`)
-- Largest page (~41KB). Tabbed UI: Overview / Requirements / Sourcing / Evaluation
-  (`type TabId`).
+- Split into `src/roleProfile/` (one file per tab); the page file itself just orchestrates.
+  Tabs: Requirements / Sourcing / Evaluation (`TabId` in `roleProfile/hydrate.ts`). **The Overview
+  tab was removed** — headline/portrait moved into the shared sidebar, and its other fields were
+  already duplicated there.
+- Uses the shared `RoleSidebar` in `editable` mode. Its edit state uses the same snapshot/discard
+  machinery as the tabs under the key `"summary"` (`EditKey = TabId | "summary"`), so Discard still
+  works for headline/portrait/designation.
 - Per-tab edit toggle (commit `af305c1`) — each tab has its own edit/view state.
 - Hydrates from `deriveRoleProfile(draft)` + `deriveJobPreview(draft)` on first visit only
   (`roleProfileGenerated` flag), then user edits win via `mergeFieldState`.
@@ -165,7 +229,7 @@ user touched.
   extracted out of `CustomQuestionsCard.tsx` specifically so a future step can import the same
   question-authoring UI. `CustomQuestionsCard.tsx` is now just the "Questions" card wrapper
   (header, item list + drag-reorder, "+ Add another") around those building blocks.
-- `CustomQuestionType` (`src/types.ts`) covers all 12 Google Forms types: short_answer, paragraph,
+- `CustomQuestionType` (`src/types/application.ts`) covers all 12 Google Forms types: short_answer, paragraph,
   multiple_choice, checkboxes, dropdown, file_upload, linear_scale, rating,
   multiple_choice_grid, checkbox_grid, date, time. Type-specific fields on `CustomQuestion`
   (rows/columns, scaleMin/Max, ratingMax/Icon, maxFiles, etc.) are all optional so older
@@ -241,8 +305,8 @@ visually).
   `Step3Page.tsx`, `deriveRoleProfile.ts`, `index.css` — check `git diff`/`git status` for current
   in-flight work before assuming this doc reflects HEAD exactly.
 - Commit history shows heavy iterative UI polish (spacing, dropdown chevrons, button width jitter,
-  sticky footers) — `index.css` is the usual blast radius for visual tweaks; check existing class
-  naming patterns before adding new ones.
+  sticky footers) — visual tweaks now land in one `src/styles/*` module rather than a single 4000-line
+  file; check existing class naming patterns before adding new ones.
 
 ---
 
@@ -250,13 +314,13 @@ visually).
 
 | Need to... | Look at |
 |---|---|
-| Change the 12 required job fields | `src/types.ts` (`COVERAGE_IDS`, `COVERAGE_LABELS`) + `src/extractJobFields.ts` (extraction) + `docs/specs/2026-08-24-step-1-collect-job-information.md` |
+| Change the 12 required job fields | `src/types/jobs.ts` (`COVERAGE_IDS`, `COVERAGE_LABELS`) + `src/extractJobFields.ts` (extraction) + `docs/specs/2026-08-24-step-1-collect-job-information.md` |
 | Change wizard step order/count | `src/App.tsx`, `src/AppShell.tsx`, `src/Stepper.tsx`, `src/wizardHeader.ts` |
 | Change how Role Profile is derived | `src/deriveRoleProfile.ts` |
 | Change evaluation criteria behavior | `src/evaluationFramework.ts`, `RoleProfilePage.tsx` (Evaluation tab) |
 | Change candidate application form fields | `src/StandardFieldsCard.tsx`, `src/CustomQuestionsCard.tsx`, `src/seedApplication.ts`, `src/applicationForm.ts` |
 | Change persistence behavior | `src/storage.ts`, `src/jobsStore.ts`, `src/memoryStore.ts` |
-| Change visual styling | `src/index.css` (single global stylesheet) |
+| Change visual styling | the right module in `src/styles/` — see `src/styles/README.md` |
 | Understand Step 1's exact locked UX rules | `docs/specs/2026-08-24-step-1-collect-job-information.md` |
 
 ---
