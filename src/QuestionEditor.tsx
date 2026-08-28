@@ -25,7 +25,7 @@ import {
 } from "./applicationForm";
 import { Switch } from "./ContextCard";
 import type {
-  ApplicationConfig,
+  ApplicationItem,
   CustomQuestion,
   CustomQuestionType,
   SectionBreak,
@@ -60,12 +60,12 @@ const RATING_MAX_OPTIONS = [3, 4, 5, 7, 10];
 
 export function QuestionBlock({
   question,
-  config,
+  items,
   onChange,
 }: {
   question: CustomQuestion;
-  config: ApplicationConfig;
-  onChange: (next: ApplicationConfig) => void;
+  items: ApplicationItem[];
+  onChange: (next: ApplicationItem[]) => void;
 }) {
   const showOptions = OPTION_TYPES.includes(question.type);
   const showGrid = GRID_TYPES.includes(question.type);
@@ -87,7 +87,7 @@ export function QuestionBlock({
           placeholder="Question"
           aria-label="Question"
           onChange={(e) =>
-            onChange(updateQuestionPrompt(config, question.id, e.target.value))
+            onChange(updateQuestionPrompt(items, question.id, e.target.value))
           }
         />
         <select
@@ -97,7 +97,7 @@ export function QuestionBlock({
           onChange={(e) =>
             onChange(
               setQuestionType(
-                config,
+                items,
                 question.id,
                 e.target.value as CustomQuestionType,
               ),
@@ -119,7 +119,7 @@ export function QuestionBlock({
             type="button"
             className="icon-x"
             aria-label="Remove image"
-            onClick={() => onChange(setQuestionImage(config, question.id, undefined))}
+            onClick={() => onChange(setQuestionImage(items, question.id, undefined))}
           >
             ×
           </button>
@@ -163,7 +163,7 @@ export function QuestionBlock({
                 onChange={(e) =>
                   onChange(
                     updateQuestionOption(
-                      config,
+                      items,
                       question.id,
                       optionIndex,
                       e.target.value,
@@ -176,7 +176,7 @@ export function QuestionBlock({
                 className="icon-x"
                 aria-label={`Remove option ${optionIndex + 1}`}
                 onClick={() =>
-                  onChange(removeQuestionOption(config, question.id, optionIndex))
+                  onChange(removeQuestionOption(items, question.id, optionIndex))
                 }
               >
                 ×
@@ -188,7 +188,7 @@ export function QuestionBlock({
             <button
               type="button"
               className="text-add"
-              onClick={() => onChange(addQuestionOption(config, question.id))}
+              onClick={() => onChange(addQuestionOption(items, question.id))}
             >
               + Add option
             </button>
@@ -206,7 +206,7 @@ export function QuestionBlock({
               onChange={(e) =>
                 onChange(
                   setScaleRange(
-                    config,
+                    items,
                     question.id,
                     Number(e.target.value),
                     question.scaleMax ?? 5,
@@ -228,7 +228,7 @@ export function QuestionBlock({
               onChange={(e) =>
                 onChange(
                   setScaleRange(
-                    config,
+                    items,
                     question.id,
                     question.scaleMin ?? 1,
                     Number(e.target.value),
@@ -251,7 +251,7 @@ export function QuestionBlock({
                 aria-label="Minimum label"
                 value={question.scaleMinLabel ?? ""}
                 onChange={(e) =>
-                  onChange(setScaleLabel(config, question.id, "min", e.target.value))
+                  onChange(setScaleLabel(items, question.id, "min", e.target.value))
                 }
               />
             </label>
@@ -262,7 +262,7 @@ export function QuestionBlock({
                 aria-label="Maximum label"
                 value={question.scaleMaxLabel ?? ""}
                 onChange={(e) =>
-                  onChange(setScaleLabel(config, question.id, "max", e.target.value))
+                  onChange(setScaleLabel(items, question.id, "max", e.target.value))
                 }
               />
             </label>
@@ -278,7 +278,7 @@ export function QuestionBlock({
               aria-label="Number of rating icons"
               value={question.ratingMax ?? 5}
               onChange={(e) =>
-                onChange(setRatingMax(config, question.id, Number(e.target.value)))
+                onChange(setRatingMax(items, question.id, Number(e.target.value)))
               }
             >
               {RATING_MAX_OPTIONS.map((value) => (
@@ -294,7 +294,7 @@ export function QuestionBlock({
               onChange={(e) =>
                 onChange(
                   setRatingIcon(
-                    config,
+                    items,
                     question.id,
                     e.target.value as "star" | "heart" | "thumb",
                   ),
@@ -323,7 +323,7 @@ export function QuestionBlock({
               ariaLabel="Allow only specific file types"
               onToggle={() =>
                 onChange(
-                  setFileUploadRule(config, question.id, {
+                  setFileUploadRule(items, question.id, {
                     restrictFileTypes: !(question.restrictFileTypes ?? false),
                   }),
                 )
@@ -338,7 +338,7 @@ export function QuestionBlock({
               value={question.maxFiles ?? 1}
               onChange={(e) =>
                 onChange(
-                  setFileUploadRule(config, question.id, {
+                  setFileUploadRule(items, question.id, {
                     maxFiles: Number(e.target.value),
                   }),
                 )
@@ -359,7 +359,7 @@ export function QuestionBlock({
               value={question.maxFileSizeMb ?? 10}
               onChange={(e) =>
                 onChange(
-                  setFileUploadRule(config, question.id, {
+                  setFileUploadRule(items, question.id, {
                     maxFileSizeMb: Number(e.target.value),
                   }),
                 )
@@ -386,14 +386,14 @@ export function QuestionBlock({
                   placeholder={`Row ${rowIndex + 1}`}
                   aria-label={`Row ${rowIndex + 1}`}
                   onChange={(e) =>
-                    onChange(updateGridRow(config, question.id, rowIndex, e.target.value))
+                    onChange(updateGridRow(items, question.id, rowIndex, e.target.value))
                   }
                 />
                 <button
                   type="button"
                   className="icon-x"
                   aria-label={`Remove row ${rowIndex + 1}`}
-                  onClick={() => onChange(removeGridRow(config, question.id, rowIndex))}
+                  onClick={() => onChange(removeGridRow(items, question.id, rowIndex))}
                 >
                   ×
                 </button>
@@ -402,7 +402,7 @@ export function QuestionBlock({
             <button
               type="button"
               className="text-add"
-              onClick={() => onChange(addGridRow(config, question.id))}
+              onClick={() => onChange(addGridRow(items, question.id))}
             >
               + Add row
             </button>
@@ -417,7 +417,7 @@ export function QuestionBlock({
                   aria-label={`Column ${columnIndex + 1}`}
                   onChange={(e) =>
                     onChange(
-                      updateGridColumn(config, question.id, columnIndex, e.target.value),
+                      updateGridColumn(items, question.id, columnIndex, e.target.value),
                     )
                   }
                 />
@@ -425,7 +425,7 @@ export function QuestionBlock({
                   type="button"
                   className="icon-x"
                   aria-label={`Remove column ${columnIndex + 1}`}
-                  onClick={() => onChange(removeGridColumn(config, question.id, columnIndex))}
+                  onClick={() => onChange(removeGridColumn(items, question.id, columnIndex))}
                 >
                   ×
                 </button>
@@ -434,7 +434,7 @@ export function QuestionBlock({
             <button
               type="button"
               className="text-add"
-              onClick={() => onChange(addGridColumn(config, question.id))}
+              onClick={() => onChange(addGridColumn(items, question.id))}
             >
               + Add column
             </button>
@@ -448,7 +448,7 @@ export function QuestionBlock({
           className="footer-icon"
           title="Duplicate"
           aria-label="Duplicate question"
-          onClick={() => onChange(duplicateItem(config, question.id))}
+          onClick={() => onChange(duplicateItem(items, question.id))}
         >
           <DuplicateIcon />
         </button>
@@ -457,7 +457,7 @@ export function QuestionBlock({
           className="footer-icon"
           title="Delete"
           aria-label="Delete question"
-          onClick={() => onChange(removeQuestion(config, question.id))}
+          onClick={() => onChange(removeQuestion(items, question.id))}
         >
           <TrashIcon />
         </button>
@@ -469,7 +469,7 @@ export function QuestionBlock({
             onToggle={() =>
               onChange(
                 setRequireResponsePerRow(
-                  config,
+                  items,
                   question.id,
                   !(question.requireResponsePerRow ?? false),
                 ),
@@ -483,7 +483,7 @@ export function QuestionBlock({
             onToggle={() =>
               onChange(
                 setQuestionRequirement(
-                  config,
+                  items,
                   question.id,
                   question.required === "mandatory" ? "optional" : "mandatory",
                 ),
@@ -500,14 +500,14 @@ export function SectionBlock({
   section,
   sectionNumber,
   sectionTotal,
-  config,
+  items,
   onChange,
 }: {
   section: SectionBreak;
   sectionNumber: number;
   sectionTotal: number;
-  config: ApplicationConfig;
-  onChange: (next: ApplicationConfig) => void;
+  items: ApplicationItem[];
+  onChange: (next: ApplicationItem[]) => void;
 }) {
   return (
     <div className="section-block">
@@ -519,7 +519,7 @@ export function SectionBlock({
         value={section.title}
         placeholder="Section title"
         aria-label="Section title"
-        onChange={(e) => onChange(setSectionTitle(config, section.id, e.target.value))}
+        onChange={(e) => onChange(setSectionTitle(items, section.id, e.target.value))}
       />
       <input
         className="section-description"
@@ -527,7 +527,7 @@ export function SectionBlock({
         placeholder="Description (optional)"
         aria-label="Section description"
         onChange={(e) =>
-          onChange(setSectionDescription(config, section.id, e.target.value))
+          onChange(setSectionDescription(items, section.id, e.target.value))
         }
       />
       <div className="question-footer">
@@ -536,7 +536,7 @@ export function SectionBlock({
           className="footer-icon"
           title="Duplicate"
           aria-label="Duplicate section"
-          onClick={() => onChange(duplicateItem(config, section.id))}
+          onClick={() => onChange(duplicateItem(items, section.id))}
         >
           <DuplicateIcon />
         </button>
@@ -545,7 +545,7 @@ export function SectionBlock({
           className="footer-icon"
           title="Delete"
           aria-label="Delete section"
-          onClick={() => onChange(removeQuestion(config, section.id))}
+          onClick={() => onChange(removeQuestion(items, section.id))}
         >
           <TrashIcon />
         </button>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { addQuestion, reorderItems } from "./applicationForm";
 import { QuestionBlock, SectionBlock } from "./QuestionEditor";
-import type { ApplicationConfig } from "./types";
+import type { ApplicationConfig, ApplicationItem } from "./types";
 
 export function CustomQuestionsCard({
   config,
@@ -11,7 +11,10 @@ export function CustomQuestionsCard({
   onChange: (next: ApplicationConfig) => void;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const sectionCount = config.items.filter(
+  const items = config.items;
+  const handleItemsChange = (next: ApplicationItem[]) =>
+    onChange({ ...config, items: next });
+  const sectionCount = items.filter(
     (item) => item.kind === "section",
   ).length;
 
@@ -23,18 +26,18 @@ export function CustomQuestionsCard({
           <button
             type="button"
             className="text-add"
-            onClick={() => onChange(addQuestion(config))}
+            onClick={() => handleItemsChange(addQuestion(items))}
           >
             + Add question
           </button>
         </div>
       </header>
       <div className="app-card-body">
-        {config.items.map((item, index) => {
+        {items.map((item, index) => {
           let sectionNumber = 0;
           if (item.kind === "section") {
             sectionNumber =
-              config.items
+              items
                 .slice(0, index + 1)
                 .filter((entry) => entry.kind === "section").length + 1;
           }
@@ -47,7 +50,7 @@ export function CustomQuestionsCard({
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => {
                 if (dragIndex === null) return;
-                onChange(reorderItems(config, dragIndex, index));
+                handleItemsChange(reorderItems(items, dragIndex, index));
                 setDragIndex(null);
               }}
             >
@@ -56,11 +59,11 @@ export function CustomQuestionsCard({
                   section={item}
                   sectionNumber={sectionNumber}
                   sectionTotal={sectionCount + 1}
-                  onChange={onChange}
-                  config={config}
+                  onChange={handleItemsChange}
+                  items={items}
                 />
               ) : (
-                <QuestionBlock question={item} config={config} onChange={onChange} />
+                <QuestionBlock question={item} items={items} onChange={handleItemsChange} />
               )}
             </div>
           );
