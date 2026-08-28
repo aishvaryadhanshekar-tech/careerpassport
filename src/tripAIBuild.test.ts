@@ -57,7 +57,10 @@ describe("generateTripRounds", () => {
     expect(caseStudy.items.length).toBeLessThanOrEqual(2);
 
     const rapidFire = stages.find((s) => s.type === "rapid_fire")!;
-    expect(rapidFire.items.every((q) => q.type === "short_answer")).toBe(true);
+    expect(rapidFire.items.every((q) => q.type === "multiple_choice")).toBe(true);
+    expect(rapidFire.items.every((q) => q.options.length === 2)).toBe(true);
+    expect(rapidFire.items.every((q) => q.options.includes("Serious") && q.options.includes("Joking"))).toBe(true);
+    expect(rapidFire.items.every((q) => !q.prompt.toLowerCase().startsWith("true or false"))).toBe(true);
   });
 
   it("respects a custom set of round types", () => {
@@ -77,6 +80,13 @@ describe("generateTripRounds", () => {
       for (const item of stage.items) {
         expect(item.prompt.trim().length).toBeGreaterThan(0);
       }
+    }
+
+    const rapidFire = stages.find((s) => s.type === "rapid_fire")!;
+    for (const item of rapidFire.items) {
+      expect(item.type).toBe("multiple_choice");
+      expect(item.options).toEqual(["Serious", "Joking"]);
+      expect(item.prompt.toLowerCase().startsWith("true or false")).toBe(false);
     }
   });
 });
@@ -120,5 +130,20 @@ describe("rewriteRoundQuestions", () => {
 
     const rewritten = rewriteRoundQuestions(mcStage, cards, draft);
     expect(rewritten.every((q) => q.type === "multiple_choice" && q.options.length > 0)).toBe(true);
+  });
+
+  it("produces Serious/Joking multiple_choice questions when targeting the rapid_fire stage type", () => {
+    const draft = draftWithContent();
+    const cards = deriveInferenceCards(draft);
+    const stages = generateTripRounds(cards, draft);
+    const rapidFireStage = stages.find((s) => s.type === "rapid_fire")!;
+
+    const rewritten = rewriteRoundQuestions(rapidFireStage, cards, draft);
+    expect(rewritten.length).toBeGreaterThan(0);
+    for (const q of rewritten) {
+      expect(q.type).toBe("multiple_choice");
+      expect(q.options).toEqual(["Serious", "Joking"]);
+      expect(q.prompt.toLowerCase().startsWith("true or false")).toBe(false);
+    }
   });
 });

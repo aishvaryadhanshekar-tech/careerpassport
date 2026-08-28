@@ -42,8 +42,9 @@ function rapidFireQuestions(cards: InferenceCard[]): CustomQuestion[] {
   return Array.from({ length: count }, (_, i) => {
     const seed = source[i % source.length];
     return question({
-      prompt: `True or false: ${seed}`,
-      type: "short_answer",
+      prompt: seed,
+      type: "multiple_choice",
+      options: ["Serious", "Joking"],
     });
   });
 }
