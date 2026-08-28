@@ -238,7 +238,7 @@ function PreviewApplyScreen({
 
   const applicationSections = (
     <>
-      {hasResume ? <AutofillCard /> : null}
+      {hasResume && !showTabs ? <AutofillCard /> : null}
       <div className="preview-fields preview-section-card" id="preview-fields">
         <p className="preview-eyebrow">Your details</p>
         <label className="preview-field">
@@ -280,6 +280,78 @@ function PreviewApplyScreen({
                 <textarea rows={3} />
               ) : item.type === "short_answer" ? (
                 <input type="text" />
+              ) : item.type === "date" ? (
+                <input type="date" />
+              ) : item.type === "time" ? (
+                <input type="time" />
+              ) : item.type === "file_upload" ? (
+                <input
+                  type="file"
+                  multiple={(item.maxFiles ?? 1) > 1}
+                  accept={
+                    item.restrictFileTypes && item.allowedFileTypes?.length
+                      ? item.allowedFileTypes.join(",")
+                      : undefined
+                  }
+                />
+              ) : item.type === "linear_scale" ? (
+                <div className="preview-scale">
+                  {item.scaleMinLabel ? <span>{item.scaleMinLabel}</span> : null}
+                  {Array.from(
+                    {
+                      length: (item.scaleMax ?? 5) - (item.scaleMin ?? 1) + 1,
+                    },
+                    (_, index) => (item.scaleMin ?? 1) + index,
+                  ).map((value) => (
+                    <label key={value} className="preview-scale-option">
+                      <input type="radio" name={item.id} />
+                      <span>{value}</span>
+                    </label>
+                  ))}
+                  {item.scaleMaxLabel ? <span>{item.scaleMaxLabel}</span> : null}
+                </div>
+              ) : item.type === "rating" ? (
+                <div className="preview-rating" aria-hidden="true">
+                  {Array.from({ length: item.ratingMax ?? 5 }).map((_, index) => (
+                    <span key={index} className="preview-rating-glyph">
+                      {item.ratingIcon === "heart"
+                        ? "♡"
+                        : item.ratingIcon === "thumb"
+                          ? "👍"
+                          : "☆"}
+                    </span>
+                  ))}
+                </div>
+              ) : item.type === "multiple_choice_grid" || item.type === "checkbox_grid" ? (
+                <table className="preview-grid">
+                  <thead>
+                    <tr>
+                      <th />
+                      {(item.columns ?? []).map((column, columnIndex) => (
+                        <th key={columnIndex}>{column || `Column ${columnIndex + 1}`}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(item.rows ?? []).map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        <td>{row || `Row ${rowIndex + 1}`}</td>
+                        {(item.columns ?? []).map((_, columnIndex) => (
+                          <td key={columnIndex}>
+                            <input
+                              type={item.type === "multiple_choice_grid" ? "radio" : "checkbox"}
+                              name={
+                                item.type === "multiple_choice_grid"
+                                  ? `${item.id}-${rowIndex}`
+                                  : undefined
+                              }
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               ) : item.type === "dropdown" ? (
                 <select defaultValue="">
                   <option value="" disabled>
@@ -337,6 +409,7 @@ function PreviewApplyScreen({
     >
       {showTabs ? (
         <>
+          {headerNode}
           <div className="preview-tabbar" role="tablist" aria-label="Job preview sections">
             <button
               type="button"
@@ -367,7 +440,6 @@ function PreviewApplyScreen({
               id="preview-tabpanel-overview"
               aria-labelledby="preview-tab-overview"
             >
-              {headerNode}
               <div className="preview-body">{overviewSections}</div>
             </div>
           ) : (

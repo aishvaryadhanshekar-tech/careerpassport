@@ -17,6 +17,7 @@ export function EditableField({
    */
   editing?: boolean;
 }) {
+  const controlled = editingProp !== undefined;
   const [editing, setEditing] = useState(editingProp ?? false);
 
   useEffect(() => {
@@ -27,15 +28,17 @@ export function EditableField({
     <div className="editable-field">
       <div className="editable-field-head">
         <span className="editable-field-label">{label}</span>
-        <button
-          type="button"
-          className="editable-field-pencil"
-          aria-label={editing ? `Done editing ${label}` : `Edit ${label}`}
-          aria-pressed={editing}
-          onClick={() => setEditing((v) => !v)}
-        >
-          <PencilIcon />
-        </button>
+        {controlled ? null : (
+          <button
+            type="button"
+            className="editable-field-pencil"
+            aria-label={editing ? `Done editing ${label}` : `Edit ${label}`}
+            aria-pressed={editing}
+            onClick={() => setEditing((v) => !v)}
+          >
+            <PencilIcon />
+          </button>
+        )}
       </div>
       {editing ? (
         <div className="editable-field-control">{children}</div>

@@ -4,6 +4,7 @@ import { filterJobs } from "./jobsListQuery";
 import {
   deleteJobs,
   formatUpdated,
+  getJob,
   listJobs,
   openJob,
   startNewJob,
@@ -89,6 +90,11 @@ export function JobsPage() {
   }
 
   function open(id: string) {
+    const job = getJob(id);
+    if (job?.status === "Published") {
+      navigate(`/jobs/${id}`);
+      return;
+    }
     if (openJob(id)) navigate("/create-job");
   }
 

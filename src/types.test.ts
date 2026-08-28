@@ -6,10 +6,15 @@ import {
 } from "./types";
 
 describe("required coverage", () => {
-  it("excludes disqualifier and evaluationCriteria from the required set", () => {
+  it("only requires the core role-basics fields", () => {
+    expect(REQUIRED_COVERAGE_IDS).not.toContain("companyType");
+    expect(REQUIRED_COVERAGE_IDS).not.toContain("experienceType");
+    expect(REQUIRED_COVERAGE_IDS).not.toContain("mustHaves");
     expect(REQUIRED_COVERAGE_IDS).not.toContain("disqualifier");
+    expect(REQUIRED_COVERAGE_IDS).not.toContain("redFlags");
+    expect(REQUIRED_COVERAGE_IDS).not.toContain("searchStrategy");
     expect(REQUIRED_COVERAGE_IDS).not.toContain("evaluationCriteria");
-    expect(REQUIRED_COVERAGE_IDS).toHaveLength(11);
+    expect(REQUIRED_COVERAGE_IDS).toHaveLength(6);
   });
 
   it("does not count a filled disqualifier toward coverage", () => {

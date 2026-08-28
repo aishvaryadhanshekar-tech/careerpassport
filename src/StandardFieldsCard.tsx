@@ -4,19 +4,14 @@ import {
   STANDARD_FIELD_META,
 } from "./applicationCatalog";
 import {
+  removeStandardField,
   removedStandardIds,
   reorderStandardFields,
   restoreStandardField,
   setStandardFieldRequirement,
 } from "./applicationForm";
-import { SegmentedControl } from "./SegmentedControl";
 import { Switch } from "./ContextCard";
 import type { ApplicationConfig, StandardFieldId } from "./types";
-
-const VISIBILITY_OPTIONS: { value: "skipped" | "optional"; label: string }[] = [
-  { value: "skipped", label: "Skip" },
-  { value: "optional", label: "Ask" },
-];
 
 export function StandardFieldsCard({
   config,
@@ -38,7 +33,6 @@ export function StandardFieldsCard({
           {config.standardOrder.map((field, index) => {
             const meta = STANDARD_FIELD_META[field.id];
             const mandatory = field.required === "mandatory";
-            const skipped = field.required === "skipped";
             return (
               <li
                 key={field.id}
@@ -55,28 +49,10 @@ export function StandardFieldsCard({
                 <span className="drag-handle" aria-hidden="true">
                   ⋮⋮
                 </span>
-                <div className={skipped ? "field-copy skipped" : "field-copy"}>
+                <div className="field-copy">
                   <strong>{meta.label}</strong>
                 </div>
-                <SegmentedControl
-                  value={skipped ? "skipped" : "optional"}
-                  options={VISIBILITY_OPTIONS}
-                  ariaLabel={`${meta.label} visibility`}
-                  onChange={(visibility) =>
-                    onChange(
-                      setStandardFieldRequirement(
-                        config,
-                        field.id,
-                        visibility === "skipped"
-                          ? "skipped"
-                          : mandatory
-                            ? "mandatory"
-                            : "optional",
-                      ),
-                    )
-                  }
-                />
-                {skipped ? null : (
+                <div className="field-required">
                   <Switch
                     checked={mandatory}
                     label="Required"
@@ -90,7 +66,16 @@ export function StandardFieldsCard({
                       )
                     }
                   />
-                )}
+                  <button
+                    type="button"
+                    className="icon-x"
+                    aria-label={`Remove ${meta.label}`}
+                    title="Remove field"
+                    onClick={() => onChange(removeStandardField(config, field.id))}
+                  >
+                    ×
+                  </button>
+                </div>
               </li>
             );
           })}

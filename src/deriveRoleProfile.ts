@@ -12,6 +12,29 @@ const GENERIC_AVOID_LOOKALIKES = [
   "Adjacent domain without hands-on ownership",
 ];
 
+const GENERIC_EVALUATION_CRITERIA = [
+  "Strong ownership of outcomes",
+  "Clear communication with stakeholders",
+];
+
+const DEPARTMENT_KEYWORDS: [RegExp, string][] = [
+  [/engineer|developer|swe|sde|architect|devops|qa|sre/i, "Engineering"],
+  [/product/i, "Product"],
+  [/design|ux|ui/i, "Design"],
+  [/sales|account executive|bizdev|business development/i, "Sales"],
+  [/marketing|growth|brand/i, "Marketing"],
+  [/hr|people|talent|recruiter/i, "HR"],
+  [/finance|accounting|controller/i, "Finance"],
+  [/operations|ops\b/i, "Operations"],
+  [/customer success|support|cs\b/i, "Customer Success"],
+  [/legal|counsel|compliance/i, "Legal"],
+];
+
+function departmentFor(designation: string): string {
+  const match = DEPARTMENT_KEYWORDS.find(([pattern]) => pattern.test(designation));
+  return match ? match[1] : "";
+}
+
 let criterionSeq = 0;
 function nextCriterionId(): string {
   criterionSeq += 1;
@@ -65,18 +88,24 @@ export function deriveRoleProfile(draft: JobDraft): RoleProfileFields {
 
   const mustHaves = splitPoints(draft.fields.mustHaves.value);
   const redFlags = splitPoints(draft.fields.redFlags.value);
+  const department = departmentFor(designation);
+
+  const evaluationFramework =
+    mustHaves.length > 0 || redFlags.length > 0
+      ? [
+          ...criteriaFromPoints(mustHaves, "critical"),
+          ...criteriaFromPoints(
+            redFlags.map((flag) => `No red flag: ${flag}`),
+            "important",
+          ),
+        ]
+      : criteriaFromPoints(GENERIC_EVALUATION_CRITERIA, "critical");
 
   return {
     headline: { value: headlineValue, source: "extracted" },
     portrait: { value: preview.idealCandidate, source: "extracted" },
-    department: { value: "", source: "empty" },
+    department: { value: department, source: department ? "extracted" : "empty" },
     avoidLookalikes: joinPoints(avoidLookalikesFor(designation, companyType, experienceType)),
-    evaluationFramework: [
-      ...criteriaFromPoints(mustHaves, "critical"),
-      ...criteriaFromPoints(
-        redFlags.map((flag) => `No red flag: ${flag}`),
-        "important",
-      ),
-    ],
+    evaluationFramework,
   };
 }

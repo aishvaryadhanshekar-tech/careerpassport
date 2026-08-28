@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  addGridColumn,
+  addGridRow,
   addQuestion,
   addQuestionOption,
   addSection,
@@ -12,10 +14,14 @@ import {
   reorderStandardFields,
   restoreStandardField,
   setContextText,
+  setFileUploadRule,
   setQuestionRequirement,
   setQuestionType,
+  setRatingMax,
+  setScaleRange,
   setStandardFieldRequirement,
   toggleContextShown,
+  updateGridRow,
   updateQuestionOption,
   updateQuestionPrompt,
 } from "./applicationForm";
@@ -147,5 +153,38 @@ describe("applicationForm", () => {
 
   it("counts mandatory standard fields plus mandatory questions", () => {
     expect(mandatoryCount(seeded())).toBe(8);
+  });
+
+  it("seeds and clears type-specific fields when switching between the new question types", () => {
+    const config = seeded();
+    const shortId = config.items[0].id;
+
+    const grid = setQuestionType(config, shortId, "multiple_choice_grid");
+    expect(questionsOf(grid)[0]).toMatchObject({ rows: [""], columns: [""] });
+
+    const withRow = updateGridRow(grid, shortId, 0, "Communication");
+    const withMoreRows = addGridRow(withRow, shortId);
+    const withColumn = addGridColumn(withMoreRows, shortId);
+    expect(questionsOf(withColumn)[0].rows).toEqual(["Communication", ""]);
+    expect(questionsOf(withColumn)[0].columns).toHaveLength(2);
+
+    const scale = setQuestionType(withColumn, shortId, "linear_scale");
+    expect(questionsOf(scale)[0]).toMatchObject({ scaleMin: 1, scaleMax: 5 });
+    expect(questionsOf(scale)[0].rows).toBeUndefined();
+    const rescaled = setScaleRange(scale, shortId, 0, 10);
+    expect(questionsOf(rescaled)[0]).toMatchObject({ scaleMin: 0, scaleMax: 10 });
+
+    const rating = setQuestionType(rescaled, shortId, "rating");
+    expect(questionsOf(rating)[0]).toMatchObject({ ratingMax: 5, ratingIcon: "star" });
+    const rerated = setRatingMax(rating, shortId, 10);
+    expect(questionsOf(rerated)[0].ratingMax).toBe(10);
+
+    const file = setQuestionType(rerated, shortId, "file_upload");
+    expect(questionsOf(file)[0]).toMatchObject({ maxFiles: 1, maxFileSizeMb: 10 });
+    const withRule = setFileUploadRule(file, shortId, { maxFiles: 3 });
+    expect(questionsOf(withRule)[0].maxFiles).toBe(3);
+
+    const date = setQuestionType(withRule, shortId, "date");
+    expect(questionsOf(date)[0].maxFiles).toBeUndefined();
   });
 });

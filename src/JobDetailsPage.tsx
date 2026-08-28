@@ -1,19 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { ApplicationPreview } from "./ApplicationPreview";
 import { EditableField } from "./EditableField";
-import { deriveJobPreview } from "./derivePreviewFields";
-import { splitPoints } from "./formControlUtils";
-import { getCurrentJobId, publishJob, salaryLabel, startNewJob } from "./jobsStore";
+import "./JobDetailsPage.css";
+import { getJob, salaryLabel } from "./jobsStore";
 import {
   ImportanceBadge,
   MustHaveRedFlagTable,
   criterionSummary,
 } from "./RoleProfilePage";
-import { seedApplication } from "./seedApplication";
-import { ShareComposeModal } from "./ShareComposeModal";
-import { loadDraft, saveDraft } from "./storage";
+import { loadDraft } from "./storage";
+import { openJob } from "./jobsStore";
 import { TabPanel, Tabs } from "./Tabs";
+import { splitPoints } from "./formControlUtils";
 import {
   COVERAGE_LABELS,
   EVAL_TYPE_LABELS,
@@ -21,45 +20,13 @@ import {
   FLAG_LABELS,
   type EvaluationCriterion,
   type JobDraft,
-  type PublishDestinations,
 } from "./types";
-import { wizardBackTo } from "./wizardHeader";
-
-function withApplication(draft: JobDraft): JobDraft {
-  if (draft.application) return draft;
-  return { ...draft, application: seedApplication(draft) };
-}
-
-function withPreview(draft: JobDraft): JobDraft {
-  if (draft.previewGenerated) return draft;
-  return {
-    ...draft,
-    preview: deriveJobPreview(draft),
-    previewGenerated: true,
-  };
-}
-
-function hydrate(): JobDraft {
-  return withPreview(withApplication(loadDraft()));
-}
 
 const WORK_MODE_LABEL: Record<string, string> = {
   WFH: "Remote",
   WFO: "On-site",
   Hybrid: "Hybrid",
 };
-
-function ReadOnlyList({ value }: { value: string }) {
-  const points = splitPoints(value);
-  if (points.length === 0) return <p className="jd-empty">Not captured yet.</p>;
-  return (
-    <ul className="jd-readonly-list">
-      {points.map((point, index) => (
-        <li key={`${index}-${point}`}>{point}</li>
-      ))}
-    </ul>
-  );
-}
 
 function SparkleIcon() {
   return (
@@ -76,58 +43,62 @@ function SparkleIcon() {
   );
 }
 
-function PublishDestinationsSection({
-  value,
-  onChange,
-}: {
-  value: PublishDestinations;
-  onChange: (next: PublishDestinations) => void;
-}) {
+function CheckIcon() {
   return (
-    <div className="publish-destinations">
-      <h3 className="publish-destinations-title">Publish to</h3>
-      <label className="publish-destination-option">
-        <input
-          type="checkbox"
-          checked={value.internal}
-          onChange={(event) =>
-            onChange({ ...value, internal: event.target.checked })
-          }
-        />
-        <span>
-          <span className="publish-destination-label">Internal talent pool</span>
-          <span className="publish-destination-blurb">
-            Visible to your existing sourced candidates
-          </span>
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path
+        d="M2.5 6.3 4.8 8.6 9.5 3.4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ReadOnlyList({ value }: { value: string }) {
+  const points = splitPoints(value);
+  if (points.length === 0) return <p className="jd-empty">Not captured yet.</p>;
+  return (
+    <ul className="jd-readonly-list">
+      {points.map((point, index) => (
+        <li key={`${index}-${point}`}>{point}</li>
+      ))}
+    </ul>
+  );
+}
+
+function DestinationBadges({
+  destinations,
+}: {
+  destinations: { internal: boolean; marketplace: boolean };
+}) {
+  const items: { label: string; active: boolean }[] = [
+    { label: "Internal", active: destinations.internal },
+    { label: "Marketplace", active: destinations.marketplace },
+  ];
+  return (
+    <div className="jd-destinations">
+      {items.map((item) => (
+        <span
+          key={item.label}
+          className={`jd-destination-badge${item.active ? " active" : ""}`}
+        >
+          {item.active ? <CheckIcon /> : null}
+          {item.label}
         </span>
-      </label>
-      <label className="publish-destination-option">
-        <input
-          type="checkbox"
-          checked={value.marketplace}
-          onChange={(event) =>
-            onChange({ ...value, marketplace: event.target.checked })
-          }
-        />
-        <span>
-          <span className="publish-destination-label">Open marketplace</span>
-          <span className="publish-destination-blurb">
-            Listed publicly for new applicants to discover
-          </span>
-        </span>
-      </label>
+      ))}
     </div>
   );
 }
 
-function RolePreviewSidebar({
+function DetailsSidebar({
   draft,
-  publishDestinations,
-  onPublishDestinationsChange,
+  destinations,
 }: {
   draft: JobDraft;
-  publishDestinations: PublishDestinations;
-  onPublishDestinationsChange: (next: PublishDestinations) => void;
+  destinations: { internal: boolean; marketplace: boolean };
 }) {
   const designation = draft.fields.designation.value;
   const department = draft.roleProfile.department.value;
@@ -146,7 +117,6 @@ function RolePreviewSidebar({
     },
     { label: COVERAGE_LABELS.salary, value: salaryLabel(draft) },
     { label: COVERAGE_LABELS.experienceYears, value: draft.fields.experienceYears.value || "—" },
-    { label: COVERAGE_LABELS.experienceType, value: draft.fields.experienceType.value || "—" },
     { label: COVERAGE_LABELS.industryType, value: draft.fields.industryType.value || "—" },
   ];
 
@@ -178,10 +148,10 @@ function RolePreviewSidebar({
             </div>
           ))}
         </dl>
-        <PublishDestinationsSection
-          value={publishDestinations}
-          onChange={onPublishDestinationsChange}
-        />
+        <div className="jd-published-to">
+          <span className="jd-published-to-label">Published to</span>
+          <DestinationBadges destinations={destinations} />
+        </div>
       </div>
     </aside>
   );
@@ -288,63 +258,88 @@ function RoleDetailsTab({ draft }: { draft: JobDraft }) {
   );
 }
 
-export function Step3Page() {
-  const navigate = useNavigate();
-  const [draft, setDraft] = useState<JobDraft>(() => hydrate());
+function NextActionsTracker({ jobId }: { jobId: string }) {
+  return (
+    <div className="jd-tracker">
+      <div className="jd-tracker-step done">
+        <span className="jd-tracker-icon">
+          <CheckIcon />
+        </span>
+        <div className="jd-tracker-body">
+          <span className="jd-tracker-label">Job created</span>
+        </div>
+      </div>
+      <div className="jd-tracker-connector" aria-hidden="true" />
+      <Link to={`/jobs/${jobId}/trips`} className="jd-tracker-step current">
+        <span className="jd-tracker-icon">2</span>
+        <div className="jd-tracker-body">
+          <span className="jd-tracker-label">Trips</span>
+          <span className="jd-tracker-desc">
+            Design the structured experience candidates go through before you interview them.
+          </span>
+        </div>
+      </Link>
+      <div className="jd-tracker-connector" aria-hidden="true" />
+      <div className="jd-tracker-step upcoming">
+        <span className="jd-tracker-icon">3</span>
+        <div className="jd-tracker-body">
+          <span className="jd-tracker-label">More steps coming</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function hydrateFromJob(id: string): JobDraft | null {
+  if (!openJob(id)) return null;
+  return loadDraft();
+}
+
+export function JobDetailsPage() {
+  const { id } = useParams<{ id: string }>();
+  const job = id ? getJob(id) : null;
+  const [draft] = useState<JobDraft | null>(() => (id ? hydrateFromJob(id) : null));
   const [tab, setTab] = useState<"details" | "application">("details");
   const [mode, setMode] = useState<"mobile" | "desktop">("desktop");
-  const [publishedJobId, setPublishedJobId] = useState<string | null>(null);
-  const draftRef = useRef(draft);
-  draftRef.current = draft;
 
   useEffect(() => {
-    const timer = window.setTimeout(() => saveDraft(draftRef.current), 2000);
-    return () => window.clearTimeout(timer);
-  }, [draft]);
-
-  useEffect(() => {
-    return () => {
-      saveDraft(draftRef.current);
-    };
+    document.querySelector(".layout-content")?.scrollTo(0, 0);
   }, []);
 
-  function setPublishDestinations(next: PublishDestinations) {
-    setDraft((current) => ({ ...current, publishDestinations: next }));
-  }
-
-  function onPublish() {
-    const from = draftRef.current;
-    saveDraft(from);
-    const id = getCurrentJobId() ?? startNewJob();
-    publishJob(id, from);
-    setPublishedJobId(id);
-  }
-
-  function closeComposeModal() {
-    const id = publishedJobId;
-    setPublishedJobId(null);
-    if (id) navigate(`/jobs/${id}`);
+  if (!id || !job || !draft) {
+    return (
+      <div className="app-shell jd-not-found">
+        <p>Job not found.</p>
+        <Link to="/">Back to jobs</Link>
+      </div>
+    );
   }
 
   const config = draft.application;
-  const applicationLink = publishedJobId
-    ? `${window.location.origin}/jobs/${publishedJobId}/apply`
-    : "";
+  const title = draft.fields.designation.value || job.title;
 
   return (
-    <div className="app-shell create-job preview-page">
+    <div className="app-shell preview-page jd-page">
       <main className="preview-main">
+        <header className="jd-header">
+          <Link to="/" className="jd-back-link">
+            ← Back to jobs
+          </Link>
+          <div className="jd-header-row">
+            <h1 className="jd-title">{title}</h1>
+            <span className="jd-status-badge">Published</span>
+          </div>
+        </header>
+
+        <NextActionsTracker jobId={id} />
+
         <div className="preview-layout">
-          <RolePreviewSidebar
-            draft={draft}
-            publishDestinations={draft.publishDestinations}
-            onPublishDestinationsChange={setPublishDestinations}
-          />
+          <DetailsSidebar draft={draft} destinations={job.publishDestinations} />
           <div className="preview-content">
             <Tabs
-              ariaLabel="Preview sections"
+              ariaLabel="Job details sections"
               active={tab}
-              onChange={(id) => setTab(id as "details" | "application")}
+              onChange={(nextTab) => setTab(nextTab as "details" | "application")}
               tabs={[
                 { id: "details", label: "Role Details" },
                 { id: "application", label: "Application Summary" },
@@ -367,23 +362,6 @@ export function Step3Page() {
           </div>
         </div>
       </main>
-      <footer className="footer">
-        <div className="footer-actions">
-          <button type="button" className="btn ghost" onClick={() => navigate(wizardBackTo(4))}>
-            Back
-          </button>
-          <button type="button" className="btn primary" onClick={onPublish}>
-            Publish
-          </button>
-        </div>
-      </footer>
-      {publishedJobId ? (
-        <ShareComposeModal
-          jobTitle={draft.fields.designation.value || "Untitled role"}
-          applicationLink={applicationLink}
-          onClose={closeComposeModal}
-        />
-      ) : null}
     </div>
   );
 }

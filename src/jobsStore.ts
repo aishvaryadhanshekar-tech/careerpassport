@@ -2,20 +2,23 @@ import { persistableDraft } from "./applyAnalysis";
 import { uid } from "./files";
 import { memoryStorage } from "./memoryStore";
 import { STORAGE_KEY, saveDraft } from "./storage";
-import { createDraft, type JobDraft } from "./types";
+import { createDraft, type JobDraft, type PublishDestinations } from "./types";
 
 export const JOBS_KEY = "cp.jobs.v1";
 export const CURRENT_JOB_ID_KEY = "cp.currentJobId";
+
+export type JobStatus = "Draft" | "Published";
 
 export type JobRecord = {
   id: string;
   createdAt: number;
   updatedAt: number;
-  status: "Draft";
+  status: JobStatus;
   title: string;
   location: string;
   workMode: string;
   salaryLabel: string;
+  publishDestinations: PublishDestinations;
   snapshot: ReturnType<typeof persistableDraft>;
 };
 
@@ -73,16 +76,41 @@ export function upsertJobFromDraft(id: string, draft: JobDraft): JobRecord {
     id,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
-    status: "Draft",
+    status: existing?.status ?? "Draft",
     title: draft.fields.designation.value.trim() || "Untitled job",
     location: draft.fields.location.value.trim() || "—",
     workMode: draft.fields.workMode.value.trim() || "—",
     salaryLabel: salaryLabel(draft),
+    publishDestinations: existing?.publishDestinations ?? draft.publishDestinations,
     snapshot: persistableDraft(draft),
   };
   writeList([record, ...readList().filter((j) => j.id !== id)]);
   memoryStorage.setItem(CURRENT_JOB_ID_KEY, id);
   return record;
+}
+
+export function publishJob(id: string, draft: JobDraft): JobRecord {
+  const now = Date.now();
+  const existing = readList().find((j) => j.id === id);
+  const record: JobRecord = {
+    id,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+    status: "Published",
+    title: draft.fields.designation.value.trim() || "Untitled job",
+    location: draft.fields.location.value.trim() || "—",
+    workMode: draft.fields.workMode.value.trim() || "—",
+    salaryLabel: salaryLabel(draft),
+    publishDestinations: draft.publishDestinations,
+    snapshot: persistableDraft(draft),
+  };
+  writeList([record, ...readList().filter((j) => j.id !== id)]);
+  memoryStorage.setItem(CURRENT_JOB_ID_KEY, id);
+  return record;
+}
+
+export function getJob(id: string): JobRecord | null {
+  return readList().find((j) => j.id === id) ?? null;
 }
 
 export function deleteJobs(ids: string[]) {

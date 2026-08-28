@@ -25,6 +25,7 @@ import { loadDraft, saveDraft } from "./storage";
 import { ChoiceRow, PointList, SalaryInput, TagInput } from "./formControls";
 import {
   COMPANY_TYPE_OPTIONS,
+  COVERAGE_IDS,
   COVERAGE_LABELS,
   REQUIRED_COVERAGE_IDS,
   EXPERIENCE_TYPE_OPTIONS,
@@ -62,7 +63,6 @@ export function CollectJobPage() {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [analysing, setAnalysing] = useState(false);
   const [buildPhase, setBuildPhase] = useState(0);
-  const [showCaptured, setShowCaptured] = useState(false);
   const [missingIds, setMissingIds] = useState<CoverageId[]>(() =>
     missingFrom(loadDraft()),
   );
@@ -361,18 +361,8 @@ export function CollectJobPage() {
     return REQUIRED_COVERAGE_IDS.filter((id) => missingIds.includes(id));
   }, [draft.analysedOnce, missingIds]);
 
-  const capturedIds = useMemo(() => {
-    return REQUIRED_COVERAGE_IDS.filter(
-      (id) =>
-        isFieldCovered(id, draft.fields, draft.salaryCurrency) &&
-        !missingIds.includes(id),
-    );
-  }, [draft, missingIds]);
-
   const anyFlag = FLAG_IDS.some((id) => draft.flags[id]);
-  const showFlagsBlock = draft.analysedOnce && draft.flagsPromptShown;
-  const showFlagsInCaptured =
-    showCaptured && anyFlag && !showFlagsBlock;
+  const showFlagsBlock = draft.analysedOnce && (draft.flagsPromptShown || anyFlag);
 
   function continueNext(from: JobDraft = draftRef.current) {
     saveDraft(from);
@@ -395,12 +385,7 @@ export function CollectJobPage() {
     const on = isFieldCovered(id, draft.fields, draft.salaryCurrency);
     if (!draft.analysedOnce && !on) return;
     setHintsOpen(false);
-    if (on) {
-      setShowCaptured(true);
-      window.setTimeout(() => document.getElementById(`field-${id}`)?.focus(), 0);
-    } else if (draft.analysedOnce) {
-      document.getElementById(`field-${id}`)?.focus();
-    }
+    window.setTimeout(() => document.getElementById(`field-${id}`)?.focus(), 0);
   }
 
   const recordLabel = recording
@@ -628,68 +613,27 @@ export function CollectJobPage() {
 
       {draft.analysedOnce ? (
       <section className="follow-up">
-        {missingVisible.length === 0 && (
-          <p className="helper" style={{ marginTop: 20 }}>
-            All {REQUIRED_COVERAGE_IDS.length} covered. Review them below if you
-            want, then continue.
+        <section id={MISSING_DETAILS_ID}>
+          <h2 className="follow-up-title">Job details</h2>
+          <p className="follow-up-sub">
+            {missingVisible.length > 0
+              ? "We've pre-filled what we could from what you shared. Fields outlined in red still need your input."
+              : `All ${REQUIRED_COVERAGE_IDS.length} required fields covered. Review the rest below if you want, then continue.`}
           </p>
-        )}
-
-        {missingVisible.length > 0 && (
-          <section id={MISSING_DETAILS_ID}>
-            <h2 className="follow-up-title">Help us fill the gaps</h2>
-            <p className="follow-up-sub">
-              We extracted what we could from what you shared. Add the rest, then
-              continue.
-            </p>
-            <FieldGrid
-              ids={missingVisible}
-              draft={draft}
-              required
-              onField={setField}
-              onCurrency={(v) => setDraft((d) => ({ ...d, salaryCurrency: v }))}
-            />
-          </section>
-        )}
+          <FieldGrid
+            ids={COVERAGE_IDS}
+            draft={draft}
+            missingIds={missingVisible}
+            onField={setField}
+            onCurrency={(v) => setDraft((d) => ({ ...d, salaryCurrency: v }))}
+          />
+        </section>
 
         {showFlagsBlock && (
           <section className="flags">
             <h3>Select to apply</h3>
             <FlagsChoice draft={draft} onFlag={setFlag} />
           </section>
-        )}
-
-        {covered >= 1 && (
-          <div className="section">
-            <button
-              type="button"
-              className="btn ghost"
-              onClick={() => setShowCaptured((v) => !v)}
-            >
-              {showCaptured
-                ? "Hide what we captured"
-                : `Show what we captured (${covered})`}
-            </button>
-            {showCaptured && (
-              <div style={{ marginTop: 16 }}>
-                <FieldGrid
-                  ids={capturedIds}
-                  draft={draft}
-                  required={false}
-                  onField={setField}
-                  onCurrency={(v) =>
-                    setDraft((d) => ({ ...d, salaryCurrency: v }))
-                  }
-                />
-                {showFlagsInCaptured && (
-                  <div className="flags">
-                    <h3>Select to apply</h3>
-                    <FlagsChoice draft={draft} onFlag={setFlag} />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         )}
       </section>
       ) : null}
@@ -699,16 +643,18 @@ export function CollectJobPage() {
           <div className="meta">
             {`${covered}/${REQUIRED_COVERAGE_IDS.length} covered`}
           </div>
-          <button
-            type="button"
-            id="continue-btn"
-            className="btn primary"
-            disabled={!canContinue}
-            aria-disabled={!canContinue}
-            onClick={onContinue}
-          >
-            Continue
-          </button>
+          <div className="footer-actions">
+            <button
+              type="button"
+              id="continue-btn"
+              className="btn primary"
+              disabled={!canContinue}
+              aria-disabled={!canContinue}
+              onClick={onContinue}
+            >
+              Continue
+            </button>
+          </div>
         </footer>
       ) : null}
     </div>
@@ -780,13 +726,13 @@ function FlagsChoice({
 function FieldGrid({
   ids,
   draft,
-  required,
+  missingIds,
   onField,
   onCurrency,
 }: {
-  ids: CoverageId[];
+  ids: readonly CoverageId[];
   draft: JobDraft;
-  required: boolean;
+  missingIds: CoverageId[];
   onField: (id: CoverageId, value: string) => void;
   onCurrency: (v: Currency | null) => void;
 }) {
@@ -798,7 +744,7 @@ function FieldGrid({
         key={id}
         id={id}
         draft={draft}
-        required={required}
+        missing={missingIds.includes(id)}
         onField={onField}
         onCurrency={onCurrency}
       />
@@ -826,13 +772,13 @@ function FieldGrid({
 function FieldControl({
   id,
   draft,
-  required,
+  missing,
   onField,
   onCurrency,
 }: {
   id: CoverageId;
   draft: JobDraft;
-  required: boolean;
+  missing: boolean;
   onField: (id: CoverageId, value: string) => void;
   onCurrency: (v: Currency | null) => void;
 }) {
@@ -874,6 +820,7 @@ function FieldControl({
         id={inputId}
         value={value}
         suggestions={TAG_FIELDS[id] ?? []}
+        variant="dropdown"
         onChange={(next) => onField(id, next)}
       />
     );
@@ -916,11 +863,10 @@ function FieldControl({
     );
   }
   return (
-    <div className={`field${WIDE_FIELDS.has(id) ? " field-wide" : ""}`}>
-      <label htmlFor={inputId}>
-        {COVERAGE_LABELS[id]}
-        {required ? <span className="req">*</span> : null}
-      </label>
+    <div
+      className={`field${WIDE_FIELDS.has(id) ? " field-wide" : ""}${missing ? " field-missing" : ""}`}
+    >
+      <label htmlFor={inputId}>{COVERAGE_LABELS[id]}</label>
       {control}
     </div>
   );

@@ -180,18 +180,55 @@ export function updateQuestionPrompt(
   return mapQuestion(config, id, (question) => ({ ...question, prompt }));
 }
 
+const CHOICE_TYPES: CustomQuestionType[] = ["multiple_choice", "checkboxes", "dropdown"];
+const GRID_TYPES: CustomQuestionType[] = ["multiple_choice_grid", "checkbox_grid"];
+
 export function setQuestionType(
   config: ApplicationConfig,
   id: string,
   type: CustomQuestionType,
 ): ApplicationConfig {
-  const isChoice =
-    type === "multiple_choice" || type === "checkboxes" || type === "dropdown";
-  return mapQuestion(config, id, (question) => ({
-    ...question,
-    type,
-    options: isChoice ? (question.options.length ? question.options : ["", ""]) : [],
-  }));
+  const isChoice = CHOICE_TYPES.includes(type);
+  const isGrid = GRID_TYPES.includes(type);
+  return mapQuestion(config, id, (question) => {
+    const next: CustomQuestion = {
+      ...question,
+      type,
+      options: isChoice ? (question.options.length ? question.options : ["", ""]) : [],
+      rows: undefined,
+      columns: undefined,
+      requireResponsePerRow: undefined,
+      scaleMin: undefined,
+      scaleMax: undefined,
+      scaleMinLabel: undefined,
+      scaleMaxLabel: undefined,
+      ratingMax: undefined,
+      ratingIcon: undefined,
+      restrictFileTypes: undefined,
+      allowedFileTypes: undefined,
+      maxFiles: undefined,
+      maxFileSizeMb: undefined,
+    };
+    if (isGrid) {
+      next.rows = question.rows?.length ? question.rows : [""];
+      next.columns = question.columns?.length ? question.columns : [""];
+      next.requireResponsePerRow = question.requireResponsePerRow ?? false;
+    } else if (type === "linear_scale") {
+      next.scaleMin = question.scaleMin ?? 1;
+      next.scaleMax = question.scaleMax ?? 5;
+      next.scaleMinLabel = question.scaleMinLabel ?? "";
+      next.scaleMaxLabel = question.scaleMaxLabel ?? "";
+    } else if (type === "rating") {
+      next.ratingMax = question.ratingMax ?? 5;
+      next.ratingIcon = question.ratingIcon ?? "star";
+    } else if (type === "file_upload") {
+      next.restrictFileTypes = question.restrictFileTypes ?? false;
+      next.allowedFileTypes = question.allowedFileTypes ?? [];
+      next.maxFiles = question.maxFiles ?? 1;
+      next.maxFileSizeMb = question.maxFileSizeMb ?? 10;
+    }
+    return next;
+  });
 }
 
 export function setQuestionRequirement(
@@ -284,6 +321,126 @@ export function removeQuestionOption(
   }));
 }
 
+export function addGridRow(config: ApplicationConfig, id: string): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({
+    ...question,
+    rows: [...(question.rows ?? []), ""],
+  }));
+}
+
+export function updateGridRow(
+  config: ApplicationConfig,
+  id: string,
+  rowIndex: number,
+  text: string,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({
+    ...question,
+    rows: (question.rows ?? []).map((row, index) => (index === rowIndex ? text : row)),
+  }));
+}
+
+export function removeGridRow(
+  config: ApplicationConfig,
+  id: string,
+  rowIndex: number,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({
+    ...question,
+    rows: (question.rows ?? []).filter((_, index) => index !== rowIndex),
+  }));
+}
+
+export function addGridColumn(config: ApplicationConfig, id: string): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({
+    ...question,
+    columns: [...(question.columns ?? []), ""],
+  }));
+}
+
+export function updateGridColumn(
+  config: ApplicationConfig,
+  id: string,
+  columnIndex: number,
+  text: string,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({
+    ...question,
+    columns: (question.columns ?? []).map((column, index) =>
+      index === columnIndex ? text : column,
+    ),
+  }));
+}
+
+export function removeGridColumn(
+  config: ApplicationConfig,
+  id: string,
+  columnIndex: number,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({
+    ...question,
+    columns: (question.columns ?? []).filter((_, index) => index !== columnIndex),
+  }));
+}
+
+export function setRequireResponsePerRow(
+  config: ApplicationConfig,
+  id: string,
+  requireResponsePerRow: boolean,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({ ...question, requireResponsePerRow }));
+}
+
+export function setScaleRange(
+  config: ApplicationConfig,
+  id: string,
+  scaleMin: number,
+  scaleMax: number,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({ ...question, scaleMin, scaleMax }));
+}
+
+export function setScaleLabel(
+  config: ApplicationConfig,
+  id: string,
+  which: "min" | "max",
+  label: string,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({
+    ...question,
+    ...(which === "min" ? { scaleMinLabel: label } : { scaleMaxLabel: label }),
+  }));
+}
+
+export function setRatingMax(
+  config: ApplicationConfig,
+  id: string,
+  ratingMax: number,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({ ...question, ratingMax }));
+}
+
+export function setRatingIcon(
+  config: ApplicationConfig,
+  id: string,
+  ratingIcon: "star" | "heart" | "thumb",
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({ ...question, ratingIcon }));
+}
+
+export function setFileUploadRule(
+  config: ApplicationConfig,
+  id: string,
+  rule: Partial<
+    Pick<
+      CustomQuestion,
+      "restrictFileTypes" | "allowedFileTypes" | "maxFiles" | "maxFileSizeMb"
+    >
+  >,
+): ApplicationConfig {
+  return mapQuestion(config, id, (question) => ({ ...question, ...rule }));
+}
+
 export function mandatoryCount(config: ApplicationConfig): number {
   const fields = config.standardOrder.filter(
     (field) => field.required === "mandatory",
@@ -302,14 +459,19 @@ export function estimateApplicationOverview(
   );
   const questions = config.items.filter(isQuestion);
   const fieldMinutes = activeFields.length * 0.5;
-  const questionMinutes = questions.reduce(
-    (sum, question) =>
-      sum +
-      (question.type === "short_answer" || question.type === "paragraph"
-        ? 1.5
-        : 0.75),
-    0,
-  );
+  const questionMinutes = questions.reduce((sum, question) => {
+    if (question.type === "short_answer" || question.type === "paragraph") return sum + 1.5;
+    if (GRID_TYPES.includes(question.type) || question.type === "file_upload") return sum + 1;
+    if (
+      question.type === "linear_scale" ||
+      question.type === "rating" ||
+      question.type === "date" ||
+      question.type === "time"
+    ) {
+      return sum + 0.5;
+    }
+    return sum + 0.75;
+  }, 0);
   const totalItems = activeFields.length + questions.length;
   const estimatedMinutes = Math.max(
     1,

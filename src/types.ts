@@ -16,9 +16,19 @@ export const COVERAGE_IDS = [
 
 export type CoverageId = (typeof COVERAGE_IDS)[number];
 
+const OPTIONAL_COVERAGE_IDS = [
+  "companyType",
+  "experienceType",
+  "mustHaves",
+  "disqualifier",
+  "redFlags",
+  "searchStrategy",
+  "evaluationCriteria",
+] as const;
+
 export const REQUIRED_COVERAGE_IDS = COVERAGE_IDS.filter(
-  (id): id is Exclude<CoverageId, "disqualifier" | "evaluationCriteria"> =>
-    id !== "disqualifier" && id !== "evaluationCriteria",
+  (id): id is Exclude<CoverageId, (typeof OPTIONAL_COVERAGE_IDS)[number]> =>
+    !(OPTIONAL_COVERAGE_IDS as readonly string[]).includes(id),
 );
 
 export const FLAG_IDS = [
@@ -158,7 +168,14 @@ export type CustomQuestionType =
   | "paragraph"
   | "multiple_choice"
   | "checkboxes"
-  | "dropdown";
+  | "dropdown"
+  | "file_upload"
+  | "linear_scale"
+  | "rating"
+  | "multiple_choice_grid"
+  | "checkbox_grid"
+  | "date"
+  | "time";
 
 export type CustomQuestion = {
   id: string;
@@ -168,6 +185,23 @@ export type CustomQuestion = {
   required: FieldRequirement;
   options: string[];
   imageUrl?: string;
+  // multiple_choice_grid / checkbox_grid
+  rows?: string[];
+  columns?: string[];
+  requireResponsePerRow?: boolean;
+  // linear_scale
+  scaleMin?: number;
+  scaleMax?: number;
+  scaleMinLabel?: string;
+  scaleMaxLabel?: string;
+  // rating
+  ratingMax?: number;
+  ratingIcon?: "star" | "heart" | "thumb";
+  // file_upload
+  restrictFileTypes?: boolean;
+  allowedFileTypes?: string[];
+  maxFiles?: number;
+  maxFileSizeMb?: number;
 };
 
 export type SectionBreak = {
@@ -276,6 +310,71 @@ export function emptyPreviewFields(): JobPreviewFields {
   };
 }
 
+export const INFERENCE_CARD_IDS = [
+  "idealCandidate",
+  "tribalDetails",
+  "skills",
+  "evaluationCriteria",
+  "sourcingStrategy",
+  "redFlags",
+] as const;
+export type InferenceCardId = (typeof INFERENCE_CARD_IDS)[number];
+export type InferenceCard = { id: InferenceCardId; title: string; content: string };
+
+export const STAGE_TYPES = [
+  "rapid_fire",
+  "do_a_demo",
+  "pick_and_defend",
+  "multiple_choice",
+  "binary_choice",
+  "rank_order",
+  "ai_critic",
+  "coding_round",
+  "case_study",
+  "flaunt_or_flex",
+] as const;
+export type StageType = (typeof STAGE_TYPES)[number];
+export const LIVE_STAGE_TYPES: readonly StageType[] = [
+  "rapid_fire",
+  "do_a_demo",
+  "pick_and_defend",
+];
+
+export type StageItem = {
+  id: string;
+  text: string;
+  answer?: "serious" | "joking";
+};
+
+export type Stage = {
+  id: string;
+  type: StageType;
+  spokenInstructions: string;
+  items: StageItem[];
+};
+
+export type Trip = {
+  id: string;
+  title: string;
+  status: "draft" | "published";
+  createdAt: number;
+  updatedAt: number;
+  inferenceCards: InferenceCard[];
+  inferenceCardsLocked: boolean;
+  spine: string;
+  spineGenerated: boolean;
+  stages: Stage[];
+};
+
+export type PublishDestinations = {
+  internal: boolean;
+  marketplace: boolean;
+};
+
+export function emptyPublishDestinations(): PublishDestinations {
+  return { internal: true, marketplace: false };
+}
+
 export type JobDraft = {
   transcript: string;
   clips: RecordingClip[];
@@ -291,6 +390,8 @@ export type JobDraft = {
   previewGenerated: boolean;
   roleProfile: RoleProfileFields;
   roleProfileGenerated: boolean;
+  publishDestinations: PublishDestinations;
+  trips: Trip[];
 };
 
 export type Extraction = {
@@ -332,6 +433,8 @@ export function createDraft(): JobDraft {
     previewGenerated: false,
     roleProfile: emptyRoleProfile(),
     roleProfileGenerated: false,
+    publishDestinations: emptyPublishDestinations(),
+    trips: [],
   };
 }
 

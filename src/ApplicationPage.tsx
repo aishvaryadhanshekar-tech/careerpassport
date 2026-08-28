@@ -10,6 +10,7 @@ import { pickActiveAnchor, type PreviewAnchor } from "./previewScroll";
 import { deriveContextText, seedApplication } from "./seedApplication";
 import { loadDraft, saveDraft } from "./storage";
 import type { ApplicationConfig, JobDraft } from "./types";
+import { wizardBackTo } from "./wizardHeader";
 
 const ANCHORS: PreviewAnchor[] = ["company", "role", "fields", "questions"];
 
@@ -160,9 +161,14 @@ export function ApplicationPage() {
           <span className="meta-dot" aria-hidden="true">·</span>
           <span>{mandatoryCount(config)} mandatory</span>
         </div>
-        <button type="button" className="btn primary" onClick={onContinue}>
-          Continue
-        </button>
+        <div className="footer-actions">
+          <button type="button" className="btn ghost" onClick={() => navigate(wizardBackTo(3))}>
+            Back
+          </button>
+          <button type="button" className="btn primary" onClick={onContinue}>
+            Continue
+          </button>
+        </div>
       </footer>
     </div>
   );

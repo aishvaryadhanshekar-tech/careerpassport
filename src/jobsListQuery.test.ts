@@ -12,6 +12,7 @@ function job(
     location: "—",
     workMode: "—",
     salaryLabel: "—",
+    publishDestinations: { internal: true, marketplace: false },
     snapshot: {} as JobRecord["snapshot"],
     ...overrides,
   };

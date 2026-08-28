@@ -16,18 +16,25 @@ export function TagInput({
   value,
   suggestions = [],
   onChange,
-  placeholder = "Type and press Enter",
+  placeholder,
+  variant = "tags",
 }: {
   id: string;
   value: string;
   suggestions?: readonly string[];
   onChange: (value: string) => void;
   placeholder?: string;
+  /** "dropdown" gives the same tag/free-text behavior a select-like look: a
+   * bordered box with a chevron and a "Select" placeholder, for fields that
+   * are conceptually a pick-from-a-list even though multiple/custom values
+   * are still allowed. */
+  variant?: "tags" | "dropdown";
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const tags = splitTags(value);
   const matches = filterSuggestions(suggestions, query, tags);
+  const resolvedPlaceholder = placeholder ?? (variant === "dropdown" ? "Select" : "Type and press Enter");
 
   function commit(raw: string) {
     const next = addTag(value, raw);
@@ -36,7 +43,7 @@ export function TagInput({
   }
 
   return (
-    <div className="tag-input">
+    <div className={`tag-input${variant === "dropdown" ? " tag-input-dropdown" : ""}`}>
       {tags.map((tag) => (
         <span className="tag-chip" key={tag}>
           {tag}
@@ -71,9 +78,14 @@ export function TagInput({
           if (query.trim()) commit(query);
           setOpen(false);
         }}
-        placeholder={tags.length === 0 ? placeholder : ""}
+        placeholder={tags.length === 0 ? resolvedPlaceholder : ""}
         autoComplete="off"
       />
+      {variant === "dropdown" ? (
+        <span className="tag-input-caret" aria-hidden="true">
+          ▾
+        </span>
+      ) : null}
       {open && matches.length > 0 ? (
         <ul className="tag-suggestions" role="listbox">
           {matches.map((item) => (

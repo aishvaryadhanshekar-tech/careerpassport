@@ -31,6 +31,18 @@ export function removeCriterion(
   return list.filter((item) => item.id !== id);
 }
 
+export function reorderCriteria(
+  list: EvaluationCriterion[],
+  fromIndex: number,
+  toIndex: number,
+): EvaluationCriterion[] {
+  if (fromIndex === toIndex || fromIndex < 0 || fromIndex >= list.length) return list;
+  const next = [...list];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
 export function updateCriterion(
   list: EvaluationCriterion[],
   id: string,

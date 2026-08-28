@@ -5,6 +5,7 @@ import {
   emptyFields,
   emptyFlags,
   emptyPreviewFields,
+  emptyPublishDestinations,
   emptyRoleProfile,
   type ApplicationConfig,
   type CoverageId,
@@ -13,8 +14,10 @@ import {
   type FieldState,
   type JobDraft,
   type JobPreviewFields,
+  type PublishDestinations,
   type RoleProfileFields,
   type SalaryPeriod,
+  type Trip,
 } from "./types";
 
 
@@ -36,6 +39,16 @@ function readPreview(value: unknown): JobPreviewFields {
     expectedSkills: data.expectedSkills ?? base.expectedSkills,
     targetCompanies: data.targetCompanies ?? base.targetCompanies,
     industrySectors: data.industrySectors ?? base.industrySectors,
+  };
+}
+
+function readPublishDestinations(value: unknown): PublishDestinations {
+  const base = emptyPublishDestinations();
+  if (!value || typeof value !== "object") return base;
+  const data = value as Partial<PublishDestinations>;
+  return {
+    internal: data.internal ?? base.internal,
+    marketplace: data.marketplace ?? base.marketplace,
   };
 }
 
@@ -86,6 +99,8 @@ export function loadDraft(): JobDraft {
       previewGenerated: Boolean(data.previewGenerated),
       roleProfile: readRoleProfile(data.roleProfile),
       roleProfileGenerated: Boolean(data.roleProfileGenerated),
+      publishDestinations: readPublishDestinations(data.publishDestinations),
+      trips: Array.isArray(data.trips) ? (data.trips as Trip[]) : [],
     };
   } catch {
     return base;
