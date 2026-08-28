@@ -23,11 +23,11 @@ function isQuestion(item: ApplicationItem): item is CustomQuestion {
   return item.kind === "question";
 }
 
-function insertAfter(
-  items: ApplicationItem[],
+function insertAfter<T extends ApplicationItem>(
+  items: T[],
   afterId: string | undefined,
-  item: ApplicationItem,
-): ApplicationItem[] {
+  item: T,
+): T[] {
   if (!afterId) return [...items, item];
   const index = items.findIndex((existing) => existing.id === afterId);
   if (index === -1) return [...items, item];
@@ -36,17 +36,14 @@ function insertAfter(
   return next;
 }
 
-function mapQuestion(
-  config: ApplicationConfig,
+function mapQuestion<T extends ApplicationItem>(
+  items: T[],
   id: string,
   update: (question: CustomQuestion) => CustomQuestion,
-): ApplicationConfig {
-  return {
-    ...config,
-    items: config.items.map((item) =>
-      isQuestion(item) && item.id === id ? update(item) : item,
-    ),
-  };
+): T[] {
+  return items.map((item) =>
+    isQuestion(item) && item.id === id ? (update(item) as T) : item,
+  );
 }
 
 export function setStandardFieldRequirement(
@@ -121,10 +118,10 @@ export function setContextText(
   };
 }
 
-export function addQuestion(
-  config: ApplicationConfig,
+export function addQuestion<T extends ApplicationItem>(
+  items: T[],
   afterId?: string,
-): ApplicationConfig {
+): T[] {
   const question: CustomQuestion = {
     id: uid(),
     kind: "question",
@@ -133,64 +130,59 @@ export function addQuestion(
     required: "optional",
     options: [],
   };
-  return { ...config, items: insertAfter(config.items, afterId, question) };
+  return insertAfter(items, afterId, question as T);
 }
 
 export function addSection(
-  config: ApplicationConfig,
+  items: ApplicationItem[],
   afterId?: string,
-): ApplicationConfig {
-  const sectionCount = config.items.filter(
-    (item) => item.kind === "section",
-  ).length;
+): ApplicationItem[] {
+  const sectionCount = items.filter((item) => item.kind === "section").length;
   const section: SectionBreak = {
     id: uid(),
     kind: "section",
     title: `Section ${sectionCount + 2}`,
     description: "",
   };
-  return { ...config, items: insertAfter(config.items, afterId, section) };
+  return insertAfter(items, afterId, section);
 }
 
-export function removeQuestion(
-  config: ApplicationConfig,
+export function removeQuestion<T extends ApplicationItem>(
+  items: T[],
   id: string,
-): ApplicationConfig {
-  return {
-    ...config,
-    items: config.items.filter((item) => item.id !== id),
-  };
+): T[] {
+  return items.filter((item) => item.id !== id);
 }
 
-export function duplicateItem(
-  config: ApplicationConfig,
+export function duplicateItem<T extends ApplicationItem>(
+  items: T[],
   id: string,
-): ApplicationConfig {
-  const item = config.items.find((entry) => entry.id === id);
-  if (!item) return config;
-  const clone: ApplicationItem = { ...item, id: uid() };
-  return { ...config, items: insertAfter(config.items, id, clone) };
+): T[] {
+  const item = items.find((entry) => entry.id === id);
+  if (!item) return items;
+  const clone = { ...item, id: uid() } as T;
+  return insertAfter(items, id, clone);
 }
 
-export function updateQuestionPrompt(
-  config: ApplicationConfig,
+export function updateQuestionPrompt<T extends ApplicationItem>(
+  items: T[],
   id: string,
   prompt: string,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({ ...question, prompt }));
+): T[] {
+  return mapQuestion(items, id, (question) => ({ ...question, prompt }));
 }
 
 const CHOICE_TYPES: CustomQuestionType[] = ["multiple_choice", "checkboxes", "dropdown"];
 const GRID_TYPES: CustomQuestionType[] = ["multiple_choice_grid", "checkbox_grid"];
 
-export function setQuestionType(
-  config: ApplicationConfig,
+export function setQuestionType<T extends ApplicationItem>(
+  items: T[],
   id: string,
   type: CustomQuestionType,
-): ApplicationConfig {
+): T[] {
   const isChoice = CHOICE_TYPES.includes(type);
   const isGrid = GRID_TYPES.includes(type);
-  return mapQuestion(config, id, (question) => {
+  return mapQuestion(items, id, (question) => {
     const next: CustomQuestion = {
       ...question,
       type,
@@ -231,78 +223,72 @@ export function setQuestionType(
   });
 }
 
-export function setQuestionRequirement(
-  config: ApplicationConfig,
+export function setQuestionRequirement<T extends ApplicationItem>(
+  items: T[],
   id: string,
   requirement: FieldRequirement,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     required: requirement,
   }));
 }
 
-export function setQuestionImage(
-  config: ApplicationConfig,
+export function setQuestionImage<T extends ApplicationItem>(
+  items: T[],
   id: string,
   imageUrl: string | undefined,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({ ...question, imageUrl }));
+): T[] {
+  return mapQuestion(items, id, (question) => ({ ...question, imageUrl }));
 }
 
 export function setSectionTitle(
-  config: ApplicationConfig,
+  items: ApplicationItem[],
   id: string,
   title: string,
-): ApplicationConfig {
-  return {
-    ...config,
-    items: config.items.map((item) =>
-      item.kind === "section" && item.id === id ? { ...item, title } : item,
-    ),
-  };
+): ApplicationItem[] {
+  return items.map((item) =>
+    item.kind === "section" && item.id === id ? { ...item, title } : item,
+  );
 }
 
 export function setSectionDescription(
-  config: ApplicationConfig,
+  items: ApplicationItem[],
   id: string,
   description: string,
-): ApplicationConfig {
-  return {
-    ...config,
-    items: config.items.map((item) =>
-      item.kind === "section" && item.id === id
-        ? { ...item, description }
-        : item,
-    ),
-  };
+): ApplicationItem[] {
+  return items.map((item) =>
+    item.kind === "section" && item.id === id
+      ? { ...item, description }
+      : item,
+  );
 }
 
-export function reorderItems(
-  config: ApplicationConfig,
+export function reorderItems<T extends ApplicationItem>(
+  items: T[],
   from: number,
   to: number,
-): ApplicationConfig {
-  return { ...config, items: move(config.items, from, to) };
+): T[] {
+  return move(items, from, to);
 }
 
-export function addQuestionOption(
-  config: ApplicationConfig,
+export function addQuestionOption<T extends ApplicationItem>(
+  items: T[],
   id: string,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     options: [...question.options, ""],
   }));
 }
 
-export function updateQuestionOption(
-  config: ApplicationConfig,
+export function updateQuestionOption<T extends ApplicationItem>(
+  items: T[],
   id: string,
   optionIndex: number,
   text: string,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     options: question.options.map((option, index) =>
       index === optionIndex ? text : option,
@@ -310,61 +296,61 @@ export function updateQuestionOption(
   }));
 }
 
-export function removeQuestionOption(
-  config: ApplicationConfig,
+export function removeQuestionOption<T extends ApplicationItem>(
+  items: T[],
   id: string,
   optionIndex: number,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     options: question.options.filter((_, index) => index !== optionIndex),
   }));
 }
 
-export function addGridRow(config: ApplicationConfig, id: string): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+export function addGridRow<T extends ApplicationItem>(items: T[], id: string): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     rows: [...(question.rows ?? []), ""],
   }));
 }
 
-export function updateGridRow(
-  config: ApplicationConfig,
+export function updateGridRow<T extends ApplicationItem>(
+  items: T[],
   id: string,
   rowIndex: number,
   text: string,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     rows: (question.rows ?? []).map((row, index) => (index === rowIndex ? text : row)),
   }));
 }
 
-export function removeGridRow(
-  config: ApplicationConfig,
+export function removeGridRow<T extends ApplicationItem>(
+  items: T[],
   id: string,
   rowIndex: number,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     rows: (question.rows ?? []).filter((_, index) => index !== rowIndex),
   }));
 }
 
-export function addGridColumn(config: ApplicationConfig, id: string): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+export function addGridColumn<T extends ApplicationItem>(items: T[], id: string): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     columns: [...(question.columns ?? []), ""],
   }));
 }
 
-export function updateGridColumn(
-  config: ApplicationConfig,
+export function updateGridColumn<T extends ApplicationItem>(
+  items: T[],
   id: string,
   columnIndex: number,
   text: string,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     columns: (question.columns ?? []).map((column, index) =>
       index === columnIndex ? text : column,
@@ -372,64 +358,64 @@ export function updateGridColumn(
   }));
 }
 
-export function removeGridColumn(
-  config: ApplicationConfig,
+export function removeGridColumn<T extends ApplicationItem>(
+  items: T[],
   id: string,
   columnIndex: number,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     columns: (question.columns ?? []).filter((_, index) => index !== columnIndex),
   }));
 }
 
-export function setRequireResponsePerRow(
-  config: ApplicationConfig,
+export function setRequireResponsePerRow<T extends ApplicationItem>(
+  items: T[],
   id: string,
   requireResponsePerRow: boolean,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({ ...question, requireResponsePerRow }));
+): T[] {
+  return mapQuestion(items, id, (question) => ({ ...question, requireResponsePerRow }));
 }
 
-export function setScaleRange(
-  config: ApplicationConfig,
+export function setScaleRange<T extends ApplicationItem>(
+  items: T[],
   id: string,
   scaleMin: number,
   scaleMax: number,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({ ...question, scaleMin, scaleMax }));
+): T[] {
+  return mapQuestion(items, id, (question) => ({ ...question, scaleMin, scaleMax }));
 }
 
-export function setScaleLabel(
-  config: ApplicationConfig,
+export function setScaleLabel<T extends ApplicationItem>(
+  items: T[],
   id: string,
   which: "min" | "max",
   label: string,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({
+): T[] {
+  return mapQuestion(items, id, (question) => ({
     ...question,
     ...(which === "min" ? { scaleMinLabel: label } : { scaleMaxLabel: label }),
   }));
 }
 
-export function setRatingMax(
-  config: ApplicationConfig,
+export function setRatingMax<T extends ApplicationItem>(
+  items: T[],
   id: string,
   ratingMax: number,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({ ...question, ratingMax }));
+): T[] {
+  return mapQuestion(items, id, (question) => ({ ...question, ratingMax }));
 }
 
-export function setRatingIcon(
-  config: ApplicationConfig,
+export function setRatingIcon<T extends ApplicationItem>(
+  items: T[],
   id: string,
   ratingIcon: "star" | "heart" | "thumb",
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({ ...question, ratingIcon }));
+): T[] {
+  return mapQuestion(items, id, (question) => ({ ...question, ratingIcon }));
 }
 
-export function setFileUploadRule(
-  config: ApplicationConfig,
+export function setFileUploadRule<T extends ApplicationItem>(
+  items: T[],
   id: string,
   rule: Partial<
     Pick<
@@ -437,8 +423,8 @@ export function setFileUploadRule(
       "restrictFileTypes" | "allowedFileTypes" | "maxFiles" | "maxFileSizeMb"
     >
   >,
-): ApplicationConfig {
-  return mapQuestion(config, id, (question) => ({ ...question, ...rule }));
+): T[] {
+  return mapQuestion(items, id, (question) => ({ ...question, ...rule }));
 }
 
 export function mandatoryCount(config: ApplicationConfig): number {
