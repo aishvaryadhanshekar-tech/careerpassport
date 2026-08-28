@@ -1,5 +1,5 @@
 import { uid } from "./files";
-import type { Stage, StageItem, StageType } from "./types";
+import type { CustomQuestion, Stage, StageType } from "./types";
 
 export const STAGE_TYPE_META: Record<StageType, { label: string; blurb: string; live: boolean }> = {
   rapid_fire: {
@@ -82,8 +82,15 @@ export function updateStage(stages: Stage[], id: string, patch: Partial<Stage>):
   return stages.map((stage) => (stage.id === id ? { ...stage, ...patch } : stage));
 }
 
-export function addStageItem(stage: Stage, text = ""): Stage {
-  const item: StageItem = { id: uid(), text };
+export function addStageItem(stage: Stage, prompt = ""): Stage {
+  const item: CustomQuestion = {
+    id: uid(),
+    kind: "question",
+    prompt,
+    type: "short_answer",
+    required: "optional",
+    options: [],
+  };
   return { ...stage, items: [...stage.items, item] };
 }
 
@@ -95,7 +102,11 @@ export function reorderStageItems(stage: Stage, from: number, to: number): Stage
   return { ...stage, items: move(stage.items, from, to) };
 }
 
-export function updateStageItem(stage: Stage, itemId: string, patch: Partial<StageItem>): Stage {
+export function updateStageItem(
+  stage: Stage,
+  itemId: string,
+  patch: Partial<CustomQuestion>,
+): Stage {
   return {
     ...stage,
     items: stage.items.map((item) => (item.id === itemId ? { ...item, ...patch } : item)),

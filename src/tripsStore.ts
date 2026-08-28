@@ -1,6 +1,16 @@
+import { DEFAULT_ROUND_TYPES } from "./tripAIBuild";
 import { uid } from "./files";
 import { deriveInferenceCards } from "./tripInference";
-import type { JobDraft, Trip } from "./types";
+import type { JobDraft, Stage, Trip } from "./types";
+
+function emptyStages(): Stage[] {
+  return DEFAULT_ROUND_TYPES.map((type) => ({
+    id: uid(),
+    type,
+    spokenInstructions: "",
+    items: [],
+  }));
+}
 
 export function createTrip(draft: JobDraft): { draft: JobDraft; tripId: string } {
   const now = Date.now();
@@ -14,7 +24,29 @@ export function createTrip(draft: JobDraft): { draft: JobDraft; tripId: string }
     inferenceCardsLocked: false,
     spine: "",
     spineGenerated: false,
+    stages: emptyStages(),
+    aiPrefilled: false,
+  };
+  return {
+    draft: { ...draft, trips: [...draft.trips, trip] },
+    tripId: trip.id,
+  };
+}
+
+export function createTripShellForAI(draft: JobDraft): { draft: JobDraft; tripId: string } {
+  const now = Date.now();
+  const trip: Trip = {
+    id: uid(),
+    title: "Untitled trip",
+    status: "draft",
+    createdAt: now,
+    updatedAt: now,
+    inferenceCards: deriveInferenceCards(draft),
+    inferenceCardsLocked: false,
+    spine: "",
+    spineGenerated: false,
     stages: [],
+    aiPrefilled: true,
   };
   return {
     draft: { ...draft, trips: [...draft.trips, trip] },

@@ -1,3 +1,5 @@
+import type { CustomQuestion } from "./application";
+
 export const INFERENCE_CARD_IDS = [
   "idealCandidate",
   "tribalDetails",
@@ -28,17 +30,11 @@ export const LIVE_STAGE_TYPES: readonly StageType[] = [
   "pick_and_defend",
 ];
 
-export type StageItem = {
-  id: string;
-  text: string;
-  answer?: "serious" | "joking";
-};
-
 export type Stage = {
   id: string;
   type: StageType;
   spokenInstructions: string;
-  items: StageItem[];
+  items: CustomQuestion[];
 };
 
 export type Trip = {
@@ -52,4 +48,5 @@ export type Trip = {
   spine: string;
   spineGenerated: boolean;
   stages: Stage[];
+  aiPrefilled: boolean;
 };
