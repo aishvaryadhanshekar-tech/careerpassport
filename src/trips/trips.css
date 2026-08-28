@@ -140,34 +140,10 @@
   color: #1a7f37;
 }
 
-.trip-publish-bar {
-  margin-top: 24px;
-}
+/* --- Trip builder header + two-column layout --- */
 
-/* --- Two-column trip builder layout --- */
-
-.trip-builder-layout {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  align-items: start;
-  gap: 24px;
-}
-
-@media (max-width: 900px) {
-  .trip-builder-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-.trip-builder-left {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 0;
-}
-
-.trip-builder-right {
-  min-width: 0;
+.trip-builder-header {
+  margin-bottom: 20px;
 }
 
 .trip-builder-title-row {
@@ -192,39 +168,35 @@
   font-family: inherit;
 }
 
+.trip-builder-locked-note {
+  margin: -8px 0 20px;
+}
+
+.trip-builder-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  align-items: start;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .trip-builder-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trip-builder-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
 .trip-spine-text {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.5;
   color: #1f1b16;
-  white-space: pre-wrap;
-}
-
-.inference-cards-condensed {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.inference-card-condensed {
-  padding: 10px 12px;
-  background: #f7f8f9;
-  border: 1px solid #e2e6e9;
-  border-radius: 10px;
-}
-
-.inference-card-condensed h3 {
-  margin: 0 0 4px;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #1f1b16;
-}
-
-.inference-card-condensed p {
-  margin: 0;
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: #5c5347;
   white-space: pre-wrap;
 }
 
@@ -360,34 +332,6 @@
   font-size: 13px;
   font-weight: 600;
   color: #1a7f37;
-}
-
-.inference-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.inference-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px;
-  background: #f7f8f9;
-  border: 1px solid #e2e6e9;
-  border-radius: 10px;
-}
-
-.inference-card textarea {
-  width: 100%;
-  min-height: 80px;
-  resize: vertical;
-  border: 1px solid #d0d5dd;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 13px;
-  color: #1f1b16;
-  font-family: inherit;
 }
 
 .stage-picker-grid {
@@ -536,23 +480,10 @@
   color: #1f1b16;
 }
 
-.trip-publish-bar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #fff;
-  border: 1px solid #e2e6e9;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(31, 27, 22, 0.08);
-}
-
-.trip-publish-bar p {
-  margin: 0 auto 0 0;
-  font-size: 12.5px;
-  color: #667085;
-}
+/* .trip-builder-footer reuses the shared .footer / .footer-actions pattern
+   from styles/footer-responsive.css (same structure as CollectJobPage's
+   footer) — TripPublishBar only renders the locked-banner text and the
+   action button(s) into that shared chrome. */
 
 .trip-publish-locked-banner {
   margin: 0;
@@ -690,11 +621,9 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: radial-gradient(
-    circle at 50% 30%,
-    #2a251d 0%,
-    #1f1b16 70%
-  );
+  background: rgba(20, 20, 20, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .ai-build-loader-card {
@@ -705,10 +634,14 @@
   width: 100%;
   max-width: 460px;
   text-align: center;
+  padding: 32px 28px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
 .ai-build-loader-icon {
-  color: #f5c65b;
+  color: #1a1a1a;
   margin-bottom: 8px;
 }
 
@@ -724,14 +657,12 @@
   font-weight: 800;
 }
 
-/* Loader sits on a dark backdrop, so give the shared shimmer a light-on-dark
-   gradient here instead of the default dark-on-light one from controls.css. */
 .ai-build-loader-heading.build-loading-text {
   background-image: linear-gradient(
     90deg,
-    #fff 40%,
-    #f5c65b 50%,
-    #fff 60%
+    #1a1a1a 40%,
+    #8a8a8a 50%,
+    #1a1a1a 60%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
@@ -742,7 +673,7 @@
 .ai-build-loader-subheading {
   margin: 0 0 28px;
   font-size: 13px;
-  color: #cfc7ba;
+  color: #6b6b6b;
 }
 
 .ai-build-loader-rows {
@@ -758,19 +689,19 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .ai-build-loader-row-active {
-  background: rgba(245, 198, 91, 0.08);
-  border-color: rgba(245, 198, 91, 0.35);
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.25);
 }
 
 .ai-build-loader-row-done {
-  background: rgba(26, 127, 55, 0.12);
-  border-color: rgba(26, 127, 55, 0.35);
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
 .ai-build-loader-row-status {
@@ -780,7 +711,7 @@
   width: 22px;
   height: 22px;
   flex: none;
-  color: #f5c65b;
+  color: #1a1a1a;
   font-size: 14px;
   font-weight: 700;
 }
@@ -790,7 +721,7 @@
 }
 
 .ai-build-loader-row-done .ai-build-loader-row-status {
-  color: #4ade80;
+  color: #1a1a1a;
 }
 
 .ai-build-loader-row-body {
@@ -803,7 +734,7 @@
 .ai-build-loader-row-label {
   font-size: 13.5px;
   font-weight: 700;
-  color: #fff;
+  color: #1a1a1a;
 }
 
 .ai-build-loader-row-detail.build-loading-text {
@@ -811,9 +742,9 @@
   font-weight: 500;
   background-image: linear-gradient(
     90deg,
-    #cfc7ba 40%,
-    #fff 50%,
-    #cfc7ba 60%
+    #8a8a8a 40%,
+    #1a1a1a 50%,
+    #8a8a8a 60%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;

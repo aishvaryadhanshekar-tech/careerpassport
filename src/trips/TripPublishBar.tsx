@@ -7,28 +7,39 @@ export type TripPublishBarProps = {
   onDuplicate: () => void;
 };
 
+/**
+ * Renders just the publish/duplicate action(s) — the caller is expected to
+ * wrap this in the shared `<footer className="footer">` / `.footer-actions`
+ * structure (see footer-responsive.css) rather than its own footer chrome.
+ */
 export function TripPublishBar({ trip, onPublish, onDuplicate }: TripPublishBarProps): JSX.Element {
   if (trip.status === "published") {
     return (
-      <footer className="trip-publish-bar">
+      <>
         <p className="trip-publish-locked-banner">
           This trip is published and locked. Editing means duplicating it.
         </p>
-        <button type="button" className="btn primary" onClick={onDuplicate}>
-          Duplicate to edit
-        </button>
-      </footer>
+        <div className="footer-actions">
+          <button type="button" className="btn primary" onClick={onDuplicate}>
+            Duplicate to edit
+          </button>
+        </div>
+      </>
     );
   }
 
   const disabled = trip.stages.length === 0;
 
   return (
-    <footer className="trip-publish-bar">
-      {disabled ? <p>Add at least one stage before publishing.</p> : null}
-      <button type="button" className="btn primary" disabled={disabled} onClick={onPublish}>
-        Publish trip
-      </button>
-    </footer>
+    <>
+      {disabled ? (
+        <p className="trip-publish-locked-banner">Add at least one stage before publishing.</p>
+      ) : null}
+      <div className="footer-actions">
+        <button type="button" className="btn primary" disabled={disabled} onClick={onPublish}>
+          Publish trip
+        </button>
+      </div>
+    </>
   );
 }
