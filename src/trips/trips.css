@@ -416,3 +416,264 @@
   font-size: 13px;
   color: #5c5347;
 }
+
+/* --- Create Trip choice modal --- */
+
+.trip-choice-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.trip-choice-modal {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.trip-choice-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  color: #6b6b74;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.trip-choice-modal-close:hover {
+  background: #f1f1f4;
+  color: #1a1a1f;
+}
+
+.trip-choice-modal-heading {
+  margin: 0 32px 4px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.trip-choice-modal-subheading {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: #5c5347;
+  line-height: 1.4;
+}
+
+.trip-choice-modal-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.trip-choice-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+}
+
+.trip-choice-card:hover {
+  border-color: #1f1b16;
+  box-shadow: 0 4px 12px rgba(31, 27, 22, 0.08);
+}
+
+.trip-choice-card-ai {
+  border-color: #1f1b16;
+  background: linear-gradient(180deg, #fbfaf8 0%, #fff 100%);
+}
+
+.trip-choice-card-badge {
+  position: absolute;
+  top: -10px;
+  right: 14px;
+  background: #1f1b16;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.trip-choice-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1f1b16;
+}
+
+.trip-choice-card-blurb {
+  font-size: 12.5px;
+  color: #5c5347;
+  line-height: 1.4;
+}
+
+/* --- AI trip build full-screen loader --- */
+
+.ai-build-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(
+    circle at 50% 30%,
+    #2a251d 0%,
+    #1f1b16 70%
+  );
+}
+
+.ai-build-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 460px;
+  text-align: center;
+}
+
+.ai-build-loader-icon {
+  color: #f5c65b;
+  margin-bottom: 8px;
+}
+
+.ai-build-loader-icon svg {
+  width: 36px;
+  height: 36px;
+  animation: sparkle-pulse 1.4s ease-in-out infinite;
+}
+
+.ai-build-loader-heading {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+/* Loader sits on a dark backdrop, so give the shared shimmer a light-on-dark
+   gradient here instead of the default dark-on-light one from controls.css. */
+.ai-build-loader-heading.build-loading-text {
+  background-image: linear-gradient(
+    90deg,
+    #fff 40%,
+    #f5c65b 50%,
+    #fff 60%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ai-build-loader-subheading {
+  margin: 0 0 28px;
+  font-size: 13px;
+  color: #cfc7ba;
+}
+
+.ai-build-loader-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.ai-build-loader-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.ai-build-loader-row-active {
+  background: rgba(245, 198, 91, 0.08);
+  border-color: rgba(245, 198, 91, 0.35);
+}
+
+.ai-build-loader-row-done {
+  background: rgba(26, 127, 55, 0.12);
+  border-color: rgba(26, 127, 55, 0.35);
+}
+
+.ai-build-loader-row-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: #f5c65b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ai-build-loader-row-status svg {
+  animation: sparkle-pulse 0.9s ease-in-out infinite;
+}
+
+.ai-build-loader-row-done .ai-build-loader-row-status {
+  color: #4ade80;
+}
+
+.ai-build-loader-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.ai-build-loader-row-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ai-build-loader-row-detail.build-loading-text {
+  font-size: 12px;
+  font-weight: 500;
+  background-image: linear-gradient(
+    90deg,
+    #cfc7ba 40%,
+    #fff 50%,
+    #cfc7ba 60%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
