@@ -6,7 +6,20 @@
       "Bash(npm run *)",
       "Bash(nohup npm run dev)",
       "Bash(curl -sf http://localhost:5173)",
-      "Bash(break)"
+      "Bash(break)",
+      "Bash(node -e \"console.log\\(require.resolve\\('playwright'\\)\\)\")",
+      "Bash(node /private/tmp/claude-502/-Users-aishvarya-dhansheka-Desktop-careerpassport/12b95fbf-c5bc-4a71-884c-073cda2d371f/scratchpad/verify_sticky.mjs)",
+      "Bash(NODE_PATH=/Users/aishvarya.dhansheka/Desktop/careerpassport/node_modules node /private/tmp/claude-502/-Users-aishvarya-dhansheka-Desktop-careerpassport/12b95fbf-c5bc-4a71-884c-073cda2d371f/scratchpad/verify_sticky.mjs)",
+      "Bash(node verify_sticky.mjs)",
+      "Bash(npm run dev -- --port 5183 > /tmp/vite-dev.log 2>&1 & *)",
+      "Bash(node /private/tmp/claude-502/-Users-aishvarya-dhansheka-Desktop-careerpassport/ca367603-e6a5-442d-8cfb-3b20c0631a46/scratchpad/verify_nudge.mjs)",
+      "Bash(npx --yes chromium-cli --help)",
+      "Bash(node verify_nudge_tmp.mjs)",
+      "Bash(xargs -I{} echo {})",
+      "Bash(git -C /Users/aishvarya.dhansheka/Desktop/careerpassport status --porcelain)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp"
     ]
   }
 }

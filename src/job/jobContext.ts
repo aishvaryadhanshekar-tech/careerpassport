@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { JobRecord } from "../jobsStore";
 import type { JobDraft } from "../types";
@@ -14,6 +15,7 @@ export type JobOutletContext = {
   job: JobRecord;
   draft: JobDraft;
   title: string;
+  setDraft: Dispatch<SetStateAction<JobDraft>>;
 };
 
 export function useJobContext(): JobOutletContext {

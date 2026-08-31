@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./JobDetailsPage.css";
 import "./job/jobTabs.css";
@@ -24,7 +24,6 @@ const JOB_TABS = [
   { id: "pipeline", label: "Pipeline", path: "pipeline" },
   { id: "prospects", label: "Prospects", path: "prospects" },
   { id: "communications", label: "Communications", path: "communications" },
-  { id: "setup", label: "Setup", path: "setup" },
 ] as const;
 
 function activeTabFor(pathname: string, jobId: string): string {
@@ -39,7 +38,7 @@ export function JobDetailsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const job = id ? getJob(id) : null;
-  const [draft] = useState<JobDraft | null>(() => (id ? hydrateFromJob(id) : null));
+  const [draft, setDraft] = useState<JobDraft | null>(() => (id ? hydrateFromJob(id) : null));
 
   const pageRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -119,7 +118,10 @@ export function JobDetailsPage() {
       {/* The kanban wants every pixel it can get, so it opts out of the 1200px page measure. */}
       <main className={`preview-main${activeTab === "pipeline" ? " is-wide" : ""}`}>
         <div className="job-tab-body">
-          <Outlet context={{ jobId: id, job, draft, title }} />
+          {/* Safe to cast: the early return above guarantees draft is non-null once we render this far. */}
+          <Outlet
+            context={{ jobId: id, job, draft, title, setDraft: setDraft as Dispatch<SetStateAction<JobDraft>> }}
+          />
         </div>
       </main>
 

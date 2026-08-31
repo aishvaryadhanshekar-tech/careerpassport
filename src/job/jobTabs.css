@@ -41,6 +41,114 @@
   top: calc(var(--jd-header-h) + 16px);
 }
 
+/* Single priority-ordered next-step callout on the Overview tab (see NextStepNudge.tsx). */
+.next-step-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #5c5347;
+  background: #fdf6e8;
+  border: 1px solid #eadfc4;
+  border-radius: 8px;
+}
+
+.next-step-nudge-link {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #a5620a;
+  white-space: nowrap;
+}
+
+/* Post-publish "done for you / needs your call" panel (see NextStepNudge.tsx JobActionSummary). */
+.job-action-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.job-action-summary-section {
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 8px;
+}
+
+.job-action-summary-section h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #667085;
+}
+
+.job-action-summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: #344054;
+}
+
+.job-action-summary-stats li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.job-action-summary-contact {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eef0f2;
+}
+
+.job-action-summary-contact-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #344054;
+}
+
+.job-action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.job-action-row-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.job-action-row-stage {
+  font-size: 12px;
+  color: #667085;
+}
+
+.job-action-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* The Application Summary sub-tab's edit toggle sits above the card, not inside its header,
+ * since the card it toggles between (CustomQuestionsCard vs ApplicationPreview) isn't shared. */
+.jo-application-edit-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
 /* --- shared empty state for tabs that are not built out yet --- */
 
 .job-tab-empty {

@@ -42,6 +42,21 @@ function SparkleIcon(): JSX.Element {
   );
 }
 
+function CaretIcon(): JSX.Element {
+  return (
+    <svg
+      className="candidate-filter-caret"
+      width="12"
+      height="12"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M4 6.5 8 10.5 12 6.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function tripStatusLabel(candidate: Candidate): string {
   if (candidate.tripStatus === "completed") {
     return typeof candidate.tripScore === "number"
@@ -52,10 +67,83 @@ function tripStatusLabel(candidate: Candidate): string {
   return "Not sent";
 }
 
+export type ColumnId =
+  | "name"
+  | "stage"
+  | "location"
+  | "origin"
+  | "applied"
+  | "trip"
+  | "tags"
+  | "ai";
+
+const COLUMN_DEFS: { id: ColumnId; label: string }[] = [
+  { id: "name", label: "Name" },
+  { id: "stage", label: "Stage" },
+  { id: "location", label: "Location" },
+  { id: "origin", label: "Origin" },
+  { id: "applied", label: "Applied" },
+  { id: "trip", label: "Trip" },
+  { id: "tags", label: "Tags" },
+  { id: "ai", label: "AI" },
+];
+
+/** All column ids, in display order. Source of truth for defaulting/validating a stored preference. */
+export const PIPELINE_COLUMN_IDS: ColumnId[] = COLUMN_DEFS.map((c) => c.id);
+
+function renderCell(
+  columnId: ColumnId,
+  candidate: Candidate,
+  stage: PipelineStage | undefined,
+): JSX.Element | null {
+  switch (columnId) {
+    case "name":
+      return (
+        <>
+          <b>{candidate.name}</b>
+          <div className="candidate-table-sub">{candidate.email}</div>
+        </>
+      );
+    case "stage":
+      return (
+        <span className="candidate-table-stage">{stage ? stage.label : candidate.stageId}</span>
+      );
+    case "location":
+      return <>{candidate.location}</>;
+    case "origin":
+      return <>{originLabel(candidate)}</>;
+    case "applied":
+      return <>{formatAppliedDate(candidate.appliedAt)}</>;
+    case "trip":
+      return <>{tripStatusLabel(candidate)}</>;
+    case "tags":
+      return candidate.tags.length > 0 ? (
+        <div className="candidate-table-tags">
+          {candidate.tags.map((tag) => (
+            <span key={tag} className="candidate-table-tag">
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null;
+    case "ai":
+      return candidate.aiFlag ? (
+        <span
+          className={`candidate-verdict verdict-${candidate.aiFlag}`}
+          title={AI_FLAG_LABELS[candidate.aiFlag]}
+        >
+          <SparkleIcon />
+          {AI_FLAG_SHORT_LABELS[candidate.aiFlag]}
+        </span>
+      ) : null;
+  }
+}
+
 export function CandidateTable({
   candidates,
   stages,
   selected,
+  visibleColumns,
   onToggleOne,
   onToggleAll,
   onOpen,
@@ -63,11 +151,13 @@ export function CandidateTable({
   candidates: Candidate[];
   stages: PipelineStage[];
   selected: Set<string>;
+  visibleColumns: Set<ColumnId>;
   onToggleOne: (id: string, on: boolean) => void;
   onToggleAll: (on: boolean) => void;
   onOpen: (candidateId: string) => void;
 }): JSX.Element {
   const stageById = new Map(stages.map((s) => [s.id, s]));
+  const columns = COLUMN_DEFS.filter((c) => visibleColumns.has(c.id));
   const allSelected = candidates.length > 0 && candidates.every((c) => selected.has(c.id));
   const someSelected = candidates.some((c) => selected.has(c.id)) && !allSelected;
 
@@ -95,14 +185,9 @@ export function CandidateTable({
                 aria-label="Select all candidates"
               />
             </th>
-            <th>Name</th>
-            <th>Stage</th>
-            <th>Location</th>
-            <th>Origin</th>
-            <th>Applied</th>
-            <th>Trip</th>
-            <th>Tags</th>
-            <th>AI</th>
+            {columns.map((col) => (
+              <th key={col.id}>{col.label}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -129,41 +214,11 @@ export function CandidateTable({
                     aria-label={`Select ${candidate.name}`}
                   />
                 </td>
-                <td>
-                  <b>{candidate.name}</b>
-                  <div className="candidate-table-sub">{candidate.email}</div>
-                </td>
-                <td>
-                  <span className="candidate-table-stage">
-                    {stage ? stage.label : candidate.stageId}
-                  </span>
-                </td>
-                <td>{candidate.location}</td>
-                <td>{originLabel(candidate)}</td>
-                <td className="num">{formatAppliedDate(candidate.appliedAt)}</td>
-                <td>{tripStatusLabel(candidate)}</td>
-                <td>
-                  {candidate.tags.length > 0 ? (
-                    <div className="candidate-table-tags">
-                      {candidate.tags.map((tag) => (
-                        <span key={tag} className="candidate-table-tag">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </td>
-                <td>
-                  {candidate.aiFlag ? (
-                    <span
-                      className={`candidate-verdict verdict-${candidate.aiFlag}`}
-                      title={AI_FLAG_LABELS[candidate.aiFlag]}
-                    >
-                      <SparkleIcon />
-                      {AI_FLAG_SHORT_LABELS[candidate.aiFlag]}
-                    </span>
-                  ) : null}
-                </td>
+                {columns.map((col) => (
+                  <td key={col.id} className={col.id === "applied" ? "num" : undefined}>
+                    {renderCell(col.id, candidate, stage)}
+                  </td>
+                ))}
               </tr>
             );
           })}
@@ -300,9 +355,7 @@ export function CandidateFilterBar({
           {activeCount > 0 ? (
             <span className="candidate-filter-count">{activeCount}</span>
           ) : null}
-          <span className="candidate-filter-caret" aria-hidden="true">
-            ▾
-          </span>
+          <CaretIcon />
         </button>
         {open ? (
           <div className="candidate-filter-popover" role="menu">
@@ -363,6 +416,76 @@ export function CandidateFilterBar({
           </div>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function ColumnsIcon(): JSX.Element {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.5" y="2" width="13" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M6 2v12M10.5 2v12" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+export function ColumnPickerButton({
+  visibleColumns,
+  onChange,
+}: {
+  visibleColumns: Set<ColumnId>;
+  onChange: (next: Set<ColumnId>) => void;
+}): JSX.Element {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function toggleColumn(id: string) {
+    const next = new Set(visibleColumns);
+    if (next.has(id as ColumnId)) next.delete(id as ColumnId);
+    else next.add(id as ColumnId);
+    onChange(next);
+  }
+
+  return (
+    <div className="candidate-filter-multiselect" ref={wrapRef}>
+      <button
+        type="button"
+        className="candidate-filter-btn"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <ColumnsIcon />
+        Configure columns
+        <CaretIcon />
+      </button>
+      {open ? (
+        <div className="candidate-filter-popover" role="menu">
+          <div className="candidate-filter-popover-section">
+            <div className="candidate-filter-popover-section-title">Columns</div>
+            <FilterCheckboxList
+              options={COLUMN_DEFS}
+              selectedValues={[...visibleColumns]}
+              onToggle={toggleColumn}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

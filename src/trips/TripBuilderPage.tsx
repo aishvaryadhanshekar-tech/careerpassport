@@ -13,9 +13,9 @@ import {
   publishTrip,
   updateTrip as updateTripInDraft,
 } from "../tripsStore";
-import { DIFFICULTIES, DIFFICULTY_LABELS } from "../types";
-import type { Difficulty, JobDraft, Trip } from "../types";
+import type { JobDraft, Trip } from "../types";
 import { TripPublishBar } from "./TripPublishBar";
+import { TripPreview } from "./TripPreview";
 import { TripRoundTabs } from "./TripRoundTabs";
 import { TripStatusBadge } from "./TripStatusBadge";
 
@@ -24,6 +24,7 @@ export function TripBuilderPage() {
   const navigate = useNavigate();
   const job = id ? getJob(id) : null;
   const [draft, setDraft] = useState<JobDraft | null>(() => (id ? hydrateFromJob(id) : null));
+  const [previewMode, setPreviewMode] = useState<"mobile" | "desktop">("mobile");
   const draftRef = useRef(draft);
   draftRef.current = draft;
 
@@ -120,63 +121,16 @@ export function TripBuilderPage() {
           className={`trip-builder-columns${trip.status === "published" ? " trip-builder-readonly" : ""}`}
         >
           <div className="trip-builder-col trip-builder-col-left">
-            <section className="trip-card">
-              <div className="trip-card-head">
-                <h2>Spine</h2>
-                <p>
-                  The scenario the whole trip sits inside — not a description of the
-                  candidate, a situation they're dropped into.
-                </p>
-              </div>
-              <div className="trip-card-body">
-                <p className="trip-spine-text">{trip.spine || "Not generated yet."}</p>
-              </div>
-            </section>
-
-            <section className="trip-card">
-              <div className="trip-card-head">
-                <h2>Trip settings</h2>
-                <p>Which pipeline stage this trip is sent at, and how hard AI-generated rounds should be.</p>
-              </div>
-              <div className="trip-card-body">
-                <label className="trip-round-duration-field">
-                  <span>Pipeline stage</span>
-                  <select
-                    className={`pill-select select-icon${trip.pipelineStageId ? "" : " is-placeholder"}`}
-                    value={trip.pipelineStageId ?? ""}
-                    onChange={(e) => updateTrip({ pipelineStageId: e.target.value || null })}
-                  >
-                    <option value="" disabled>
-                      Choose a stage
-                    </option>
-                    {pipelineStages.map((stage) => (
-                      <option key={stage.id} value={stage.id}>
-                        {stage.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="trip-round-duration-field">
-                  <span>Difficulty</span>
-                  <select
-                    className="pill-select select-icon"
-                    value={trip.difficulty}
-                    onChange={(e) => updateTrip({ difficulty: e.target.value as Difficulty })}
-                  >
-                    {DIFFICULTIES.map((d) => (
-                      <option key={d} value={d}>
-                        {DIFFICULTY_LABELS[d]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            </section>
+            <TripPreview trip={trip} mode={previewMode} onMode={setPreviewMode} />
           </div>
 
           <div className="trip-builder-col trip-builder-col-right">
-            <TripRoundTabs trip={trip} draft={draft} onChange={updateTrip} />
+            <TripRoundTabs
+              trip={trip}
+              draft={draft}
+              pipelineStages={pipelineStages}
+              onChange={updateTrip}
+            />
           </div>
         </div>
       </main>

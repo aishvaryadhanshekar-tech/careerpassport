@@ -4,6 +4,7 @@ import {
   buildTripWithAI,
   generateTripRounds,
   rewriteRoundQuestions,
+  rewriteSingleQuestion,
 } from "./tripAIBuild";
 import { deriveInferenceCards } from "./tripInference";
 import { createDraft, type CustomQuestion, type JobDraft } from "./types";
@@ -145,5 +146,34 @@ describe("rewriteRoundQuestions", () => {
       expect(q.options).toEqual(["Serious", "Joking"]);
       expect(q.prompt.toLowerCase().startsWith("true or false")).toBe(false);
     }
+  });
+});
+
+describe("rewriteSingleQuestion", () => {
+  it("rewrites just one question, keeping its id, in the same shape as its stage type", () => {
+    const draft = draftWithContent();
+    const cards = deriveInferenceCards(draft);
+    const stages = generateTripRounds(cards, draft);
+    const rapidFireStage = stages.find((s) => s.type === "rapid_fire")!;
+    const target = rapidFireStage.items[0]!;
+
+    const rewritten = rewriteSingleQuestion("rapid_fire", target, cards, "medium");
+
+    expect(rewritten.id).toBe(target.id);
+    expect(rewritten.type).toBe("multiple_choice");
+    expect(rewritten.options).toEqual(["Serious", "Joking"]);
+  });
+
+  it("leaves the rest of the round untouched (single-question scope, not whole-round)", () => {
+    const draft = draftWithContent();
+    const cards = deriveInferenceCards(draft);
+    const stages = generateTripRounds(cards, draft);
+    const caseStudyStage = stages.find((s) => s.type === "case_study")!;
+    const target = caseStudyStage.items[0]!;
+
+    const rewritten = rewriteSingleQuestion("case_study", target, cards, "medium");
+
+    expect(rewritten.id).toBe(target.id);
+    expect(rewritten.type).toBe("paragraph");
   });
 });

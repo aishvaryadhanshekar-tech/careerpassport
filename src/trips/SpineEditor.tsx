@@ -39,10 +39,6 @@ export function SpineEditor({
     <section className="trip-card">
       <div className="trip-card-head">
         <h2>Spine</h2>
-        <p>
-          The scenario the whole trip sits inside — not a description of the
-          candidate, a situation they're dropped into.
-        </p>
       </div>
       <div className="trip-card-body">
         {disabled ? (

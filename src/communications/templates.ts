@@ -201,6 +201,12 @@ export function templateById(id: string): MessageTemplate | null {
   return MESSAGE_TEMPLATES.find((t) => t.id === id) ?? null;
 }
 
+/** The "Send invite" shortcut's template for a stage — not a new concept, just a labeled pick. */
+export function inviteTemplateForStage(stageId: string): MessageTemplate | null {
+  if (stageId === "interviewing") return templateById("tpl-interview-invite");
+  return templateById("tpl-trip-invite");
+}
+
 /** Stage ids any template names explicitly — lets the tab group without a board loaded. */
 export function scopedStageIds(): string[] {
   const ids = new Set<string>();

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   addGridColumn,
   addGridRow,
@@ -24,13 +24,35 @@ import {
   updateQuestionOption,
   updateQuestionPrompt,
 } from "./applicationForm";
+import { MicIcon, StopIcon } from "./collectJob/icons";
 import { Switch } from "./ContextCard";
+import { SparkleIcon } from "./shared/icons";
+import { useBuildPhase } from "./shared/useBuildPhase";
+import { useDictation } from "./shared/useDictation";
 import type {
   ApplicationItem,
   CustomQuestion,
   CustomQuestionType,
   SectionBreak,
 } from "./types";
+
+/**
+ * Option-card constraints for a lever type (Trips only — see `tripStages.ts`'s
+ * `STAGE_OPTION_CONSTRAINTS`). Defined here rather than in `tripStages.ts` because this is the
+ * shape `QuestionBlock` itself understands; `tripStages.ts` imports this type rather than the
+ * other way around, so this shared/Applications-facing component has no dependency on
+ * Trips-specific modules.
+ */
+export type OptionCardConstraints = {
+  /** When set, the option list may never have fewer than this many options. */
+  fixedOptionCount?: number;
+  /** Defaults to true (add allowed) when omitted. */
+  allowAddOption?: boolean;
+  /** Defaults to true (remove allowed) when omitted, subject to `fixedOptionCount`. */
+  allowRemoveOption?: boolean;
+};
+
+const REWRITE_PHASES = ["Thinking…", "Rewriting…"] as const;
 
 export const TYPE_LABELS: Record<CustomQuestionType, string> = {
   short_answer: "Short answer",
@@ -63,10 +85,26 @@ export function QuestionBlock({
   question,
   items,
   onChange,
+  optionConstraints,
+  enableDictation = false,
+  onRewriteWithAI,
 }: {
   question: CustomQuestion;
   items: ApplicationItem[];
   onChange: (next: ApplicationItem[]) => void;
+  /**
+   * Lever-aware option-card rules (Trips only). Omitted entirely by Applications' own
+   * `QuestionBlock` usage (`CustomQuestionsCard.tsx`), which defaults to fully unconstrained
+   * behavior — identical to this component's pre-existing behavior.
+   */
+  optionConstraints?: OptionCardConstraints;
+  /** Shows a per-question mic button that dictates into the prompt field. Off by default. */
+  enableDictation?: boolean;
+  /**
+   * Shows a per-question Sparkle "rewrite with AI" button when provided. Omitted by default
+   * (and by Applications, which has no AI-rewrite context), so no button renders there.
+   */
+  onRewriteWithAI?: () => Promise<void> | void;
 }) {
   const showOptions = OPTION_TYPES.includes(question.type);
   const showGrid = GRID_TYPES.includes(question.type);
@@ -75,6 +113,36 @@ export function QuestionBlock({
   const showFileUpload = question.type === "file_upload";
   const showDate = question.type === "date";
   const showTime = question.type === "time";
+
+  const constraints = optionConstraints ?? {};
+  const canAddOption = constraints.allowAddOption !== false;
+  const canRemoveOption = (currentCount: number) => {
+    if (constraints.allowRemoveOption === false) return false;
+    if (constraints.fixedOptionCount !== undefined && currentCount <= constraints.fixedOptionCount) {
+      return false;
+    }
+    return true;
+  };
+
+  const dictation = useDictation({
+    value: question.prompt,
+    onChange: (next) => onChange(updateQuestionPrompt(items, question.id, next)),
+  });
+
+  const [rewriting, setRewriting] = useState(false);
+  const rewritePhase = useBuildPhase(rewriting);
+
+  async function handleRewrite() {
+    if (!onRewriteWithAI || rewriting) return;
+    setRewriting(true);
+    try {
+      await onRewriteWithAI();
+    } finally {
+      setRewriting(false);
+    }
+  }
+
+  const showQuestionActions = enableDictation || Boolean(onRewriteWithAI);
 
   return (
     <div className="question-block">
@@ -91,6 +159,43 @@ export function QuestionBlock({
             onChange(updateQuestionPrompt(items, question.id, value))
           }
         />
+        {showQuestionActions ? (
+          <div className="question-top-actions">
+            {enableDictation ? (
+              <button
+                type="button"
+                className={`footer-icon${dictation.recording ? " on" : ""}`}
+                title={dictation.recording ? "Stop recording" : "Record question text"}
+                aria-label={dictation.recording ? "Stop recording" : "Record question text"}
+                onClick={() =>
+                  dictation.recording ? dictation.stopRecording() : dictation.startRecording()
+                }
+              >
+                {dictation.recording ? <StopIcon /> : <MicIcon />}
+              </button>
+            ) : null}
+            {onRewriteWithAI ? (
+              rewriting ? (
+                <span className="build-loading" aria-live="polite">
+                  <SparkleIcon />
+                  <span className="build-loading-text">
+                    {REWRITE_PHASES[rewritePhase % REWRITE_PHASES.length]}
+                  </span>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="footer-icon"
+                  title="Rewrite this question with AI"
+                  aria-label="Rewrite this question with AI"
+                  onClick={handleRewrite}
+                >
+                  <SparkleIcon />
+                </button>
+              )
+            ) : null}
+          </div>
+        ) : null}
         <select
           className="type-select"
           value={question.type}
@@ -112,6 +217,21 @@ export function QuestionBlock({
           ))}
         </select>
       </div>
+
+      {enableDictation && dictation.recording && dictation.interim ? (
+        <p className="question-dictation-interim" aria-live="polite">
+          {dictation.interim}
+        </p>
+      ) : null}
+      {enableDictation && (dictation.micBlocked || dictation.micFailed || dictation.noSpeechApi) ? (
+        <p className="question-dictation-note">
+          {dictation.micBlocked
+            ? "Microphone access is blocked."
+            : dictation.noSpeechApi
+              ? "Voice input isn't supported in this browser."
+              : "Couldn't start the microphone."}
+        </p>
+      ) : null}
 
       {question.imageUrl ? (
         <div className="question-image">
@@ -172,28 +292,32 @@ export function QuestionBlock({
                   )
                 }
               />
-              <button
-                type="button"
-                className="icon-x"
-                aria-label={`Remove option ${optionIndex + 1}`}
-                onClick={() =>
-                  onChange(removeQuestionOption(items, question.id, optionIndex))
-                }
-              >
-                ×
-              </button>
+              {canRemoveOption(question.options.length) ? (
+                <button
+                  type="button"
+                  className="icon-x"
+                  aria-label={`Remove option ${optionIndex + 1}`}
+                  onClick={() =>
+                    onChange(removeQuestionOption(items, question.id, optionIndex))
+                  }
+                >
+                  ×
+                </button>
+              ) : null}
             </li>
           ))}
-          <li>
-            <span className="option-bullet" aria-hidden="true" />
-            <button
-              type="button"
-              className="text-add"
-              onClick={() => onChange(addQuestionOption(items, question.id))}
-            >
-              + Add option
-            </button>
-          </li>
+          {canAddOption ? (
+            <li>
+              <span className="option-bullet" aria-hidden="true" />
+              <button
+                type="button"
+                className="text-add"
+                onClick={() => onChange(addQuestionOption(items, question.id))}
+              >
+                + Add option
+              </button>
+            </li>
+          ) : null}
         </ul>
       ) : null}
 

@@ -240,6 +240,17 @@
   gap: 16px;
 }
 
+.trip-round-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: #f4f5f7;
+  padding-bottom: 16px;
+}
+
 .trip-round-tab-bar {
   display: flex;
   gap: 6px;
@@ -393,7 +404,7 @@
 
 .stage-picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
   gap: 12px;
 }
 
@@ -833,14 +844,42 @@
 
 /* --- Trip round tabs: add lever control --- */
 
-.trip-round-tab-add {
-  color: #5c5347;
-  border-bottom-style: dashed;
-  border-bottom-width: 2px;
-  border-bottom-color: #d0d5dd;
+.trip-round-tab-add-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: -1px;
 }
 
-.trip-round-tab-add:hover {
+.trip-round-tab-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px dashed #d0d5dd;
+  border-radius: 8px;
+  background: transparent;
+  color: #5c5347;
+  cursor: pointer;
+}
+
+.trip-round-tab-add:hover,
+.trip-round-tab-add[aria-expanded="true"] {
   color: #1f1b16;
-  border-bottom-color: #1f1b16;
+  border-color: #1f1b16;
+}
+
+.stage-picker-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  width: max-content;
+  max-width: min(560px, 90vw);
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(31, 27, 22, 0.16);
 }

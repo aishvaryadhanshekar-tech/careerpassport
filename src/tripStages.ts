@@ -1,4 +1,5 @@
 import { uid } from "./files";
+import type { OptionCardConstraints } from "./QuestionEditor";
 import type { CustomQuestion, Stage, StageType } from "./types";
 
 export const STAGE_TYPE_META: Record<StageType, { label: string; blurb: string; live: boolean }> = {
@@ -52,6 +53,31 @@ export const STAGE_TYPE_META: Record<StageType, { label: string; blurb: string; 
     blurb: "Presents work they're proud of — reveals what they value in their own output",
     live: false,
   },
+};
+
+/**
+ * Option-card constraints per lever type, threaded into `QuestionBlock` (via
+ * `RoundQuestionsCard`) to keep a lever's option list shaped the way its own semantics require
+ * — e.g. rapid-fire's "Serious / Joking" binary can't be turned into a 3-way choice by hand.
+ *
+ * Deliberately a `Partial` record: a lever with no entry here gets fully unconstrained
+ * behavior (add/remove options freely), which is also what `QuestionBlock` defaults to when no
+ * config is passed at all — see the "audit" note below for lever types left unconstrained on
+ * purpose because their option semantics are ambiguous rather than obviously fixed.
+ *
+ * Audit of all lever types:
+ * - rapid_fire: binary by construction (`tripAIBuild.ts`'s `rapidFireQuestions` always emits
+ *   exactly "Serious"/"Joking") — constrained to fixed 2 options, no add/remove.
+ * - binary_choice: name states the constraint directly — constrained the same way.
+ * - multiple_choice, pick_and_defend, rank_order, ai_critic, coding_round, case_study,
+ *   flaunt_or_flex, do_a_demo: left unconstrained. `pick_and_defend` and `rank_order` both
+ *   imply "more than one option" but neither implies a specific fixed count the way
+ *   rapid_fire/binary_choice do, so guessing a minimum here would be arbitrary — flagged back
+ *   rather than guessed.
+ */
+export const STAGE_OPTION_CONSTRAINTS: Partial<Record<StageType, OptionCardConstraints>> = {
+  rapid_fire: { fixedOptionCount: 2, allowAddOption: false, allowRemoveOption: false },
+  binary_choice: { fixedOptionCount: 2, allowAddOption: false, allowRemoveOption: false },
 };
 
 export const DEFAULT_DURATION_BY_TYPE: Record<StageType, number> = {

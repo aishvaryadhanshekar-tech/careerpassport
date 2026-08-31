@@ -21,6 +21,9 @@
 .pipeline-toolbar-left {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .pipeline-column-select {
@@ -711,7 +714,7 @@
 }
 
 .candidate-filter-caret {
-  font-size: 9px;
+  flex: none;
   color: #9aa0a6;
 }
 

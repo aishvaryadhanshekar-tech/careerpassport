@@ -24,9 +24,15 @@ import {
 import { BulkActionsBar } from "./BulkActionsBar";
 import { CandidateCard } from "./CandidateCard";
 import { CandidateDrawer } from "./CandidateDrawer";
-import { CandidateFilterBar, CandidateTable } from "./CandidateTable";
+import {
+  CandidateFilterBar,
+  CandidateTable,
+  ColumnPickerButton,
+  type ColumnId,
+} from "./CandidateTable";
 import { EMPTY_CANDIDATE_FILTERS, filterCandidates, type CandidateFilters } from "./pipelineFilters";
 import "./pipeline.css";
+import { loadVisibleColumns, saveVisibleColumns } from "../pipelineColumnsPref";
 
 /** Placeholder until the workspace/org model carries a real company name. */
 const COMPANY_NAME = "Conte";
@@ -198,6 +204,12 @@ export function PipelineTab(): JSX.Element {
   const [view, setView] = useState<"board" | "table">("board");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<CandidateFilters>(EMPTY_CANDIDATE_FILTERS);
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => loadVisibleColumns());
+
+  function handleVisibleColumnsChange(next: Set<ColumnId>) {
+    setVisibleColumns(next);
+    saveVisibleColumns(next);
+  }
 
   const counts = countsByStage(board);
   const jobTitle = draft.fields.designation.value.trim() || "this role";
@@ -318,12 +330,18 @@ export function PipelineTab(): JSX.Element {
                 }
               />
             ) : view === "table" ? (
-              <CandidateFilterBar
-                filters={filters}
-                onChange={setFilters}
-                stages={board.stages}
-                availableTags={availableTags}
-              />
+              <>
+                <CandidateFilterBar
+                  filters={filters}
+                  onChange={setFilters}
+                  stages={board.stages}
+                  availableTags={availableTags}
+                />
+                <ColumnPickerButton
+                  visibleColumns={visibleColumns}
+                  onChange={handleVisibleColumnsChange}
+                />
+              </>
             ) : null}
           </div>
           <div className="view-toggle" role="group" aria-label="Pipeline view">
@@ -354,6 +372,7 @@ export function PipelineTab(): JSX.Element {
           candidates={visibleCandidates}
           stages={board.stages}
           selected={selected}
+          visibleColumns={visibleColumns}
           onToggleOne={toggleOne}
           onToggleAll={(on) =>
             toggleMany(

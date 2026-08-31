@@ -131,6 +131,31 @@
   color: #2f5d50;
 }
 
+.footer-icon.on {
+  background: #fde8e8;
+  color: #c0392b;
+}
+
+.question-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.question-dictation-interim {
+  margin: -6px 0 0 26px;
+  font-size: 13px;
+  font-style: italic;
+  color: #667085;
+}
+
+.question-dictation-note {
+  margin: -6px 0 0 26px;
+  font-size: 12px;
+  color: #c0392b;
+}
+
 .footer-divider {
   width: 1px;
   height: 20px;

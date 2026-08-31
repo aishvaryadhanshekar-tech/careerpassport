@@ -26,6 +26,7 @@ export function RoleProfilePage() {
     requirements: false,
     sourcing: false,
     evaluation: false,
+    application: false,
   });
   const [tabSnapshots, setTabSnapshots] = useState<Partial<Record<EditKey, JobDraft>>>({});
   const draftRef = useRef(draft);

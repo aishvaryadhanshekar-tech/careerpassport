@@ -72,6 +72,12 @@ export function countsByStage(board: PipelineBoard): Record<string, number> {
   return counts;
 }
 
+/** Candidates still in the earliest, unreviewed stages of the pipeline. */
+export function countAwaitingReview(board: PipelineBoard): number {
+  const counts = countsByStage(board);
+  return (counts.applied ?? 0) + (counts.screened ?? 0);
+}
+
 function event(
   label: string,
   actor: TimelineEvent["actor"],

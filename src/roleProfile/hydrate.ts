@@ -9,8 +9,11 @@ export type TabId = "requirements" | "sourcing" | "evaluation";
  * Editable regions on the Role Profile page. The sidebar ("summary") is not a tab but uses the
  * same snapshot/discard machinery, so headline, portrait and the role's core fields keep working
  * Discard — they used to live in the now-deleted Overview tab and would otherwise have lost it.
+ *
+ * "application" is Job Overview's own slice — the wizard's Role Profile page never edits it,
+ * but it shares this snapshot/discard machinery rather than duplicating it.
  */
-export type EditKey = TabId | "summary";
+export type EditKey = TabId | "summary" | "application";
 
 // Every field with its own FieldState only refills when it's genuinely
 // unset (never "user"-sourced, never already carrying a value) so a
@@ -110,5 +113,7 @@ export function restoreTabSlice(id: EditKey, current: JobDraft, snapshot: JobDra
         ...current,
         roleProfile: { ...current.roleProfile, evaluationFramework: snapshot.roleProfile.evaluationFramework },
       };
+    case "application":
+      return { ...current, application: snapshot.application };
   }
 }

@@ -175,3 +175,24 @@ export function rewriteRoundQuestions(
 ): CustomQuestion[] {
   return questionsForType(stage.type, cards, difficulty);
 }
+
+/**
+ * Rewrites a single `CustomQuestion` in place (keeping its id), reusing the same per-stage-type
+ * generation branches as `questionsForType`/`rewriteRoundQuestions` — just scoped to produce one
+ * question instead of a whole round. Backs the per-question Sparkle "rewrite with AI" control in
+ * `QuestionBlock`/`RoundQuestionsCard`, as opposed to the existing whole-round rewrite button in
+ * `TripRoundTabs.tsx`.
+ */
+export function rewriteSingleQuestion(
+  type: StageType,
+  question: CustomQuestion,
+  cards: InferenceCard[],
+  difficulty: Difficulty,
+): CustomQuestion {
+  const pool = questionsForType(type, cards, difficulty);
+  if (pool.length === 0) {
+    return { ...question };
+  }
+  const pick = pool[Math.floor(Math.random() * pool.length)] ?? pool[0]!;
+  return { ...pick, id: question.id };
+}
