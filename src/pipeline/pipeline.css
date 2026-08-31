@@ -1,5 +1,35 @@
 /* Pipeline kanban. Component-scoped — imported by PipelineTab.tsx, not via the styles barrel. */
 
+.pipeline-toolbar {
+  margin-bottom: 12px;
+}
+
+.pipeline-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pipeline-toolbar-row.is-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  padding: 4px 0;
+}
+
+.pipeline-toolbar-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.pipeline-column-select {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
 .pipeline-board {
   display: flex;
   align-items: flex-start;
@@ -423,4 +453,377 @@
 .candidate-verdict.verdict-hold {
   background: #fee4e2;
   color: #912018;
+}
+
+/* --- bulk selection --- */
+
+.candidate-card-select {
+  flex: none;
+  margin: 2px 0 0;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.candidate-card.is-selected {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 1px #0f766e;
+}
+
+/* --- bulk actions bar ---
+ *
+ * Sticky just under the pipeline header so it stays visible while the board/table scrolls,
+ * mirroring the `.jobs-selected-count` + `.btn danger` pairing on the Jobs list. */
+
+.pipeline-bulk-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(31, 27, 22, 0.08);
+  flex: 1;
+  min-width: 0;
+}
+
+.pipeline-bulk-bar-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5c5347;
+  white-space: nowrap;
+}
+
+.pipeline-bulk-bar-clear {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #667085;
+  cursor: pointer;
+}
+
+.pipeline-bulk-bar-clear:hover {
+  color: #1f1b16;
+  text-decoration: underline;
+}
+
+.pipeline-bulk-bar-item {
+  display: flex;
+  align-items: center;
+}
+
+.pipeline-bulk-bar-spacer {
+  flex: 1;
+}
+
+.pipeline-bulk-bar select.pipeline-bulk-move-select {
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f1b16;
+}
+
+/* --- Candidate table view ---
+ *
+ * Follows JobsPage's .jobs-table convention (src/styles/jobs.css) so the two record tables in
+ * the product read as one system, but scoped under candidate-table- to avoid collisions since
+ * both can be mounted at once. */
+.candidate-table-wrap {
+  width: 100%;
+  max-width: none;
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 12px;
+}
+
+.candidate-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.candidate-table th {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9aa0a6;
+  font-weight: 500;
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid #d5d9dc;
+}
+
+.candidate-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e3e5e7;
+  color: #5c5347;
+  vertical-align: middle;
+}
+
+.candidate-table td b {
+  color: #1f1b16;
+  font-weight: 600;
+}
+
+.candidate-table-sub {
+  font-size: 12px;
+  color: #9aa0a6;
+  margin-top: 2px;
+}
+
+.candidate-table tbody tr {
+  cursor: pointer;
+}
+
+.candidate-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.candidate-table tbody tr.is-selected {
+  background: #f7f8f9;
+}
+
+.candidate-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.candidate-table .candidate-table-check {
+  width: 40px;
+  padding-left: 10px;
+  padding-right: 4px;
+  vertical-align: middle;
+}
+
+.candidate-table .candidate-table-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: #1f1b16;
+  cursor: pointer;
+}
+
+.candidate-table .num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.candidate-table-stage {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: #f1f2f4;
+  color: #44546f;
+}
+
+.candidate-table-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 220px;
+}
+
+.candidate-table-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f0f1f3;
+  color: #5c5347;
+  white-space: nowrap;
+}
+
+.candidate-table-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  color: #9aa0a6;
+  font-size: 14px;
+  border: 1px dashed #e2e6e9;
+  border-radius: 12px;
+}
+
+/* --- Candidate filter bar --- */
+.candidate-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.candidate-filter-search {
+  flex: none;
+  width: 220px;
+  max-width: 260px;
+  padding: 8px 12px;
+  border: 1px solid #e2e6e9;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1f1b16;
+  background: #fff;
+}
+
+.candidate-filter-search:focus {
+  outline: none;
+  border-color: #0f766e;
+}
+
+.candidate-filter-multiselect {
+  position: relative;
+  flex: none;
+}
+
+.candidate-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #e2e6e9;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f1b16;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.candidate-filter-btn:hover {
+  background: #fafafa;
+}
+
+.candidate-filter-btn.is-active {
+  border-color: #0f766e;
+  color: #0f766e;
+  background: #e8f5f3;
+}
+
+.candidate-filter-caret {
+  font-size: 9px;
+  color: #9aa0a6;
+}
+
+.candidate-filter-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 240px;
+  max-height: 340px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(31, 27, 22, 0.12);
+}
+
+.candidate-filter-popover-section + .candidate-filter-popover-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eef0f1;
+}
+
+.candidate-filter-popover-section-title {
+  padding: 2px 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #9aa0a6;
+}
+
+.candidate-filter-popover-clear {
+  align-self: flex-start;
+  margin-top: 10px;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f766e;
+  cursor: pointer;
+}
+
+.candidate-filter-popover-clear:hover {
+  text-decoration: underline;
+}
+
+.candidate-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.candidate-filter-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1f1b16;
+  cursor: pointer;
+}
+
+.candidate-filter-popover-item:hover {
+  background: #f7f8f9;
+}
+
+.candidate-filter-popover-item input {
+  accent-color: #1f1b16;
+  cursor: pointer;
+}
+
+.candidate-filter-popover-empty {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.candidate-filter-dates {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.candidate-filter-date-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.candidate-filter-date-field input {
+  padding: 6px 8px;
+  border: 1px solid #e2e6e9;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #1f1b16;
+  background: #fff;
 }

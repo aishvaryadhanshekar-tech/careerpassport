@@ -138,6 +138,8 @@ export function CandidateCard({
   onSendMessage,
   templateValues,
   onDragStateChange,
+  selected,
+  onToggleSelect,
 }: {
   candidate: Candidate;
   stages: PipelineStage[];
@@ -148,6 +150,8 @@ export function CandidateCard({
   onSendMessage: (template: MessageTemplate) => void;
   templateValues: TemplateValues;
   onDragStateChange: (dragging: boolean) => void;
+  selected: boolean;
+  onToggleSelect: (on: boolean) => void;
 }): JSX.Element {
   const [dragging, setDragging] = useState(false);
   // One primary action per card, by precedence. A candidate with no Trip yet needs one
@@ -161,7 +165,7 @@ export function CandidateCard({
 
   return (
     <div
-      className={`candidate-card${dragging ? " is-dragging" : ""}`}
+      className={`candidate-card${dragging ? " is-dragging" : ""}${selected ? " is-selected" : ""}`}
       role="button"
       tabIndex={0}
       draggable
@@ -185,6 +189,17 @@ export function CandidateCard({
       }}
     >
       <div className="candidate-card-top">
+        <input
+          type="checkbox"
+          className="candidate-card-select"
+          checked={selected}
+          aria-label={`Select ${candidate.name}`}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggleSelect(e.target.checked);
+          }}
+        />
         <span className="candidate-card-name">{candidate.name}</span>
         {/* Beside the name: the AI verdict is the second thing a hiring manager needs, and
           * down in the chip row it had the same shape and weight as the neutral origin and

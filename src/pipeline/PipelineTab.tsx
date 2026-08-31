@@ -1,6 +1,8 @@
-import { useRef, useState, type JSX } from "react";
+import { useMemo, useRef, useState, type JSX } from "react";
 import {
   addStage,
+  bulkMoveCandidates,
+  bulkSendMessage,
   countsByStage,
   getBoard,
   moveCandidate,
@@ -8,15 +10,30 @@ import {
   sendMessage,
   setTripStatus,
 } from "../candidatesStore";
+import { SendMessageMenu } from "../communications/SendMessageMenu";
 import { useJobContext } from "../job/jobContext";
 import { PROFILE } from "../profile";
-import type { Candidate, PipelineBoard, PipelineStage, TemplateValues } from "../types";
+import {
+  ARCHIVE_STAGE_ID,
+  type Candidate,
+  type MessageTemplate,
+  type PipelineBoard,
+  type PipelineStage,
+  type TemplateValues,
+} from "../types";
+import { BulkActionsBar } from "./BulkActionsBar";
 import { CandidateCard } from "./CandidateCard";
 import { CandidateDrawer } from "./CandidateDrawer";
+import { CandidateFilterBar, CandidateTable } from "./CandidateTable";
+import { EMPTY_CANDIDATE_FILTERS, filterCandidates, type CandidateFilters } from "./pipelineFilters";
 import "./pipeline.css";
 
 /** Placeholder until the workspace/org model carries a real company name. */
 const COMPANY_NAME = "Conte";
+
+/** No template's scope names this id, so templatesForStage(stageId) falls through to just
+ * the stage-agnostic ("all") templates — exactly what a mixed-stage bulk selection needs. */
+const MIXED_STAGE_SENTINEL = "__mixed__";
 
 function StageColumn({
   stage,
@@ -26,6 +43,9 @@ function StageColumn({
   onDropCandidate,
   onDragOverColumn,
   onDragLeaveColumn,
+  selectAllChecked,
+  selectAllIndeterminate,
+  onToggleColumnSelect,
   children,
 }: {
   stage: PipelineStage;
@@ -35,6 +55,9 @@ function StageColumn({
   onDropCandidate: (candidateId: string) => void;
   onDragOverColumn: () => void;
   onDragLeaveColumn: () => void;
+  selectAllChecked: boolean;
+  selectAllIndeterminate: boolean;
+  onToggleColumnSelect: (on: boolean) => void;
   children: (candidate: Candidate) => JSX.Element;
 }): JSX.Element {
   return (
@@ -55,6 +78,18 @@ function StageColumn({
       }}
     >
       <header className="pipeline-column-head">
+        {candidates.length > 0 ? (
+          <input
+            type="checkbox"
+            className="pipeline-column-select"
+            checked={selectAllChecked}
+            ref={(el) => {
+              if (el) el.indeterminate = selectAllIndeterminate;
+            }}
+            onChange={(e) => onToggleColumnSelect(e.target.checked)}
+            aria-label={`Select all candidates in ${stage.label}`}
+          />
+        ) : null}
         <span className="pipeline-column-title">{stage.label}</span>
         <span className={`pipeline-count${count > 0 ? " is-filled" : ""}`}>{count}</span>
       </header>
@@ -136,11 +171,33 @@ function AddStage({ onAdd }: { onAdd: (label: string) => void }): JSX.Element {
   );
 }
 
+function BoardIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.5" y="2" width="4" height="12" rx="1" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="6.5" y="2" width="4" height="8" rx="1" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="11.5" y="2" width="3" height="10" rx="1" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function TableIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.5" y="2" width="13" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M1.5 6.5h13M1.5 10.5h13M6 2v12" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
 export function PipelineTab(): JSX.Element {
   const { jobId, draft } = useJobContext();
   const [board, setBoard] = useState<PipelineBoard>(() => getBoard(jobId));
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [openCandidateId, setOpenCandidateId] = useState<string | null>(null);
+  const [view, setView] = useState<"board" | "table">("board");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<CandidateFilters>(EMPTY_CANDIDATE_FILTERS);
 
   const counts = countsByStage(board);
   const jobTitle = draft.fields.designation.value.trim() || "this role";
@@ -165,52 +222,209 @@ export function PipelineTab(): JSX.Element {
     setBoard(moveCandidate(jobId, candidateId, stageId));
   }
 
+  function toggleOne(id: string, on: boolean) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  function toggleMany(ids: string[], on: boolean) {
+    setSelected((current) => {
+      const next = new Set(current);
+      for (const id of ids) {
+        if (on) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  const visibleCandidates = useMemo(
+    () => filterCandidates(board.candidates, filters),
+    [board.candidates, filters],
+  );
+
+  const availableTags = useMemo(() => {
+    const tags = new Set<string>();
+    for (const candidate of board.candidates) {
+      for (const tag of candidate.tags) tags.add(tag);
+    }
+    return [...tags].sort();
+  }, [board.candidates]);
+
+  const selectedCandidates = useMemo(
+    () => board.candidates.filter((c) => selected.has(c.id)),
+    [board.candidates, selected],
+  );
+
+  const commonStageId =
+    selectedCandidates.length > 0 &&
+    selectedCandidates.every((c) => c.stageId === selectedCandidates[0].stageId)
+      ? selectedCandidates[0].stageId
+      : MIXED_STAGE_SENTINEL;
+
+  const bulkPreviewValues: TemplateValues = {
+    candidate_name: selectedCandidates.length === 1 ? selectedCandidates[0].name : "the candidate",
+    job_title: jobTitle,
+    company: COMPANY_NAME,
+    sender_name: PROFILE.name,
+    stage:
+      commonStageId !== MIXED_STAGE_SENTINEL
+        ? (board.stages.find((s) => s.id === commonStageId)?.label ?? "current")
+        : "their current stage",
+  };
+
+  function handleBulkMove(toStageId: string) {
+    setBoard(bulkMoveCandidates(jobId, [...selected], toStageId));
+    clearSelection();
+  }
+
+  function handleBulkArchive() {
+    setBoard(bulkMoveCandidates(jobId, [...selected], ARCHIVE_STAGE_ID));
+    clearSelection();
+  }
+
+  function handleBulkSend(template: MessageTemplate) {
+    setBoard(bulkSendMessage(jobId, [...selected], template, templateValuesFor));
+    clearSelection();
+  }
+
   return (
     <>
-      <div className="pipeline-board">
-        {board.stages.map((stage) => (
-          <StageColumn
-            key={stage.id}
-            stage={stage}
-            count={counts[stage.id] ?? 0}
-            candidates={board.candidates.filter((c) => c.stageId === stage.id)}
-            isDropTarget={dropTarget === stage.id}
-            onDragOverColumn={() => setDropTarget(stage.id)}
-            onDragLeaveColumn={() =>
-              setDropTarget((current) => (current === stage.id ? null : current))
-            }
-            onDropCandidate={(candidateId) => handleDrop(stage.id, candidateId)}
-          >
-            {(candidate) => (
-              <CandidateCard
-                key={candidate.id}
-                candidate={candidate}
+      <div className="pipeline-toolbar">
+        <div className={`pipeline-toolbar-row${selected.size > 0 ? " is-sticky" : ""}`}>
+          <div className="pipeline-toolbar-left">
+            {selected.size > 0 ? (
+              <BulkActionsBar
+                selectedCount={selected.size}
                 stages={board.stages}
-                onOpen={() => setOpenCandidateId(candidate.id)}
-                onMove={(toStageId) => setBoard(moveCandidate(jobId, candidate.id, toStageId))}
-                onSendTrip={() => setBoard(setTripStatus(jobId, candidate.id, "sent"))}
-                onSendMessage={(template) =>
-                  setBoard(
-                    sendMessage(jobId, candidate.id, template, templateValuesFor(candidate)),
-                  )
+                onClear={clearSelection}
+                onMoveToStage={handleBulkMove}
+                onArchive={handleBulkArchive}
+                sendMessageSlot={
+                  <SendMessageMenu
+                    stageId={commonStageId}
+                    values={bulkPreviewValues}
+                    buttonClassName="btn"
+                    onSend={handleBulkSend}
+                  />
                 }
-                templateValues={templateValuesFor(candidate)}
-                onSchedule={() =>
-                  // Prototype: schedule two days out rather than opening a date picker.
-                  setBoard(
-                    scheduleInterview(jobId, candidate.id, Date.now() + 2 * 24 * 60 * 60 * 1000),
-                  )
-                }
-                onDragStateChange={(dragging) => {
-                  if (!dragging) setDropTarget(null);
-                }}
               />
-            )}
-          </StageColumn>
-        ))}
-
-        <AddStage onAdd={(label) => setBoard(addStage(jobId, label))} />
+            ) : view === "table" ? (
+              <CandidateFilterBar
+                filters={filters}
+                onChange={setFilters}
+                stages={board.stages}
+                availableTags={availableTags}
+              />
+            ) : null}
+          </div>
+          <div className="view-toggle" role="group" aria-label="Pipeline view">
+            <button
+              type="button"
+              className={view === "board" ? "on" : ""}
+              onClick={() => setView("board")}
+              aria-label="Board view"
+              title="Board view"
+            >
+              <BoardIcon />
+            </button>
+            <button
+              type="button"
+              className={view === "table" ? "on" : ""}
+              onClick={() => setView("table")}
+              aria-label="Table view"
+              title="Table view"
+            >
+              <TableIcon />
+            </button>
+          </div>
+        </div>
       </div>
+
+      {view === "table" ? (
+        <CandidateTable
+          candidates={visibleCandidates}
+          stages={board.stages}
+          selected={selected}
+          onToggleOne={toggleOne}
+          onToggleAll={(on) =>
+            toggleMany(
+              visibleCandidates.map((c) => c.id),
+              on,
+            )
+          }
+          onOpen={(candidateId) => setOpenCandidateId(candidateId)}
+        />
+      ) : (
+        <div className="pipeline-board">
+          {board.stages.map((stage) => {
+            const stageCandidates = board.candidates.filter((c) => c.stageId === stage.id);
+            const stageIds = stageCandidates.map((c) => c.id);
+            const stageSelectedCount = stageIds.filter((id) => selected.has(id)).length;
+            return (
+              <StageColumn
+                key={stage.id}
+                stage={stage}
+                count={counts[stage.id] ?? 0}
+                candidates={stageCandidates}
+                isDropTarget={dropTarget === stage.id}
+                onDragOverColumn={() => setDropTarget(stage.id)}
+                onDragLeaveColumn={() =>
+                  setDropTarget((current) => (current === stage.id ? null : current))
+                }
+                onDropCandidate={(candidateId) => handleDrop(stage.id, candidateId)}
+                selectAllChecked={stageIds.length > 0 && stageSelectedCount === stageIds.length}
+                selectAllIndeterminate={
+                  stageSelectedCount > 0 && stageSelectedCount < stageIds.length
+                }
+                onToggleColumnSelect={(on) => toggleMany(stageIds, on)}
+              >
+                {(candidate) => (
+                  <CandidateCard
+                    key={candidate.id}
+                    candidate={candidate}
+                    stages={board.stages}
+                    selected={selected.has(candidate.id)}
+                    onToggleSelect={(on) => toggleOne(candidate.id, on)}
+                    onOpen={() => setOpenCandidateId(candidate.id)}
+                    onMove={(toStageId) => setBoard(moveCandidate(jobId, candidate.id, toStageId))}
+                    onSendTrip={() => setBoard(setTripStatus(jobId, candidate.id, "sent"))}
+                    onSendMessage={(template) =>
+                      setBoard(
+                        sendMessage(jobId, candidate.id, template, templateValuesFor(candidate)),
+                      )
+                    }
+                    templateValues={templateValuesFor(candidate)}
+                    onSchedule={() =>
+                      // Prototype: schedule two days out rather than opening a date picker.
+                      setBoard(
+                        scheduleInterview(
+                          jobId,
+                          candidate.id,
+                          Date.now() + 2 * 24 * 60 * 60 * 1000,
+                        ),
+                      )
+                    }
+                    onDragStateChange={(dragging) => {
+                      if (!dragging) setDropTarget(null);
+                    }}
+                  />
+                )}
+              </StageColumn>
+            );
+          })}
+
+          <AddStage onAdd={(label) => setBoard(addStage(jobId, label))} />
+        </div>
+      )}
 
       {openCandidate ? (
         <CandidateDrawer

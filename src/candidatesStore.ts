@@ -167,6 +167,30 @@ export function moveCandidate(
   });
 }
 
+/** Same as moveCandidate for every id, in one read/save round trip instead of N. */
+export function bulkMoveCandidates(
+  jobId: string,
+  candidateIds: readonly string[],
+  toStageId: string,
+): PipelineBoard {
+  const board = getBoard(jobId);
+  const to = board.stages.find((s) => s.id === toStageId);
+  if (!to) return board;
+  const ids = new Set(candidateIds);
+  let changed = false;
+  const candidates = board.candidates.map((candidate) => {
+    if (!ids.has(candidate.id) || candidate.stageId === toStageId) return candidate;
+    const from = board.stages.find((s) => s.id === candidate.stageId);
+    changed = true;
+    return withEvent(
+      { ...candidate, stageId: toStageId },
+      event(`Moved to ${to.label}`, "team", `${from?.label ?? "Unassigned"} → ${to.label}`),
+    );
+  });
+  if (!changed) return board;
+  return save(jobId, { ...board, candidates });
+}
+
 export function setTripStatus(
   jobId: string,
   candidateId: string,
@@ -314,4 +338,42 @@ export function sendMessage(
       event(`Sent “${template.name}”`, "team", MESSAGE_CHANNEL_LABELS[template.channel]),
     );
   });
+}
+
+/**
+ * Same as sendMessage for every id, in one read/save round trip instead of N.
+ * Takes a values-per-candidate function since {{stage}} (and potentially other tokens)
+ * differ across a mixed-stage selection.
+ */
+export function bulkSendMessage(
+  jobId: string,
+  candidateIds: readonly string[],
+  template: MessageTemplate,
+  valuesForCandidate: (candidate: Candidate) => TemplateValues,
+): PipelineBoard {
+  const board = getBoard(jobId);
+  const ids = new Set(candidateIds);
+  let changed = false;
+  const candidates = board.candidates.map((candidate) => {
+    if (!ids.has(candidate.id)) return candidate;
+    const values = valuesForCandidate(candidate);
+    const message: SentMessage = {
+      id: uid(),
+      templateId: template.id,
+      templateName: template.name,
+      channel: template.channel,
+      intent: template.intent,
+      subject: renderTemplate(template.subject, values),
+      body: renderTemplate(template.body, values),
+      sentAt: Date.now(),
+      sentBy: values.sender_name,
+    };
+    changed = true;
+    return withEvent(
+      { ...candidate, messages: [...(candidate.messages ?? []), message] },
+      event(`Sent “${template.name}”`, "team", MESSAGE_CHANNEL_LABELS[template.channel]),
+    );
+  });
+  if (!changed) return board;
+  return save(jobId, { ...board, candidates });
 }

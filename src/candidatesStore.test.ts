@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   addNote,
   addStage,
+  bulkMoveCandidates,
+  bulkSendMessage,
   countsByStage,
   getBoard,
   getCandidate,
@@ -9,12 +11,13 @@ import {
   parseMentions,
   removeStage,
   renameStage,
+  sendMessage,
   setRating,
   setTripStatus,
   toggleTag,
 } from "./candidatesStore";
 import { memoryStorage } from "./memoryStore";
-import { ARCHIVE_STAGE_ID, flagForScore } from "./types";
+import { ARCHIVE_STAGE_ID, flagForScore, type MessageTemplate, type TemplateValues } from "./types";
 
 const JOB = "job-1";
 
@@ -184,6 +187,87 @@ describe("parseMentions", () => {
   });
   it("returns empty when there are none", () => {
     expect(parseMentions("no mentions here")).toEqual([]);
+  });
+});
+
+describe("bulkMoveCandidates", () => {
+  it("moves every listed candidate and records a timeline event each", () => {
+    const before = getCandidate(JOB, "cand-priya")!;
+    bulkMoveCandidates(JOB, ["cand-priya", "cand-arjun"], "screened");
+    const priya = getCandidate(JOB, "cand-priya")!;
+    expect(priya.stageId).toBe("screened");
+    expect(priya.timeline.length).toBe(before.timeline.length + 1);
+    expect(getCandidate(JOB, "cand-arjun")?.stageId).toBe("screened");
+  });
+
+  it("skips candidates already in the target stage", () => {
+    const before = getCandidate(JOB, "cand-priya")!;
+    bulkMoveCandidates(JOB, ["cand-priya"], "applied");
+    expect(getCandidate(JOB, "cand-priya")!.timeline.length).toBe(before.timeline.length);
+  });
+
+  it("ignores an unknown stage", () => {
+    bulkMoveCandidates(JOB, ["cand-priya"], "nope");
+    expect(getCandidate(JOB, "cand-priya")?.stageId).toBe("applied");
+  });
+
+  it("leaves unlisted candidates untouched", () => {
+    bulkMoveCandidates(JOB, ["cand-priya"], "screened");
+    expect(getCandidate(JOB, "cand-arjun")?.stageId).toBe("applied");
+  });
+});
+
+describe("bulkSendMessage", () => {
+  const TEMPLATE: MessageTemplate = {
+    id: "tpl-test",
+    name: "Test template",
+    channel: "email",
+    intent: "acknowledge",
+    scope: "all",
+    blurb: "",
+    subject: "Hi {{candidate_name}}",
+    body: "You are at {{stage}}",
+  };
+
+  function valuesFor(candidate: { name: string; stageId: string }): TemplateValues {
+    return {
+      candidate_name: candidate.name,
+      job_title: "Engineer",
+      company: "Acme",
+      sender_name: "Alex Smith",
+      stage: candidate.stageId,
+    };
+  }
+
+  it("records a message and timeline event for every listed candidate", () => {
+    bulkSendMessage(JOB, ["cand-priya", "cand-arjun"], TEMPLATE, valuesFor);
+    const priya = getCandidate(JOB, "cand-priya")!;
+    const arjun = getCandidate(JOB, "cand-arjun")!;
+    expect(priya.messages).toHaveLength(1);
+    expect(arjun.messages).toHaveLength(1);
+    expect(priya.timeline[priya.timeline.length - 1].label).toBe('Sent “Test template”');
+  });
+
+  it("renders per-candidate values, not a shared value", () => {
+    bulkSendMessage(JOB, ["cand-priya", "cand-arjun"], TEMPLATE, valuesFor);
+    const priya = getCandidate(JOB, "cand-priya")!;
+    const arjun = getCandidate(JOB, "cand-arjun")!;
+    expect(priya.messages![0].subject).toContain(priya.name);
+    expect(arjun.messages![0].subject).toContain(arjun.name);
+  });
+
+  it("renders the same way sendMessage does for a single candidate", () => {
+    const candidate = getCandidate(JOB, "cand-priya")!;
+    sendMessage(JOB, "cand-priya", TEMPLATE, valuesFor(candidate));
+    const viaSingle = getCandidate(JOB, "cand-priya")!.messages![0];
+
+    bulkSendMessage(JOB, ["cand-arjun"], TEMPLATE, valuesFor);
+    const arjun = getCandidate(JOB, "cand-arjun")!;
+    const viaBulk = arjun.messages![0];
+
+    expect(viaSingle.subject).toBe(`Hi ${candidate.name}`);
+    expect(viaBulk.subject).toBe(`Hi ${arjun.name}`);
+    expect(viaBulk.body).toBe(`You are at ${arjun.stageId}`);
   });
 });
 
