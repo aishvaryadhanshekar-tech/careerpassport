@@ -16,7 +16,16 @@
       "Bash(npx --yes chromium-cli --help)",
       "Bash(node verify_nudge_tmp.mjs)",
       "Bash(xargs -I{} echo {})",
-      "Bash(git -C /Users/aishvarya.dhansheka/Desktop/careerpassport status --porcelain)"
+      "Bash(git -C /Users/aishvarya.dhansheka/Desktop/careerpassport status --porcelain)",
+      "Bash(cp .claude/worktrees/agent-a740f18dd895946e6/src/trips/TripAddLeverModal.tsx src/trips/TripAddLeverModal.tsx)",
+      "Bash(cp .claude/worktrees/agent-a740f18dd895946e6/src/trips/TripAddLeverModal.test.ts src/trips/TripAddLeverModal.test.ts)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5183/)",
+      "Bash(which chromium-cli *)",
+      "Read(//usr/local/**)",
+      "Bash(node /private/tmp/claude-502/-Users-aishvarya-dhansheka-Desktop-careerpassport/47111f23-b086-45d2-bda0-978d1a7c60e1/scratchpad/verify.mjs)",
+      "Bash(node /Users/aishvarya.dhansheka/Desktop/careerpassport/_verify_tmp.mjs)",
+      "Bash(git worktree *)",
+      "Bash(git branch *)"
     ],
     "additionalDirectories": [
       "/private/tmp"

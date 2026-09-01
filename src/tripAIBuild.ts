@@ -196,3 +196,38 @@ export function rewriteSingleQuestion(
   const pick = pool[Math.floor(Math.random() * pool.length)] ?? pool[0]!;
   return { ...pick, id: question.id };
 }
+
+function lowerFirst(s: string): string {
+  return s.length > 0 ? s[0].toLowerCase() + s.slice(1) : s;
+}
+
+function capitalize(s: string): string {
+  return s.length > 0 ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
+const SNIPPET_REWRITE_STYLES: Array<(s: string) => string> = [
+  (s) => `Put simply, ${lowerFirst(s)}`,
+  (s) => `In other words, ${lowerFirst(s)}`,
+  (s) => `To rephrase: ${lowerFirst(s)}`,
+  (s) => `${capitalize(s)} — reworded for clarity`,
+];
+
+/**
+ * Rewrites a single highlighted snippet of a question prompt (not the whole question) — the
+ * "fake AI" behind the inline text-selection "Rewrite" affordance in QuestionEditor. Follows
+ * this file's existing convention of a templated/seeded transformation rather than a real LLM
+ * call: the style is picked deterministically from the snippet's length (so the same input
+ * always rewrites the same way, and the transformation is easy to unit test without mocking
+ * randomness), and `difficulty` nudges the phrasing's register.
+ */
+export function rewriteTextSnippet(snippet: string, difficulty: Difficulty): string {
+  const trimmed = snippet.trim();
+  if (!trimmed) return snippet;
+
+  const style = SNIPPET_REWRITE_STYLES[trimmed.length % SNIPPET_REWRITE_STYLES.length];
+  const reworded = style(trimmed);
+
+  if (difficulty === "hard") return `${reworded}, with specific, concrete detail`;
+  if (difficulty === "easy") return `${reworded}, kept short and simple`;
+  return reworded;
+}

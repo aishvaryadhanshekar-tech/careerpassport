@@ -86,6 +86,7 @@ export function RoundQuestionsCard({
               onRewriteWithAI={
                 canRewriteWithAI ? () => handleRewriteQuestion(question.id) : undefined
               }
+              enableSelectionRewrite
             />
           </div>
         ))}

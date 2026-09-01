@@ -45,31 +45,8 @@ export function TripRoundTabs({
 }: TripRoundTabsProps): JSX.Element {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [rewritingId, setRewritingId] = useState<string | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
-  const addPopoverRef = useRef<HTMLDivElement | null>(null);
+  const [addLeverModalOpen, setAddLeverModalOpen] = useState(false);
   const buildPhase = useBuildPhase(rewritingId !== null);
-
-  useEffect(() => {
-    if (!addOpen) return;
-
-    function onPointerDown(e: MouseEvent) {
-      if (addPopoverRef.current && !addPopoverRef.current.contains(e.target as Node)) {
-        setAddOpen(false);
-      }
-    }
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setAddOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [addOpen]);
 
   const activeStage = trip.stages.find((s) => s.id === activeId) ?? trip.stages[0] ?? null;
 
@@ -85,16 +62,6 @@ export function TripRoundTabs({
         stage.id === stageId ? { ...stage, durationMinutes } : stage,
       ),
     });
-  }
-
-  function onAddStage(type: StageType) {
-    const nextStages = addStage(trip.stages, type);
-    onChange({ stages: nextStages });
-    const newStage = nextStages[nextStages.length - 1];
-    if (newStage) {
-      setActiveId(newStage.id);
-    }
-    setAddOpen(false);
   }
 
   async function onRewrite(stage: Stage) {
@@ -187,47 +154,26 @@ export function TripRoundTabs({
             <span className="trip-round-tab-duration">{stage.durationMinutes}m</span>
           </button>
         ))}
-        <div className="trip-round-tab-add-wrap" ref={addPopoverRef}>
+        <div className="trip-round-tab-add-wrap">
           <button
             type="button"
             className="trip-round-tab-add"
             aria-label="Add lever"
-            aria-haspopup="true"
-            aria-expanded={addOpen}
-            onClick={() => setAddOpen((v) => !v)}
+            aria-haspopup="dialog"
+            onClick={() => setAddLeverModalOpen(true)}
           >
             <PlusIcon />
           </button>
-
-          {addOpen && (
-            <div className="stage-picker-popover">
-              <div className="stage-picker-grid">
-                {Object.entries(STAGE_TYPE_META).map(([type, meta]) => {
-                  if (!meta.live) {
-                    return (
-                      <div key={type} className="stage-picker-card disabled-stage-card">
-                        <span className="stage-picker-card-label">{meta.label}</span>
-                        <span className="stage-picker-card-blurb">{meta.blurb}</span>
-                      </div>
-                    );
-                  }
-                  return (
-                    <button
-                      key={type}
-                      type="button"
-                      className="stage-picker-card"
-                      onClick={() => onAddStage(type as StageType)}
-                    >
-                      <span className="stage-picker-card-label">{meta.label}</span>
-                      <span className="stage-picker-card-blurb">{meta.blurb}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      <TripAddLeverModal
+        open={addLeverModalOpen}
+        trip={trip}
+        draft={draft}
+        onChange={onChange}
+        onClose={() => setAddLeverModalOpen(false)}
+      />
 
       <div className="trip-round-tab-panel" role="tabpanel">
         <p className="trip-round-tab-blurb">{STAGE_TYPE_META[activeStage.type].blurb}</p>

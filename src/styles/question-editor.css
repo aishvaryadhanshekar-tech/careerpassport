@@ -311,3 +311,54 @@
   padding: 8px 12px;
   background: #f7f8f9;
 }
+
+/* Floating "Rewrite" affordance for a highlighted text selection inside the question-prompt
+ * textarea (Trips only — see `enableSelectionRewrite` on QuestionBlock). Positioned via
+ * `position: fixed` at the triggering event's client coordinates (see
+ * `useTextSelectionToolbar`), same "good enough" anchoring every other hand-rolled popover in
+ * this app uses rather than precise text-range geometry. */
+.selection-rewrite-wrap {
+  position: fixed;
+  z-index: 40;
+  transform: translate(-50%, -100%) translateY(-8px);
+}
+
+.selection-rewrite-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #2f5d50;
+  background: #1f1b16;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+}
+
+.selection-rewrite-btn:hover {
+  background: #2f5d50;
+}
+
+.selection-rewrite-busy {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #1f1b16;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.selection-rewrite-busy,
+.selection-rewrite-busy .build-loading-text {
+  color: #fff;
+}
+
+.selection-rewrite-busy .build-loading-text {
+  background-image: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: #fff;
+  animation: none;
+}

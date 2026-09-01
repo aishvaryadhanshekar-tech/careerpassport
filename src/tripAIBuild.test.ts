@@ -5,6 +5,7 @@ import {
   generateTripRounds,
   rewriteRoundQuestions,
   rewriteSingleQuestion,
+  rewriteTextSnippet,
 } from "./tripAIBuild";
 import { deriveInferenceCards } from "./tripInference";
 import { createDraft, type CustomQuestion, type JobDraft } from "./types";
@@ -175,5 +176,32 @@ describe("rewriteSingleQuestion", () => {
 
     expect(rewritten.id).toBe(target.id);
     expect(rewritten.type).toBe("paragraph");
+  });
+});
+
+describe("rewriteTextSnippet", () => {
+  it("returns a visibly different, non-empty rewrite of the snippet", () => {
+    const snippet = "Describe a time you disagreed with a teammate";
+    const rewritten = rewriteTextSnippet(snippet, "medium");
+
+    expect(rewritten.trim().length).toBeGreaterThan(0);
+    expect(rewritten).not.toBe(snippet);
+  });
+
+  it("is deterministic for a given snippet and difficulty", () => {
+    const snippet = "Explain your approach to debugging a production incident";
+    expect(rewriteTextSnippet(snippet, "hard")).toBe(rewriteTextSnippet(snippet, "hard"));
+  });
+
+  it("passes through empty/whitespace-only snippets unchanged", () => {
+    expect(rewriteTextSnippet("   ", "medium")).toBe("   ");
+    expect(rewriteTextSnippet("", "easy")).toBe("");
+  });
+
+  it("varies phrasing by difficulty", () => {
+    const snippet = "Tell me about a challenging project";
+    const easy = rewriteTextSnippet(snippet, "easy");
+    const hard = rewriteTextSnippet(snippet, "hard");
+    expect(easy).not.toBe(hard);
   });
 });

@@ -1,4 +1,7 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { SelectionRewriteButton } from "./shared/SelectionRewriteButton";
+import { useTextSelectionToolbar } from "./shared/useTextSelectionToolbar";
+import { rewriteTextSnippet } from "./tripAIBuild";
 import {
   addGridColumn,
   addGridRow,
@@ -88,6 +91,7 @@ export function QuestionBlock({
   optionConstraints,
   enableDictation = false,
   onRewriteWithAI,
+  enableSelectionRewrite = false,
 }: {
   question: CustomQuestion;
   items: ApplicationItem[];
@@ -105,6 +109,13 @@ export function QuestionBlock({
    * (and by Applications, which has no AI-rewrite context), so no button renders there.
    */
   onRewriteWithAI?: () => Promise<void> | void;
+  /**
+   * Trips-only affordance: highlighting a word/sentence inside the question prompt surfaces a
+   * small floating "Rewrite" button that rewrites just that selection. Off by default so
+   * Applications' `CustomQuestionsCard` usage of this component is unaffected — only
+   * `RoundQuestionsCard` (Trips) turns it on.
+   */
+  enableSelectionRewrite?: boolean;
 }) {
   const showOptions = OPTION_TYPES.includes(question.type);
   const showGrid = GRID_TYPES.includes(question.type);
@@ -142,6 +153,30 @@ export function QuestionBlock({
     }
   }
 
+  // Only attached to the actual textarea (via `textareaRef` below) when
+  // `enableSelectionRewrite` is on, so the hook's listeners are otherwise inert.
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+  const selection = useTextSelectionToolbar(promptRef, question.prompt);
+  const [rewritingSelection, setRewritingSelection] = useState(false);
+
+  async function onRewriteSelection() {
+    if (rewritingSelection || !selection.active) return;
+    const { selectionStart, selectionEnd } = selection;
+    const prompt = question.prompt;
+    // Guard against stale offsets: if the prompt changed length underneath the captured
+    // selection since it was read, bail rather than splice at the wrong spot.
+    if (selectionStart < 0 || selectionEnd > prompt.length || selectionStart >= selectionEnd) {
+      return;
+    }
+    const snippet = prompt.slice(selectionStart, selectionEnd);
+    setRewritingSelection(true);
+    await new Promise((r) => setTimeout(r, 700));
+    const rewritten = rewriteTextSnippet(snippet, "medium");
+    const nextPrompt = prompt.slice(0, selectionStart) + rewritten + prompt.slice(selectionEnd);
+    onChange(updateQuestionPrompt(items, question.id, nextPrompt));
+    setRewritingSelection(false);
+  }
+
   const showQuestionActions = enableDictation || Boolean(onRewriteWithAI);
 
   return (
@@ -158,7 +193,15 @@ export function QuestionBlock({
           onValueChange={(value) =>
             onChange(updateQuestionPrompt(items, question.id, value))
           }
+          textareaRef={enableSelectionRewrite ? promptRef : undefined}
         />
+        {enableSelectionRewrite && selection.active && selection.position ? (
+          <SelectionRewriteButton
+            position={selection.position}
+            busy={rewritingSelection}
+            onClick={onRewriteSelection}
+          />
+        ) : null}
         {showQuestionActions ? (
           <div className="question-top-actions">
             {enableDictation ? (
@@ -688,6 +731,7 @@ function AutoGrowTextarea({
   ariaLabel,
   onValueChange,
   "aria-label": ariaLabelProp,
+  textareaRef,
 }: {
   className: string;
   value: string;
@@ -695,6 +739,9 @@ function AutoGrowTextarea({
   ariaLabel?: string;
   onValueChange: (value: string) => void;
   "aria-label"?: string;
+  /** Optional escape hatch for a caller that needs the underlying node (e.g. Trips' inline
+   * selection-rewrite affordance on the question-prompt usage) — unused by every other caller. */
+  textareaRef?: RefObject<HTMLTextAreaElement | null>;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -707,7 +754,10 @@ function AutoGrowTextarea({
 
   return (
     <textarea
-      ref={ref}
+      ref={(node) => {
+        ref.current = node;
+        if (textareaRef) textareaRef.current = node;
+      }}
       className={`autogrow ${className}`}
       rows={1}
       value={value}
