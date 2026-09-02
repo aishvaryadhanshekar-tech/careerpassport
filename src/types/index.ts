@@ -6,3 +6,4 @@ export * from "./trips";
 export * from "./candidates";
 export * from "./communications";
 export * from "./draft";
+export * from "./canvasJob";

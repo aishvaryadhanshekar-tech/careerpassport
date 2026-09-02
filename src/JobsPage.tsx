@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createJobEntryRoute } from "./canvasJob/creationEntry";
 import { filterJobs } from "./jobsListQuery";
 import {
   deleteJobs,
@@ -86,7 +87,7 @@ export function JobsPage() {
 
   function createJob() {
     startNewJob();
-    navigate("/create-job");
+    navigate(createJobEntryRoute());
   }
 
   function open(id: string) {
@@ -95,7 +96,7 @@ export function JobsPage() {
       navigate(`/jobs/${id}`);
       return;
     }
-    if (openJob(id)) navigate("/create-job");
+    if (openJob(id)) navigate(createJobEntryRoute());
   }
 
   function toggleOne(id: string, on: boolean) {

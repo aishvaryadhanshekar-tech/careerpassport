@@ -20,7 +20,7 @@ export function AppShell() {
   const [profileOpen, setProfileOpen] = useState(false);
   const jobsOn = jobsNavActive(pathname);
   const isWizard =
-    pathname.startsWith("/create-job") ||
+    (pathname.startsWith("/create-job") && !pathname.startsWith("/create-job-canvas")) ||
     pathname.startsWith("/role-profile") ||
     pathname.startsWith("/step-2") ||
     pathname.startsWith("/step-3");

@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { ApplicationPage } from "./ApplicationPage";
+import { CanvasJobPage } from "./canvasJob/CanvasJobPage";
 import { CollectJobPage } from "./CollectJobPage";
 import { JobDetailsPage } from "./JobDetailsPage";
 import { CommunicationsTab } from "./job/CommunicationsTab";
@@ -22,6 +23,7 @@ export function App() {
           <Route path="/" element={<JobsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/create-job" element={<CollectJobPage />} />
+          <Route path="/create-job-canvas" element={<CanvasJobPage />} />
           <Route path="/role-profile" element={<RoleProfilePage />} />
           <Route path="/step-2" element={<ApplicationPage />} />
           <Route path="/step-3" element={<Step3Page />} />
