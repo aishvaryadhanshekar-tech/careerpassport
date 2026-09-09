@@ -90,41 +90,51 @@ export function TripBuilderPage() {
 
   return (
     <div className="app-shell jd-page trip-builder-page">
-      <main className="preview-main">
+      <section className="preview-main">
         <header className="jd-header trip-builder-header">
           <div className="jd-header-row trip-builder-title-row">
             <Link to={`/jobs/${id}/trips`} className="jd-back-btn" aria-label="Back to trips">
               <BackArrowIcon />
             </Link>
-            <EditableField
-              label="Trip title"
-              display={<h1 className="jd-title">{trip.title || "Untitled trip"}</h1>}
-            >
-              <input
-                className="trip-title-input"
-                value={trip.title}
-                placeholder="Untitled trip"
-                onChange={(e) => updateTrip({ title: e.target.value })}
-              />
-            </EditableField>
+            {trip.status === "published" ? (
+              // TRP-06: `updateTrip` silently no-ops for published trips, so the pencil/edit
+              // affordance below would imply an edit that does nothing. Duplicate is the path
+              // to an editable copy instead.
+              <h1 className="jd-title">{trip.title || "Untitled trip"}</h1>
+            ) : (
+              <EditableField
+                label="Trip title"
+                display={<h1 className="jd-title">{trip.title || "Untitled trip"}</h1>}
+              >
+                <input
+                  className="trip-title-input"
+                  value={trip.title}
+                  placeholder="Untitled trip"
+                  onChange={(e) => updateTrip({ title: e.target.value })}
+                />
+              </EditableField>
+            )}
             <TripStatusBadge status={trip.status} />
           </div>
         </header>
 
         {trip.status === "published" ? (
           <p className="trip-section-locked-note trip-builder-locked-note">
-            This trip is published and locked. Duplicate it below to make changes.
+            Published trips are read-only. Duplicate to edit.
           </p>
         ) : null}
 
+        <nav className="editor-jump-links" aria-label="Trip workspace">
+          <a href="#trip-round-editor">{trip.status === "published" ? "Trip details" : "Edit rounds"}</a><a href="#trip-preview">Preview</a>
+        </nav>
         <div
           className={`trip-builder-columns${trip.status === "published" ? " trip-builder-readonly" : ""}`}
         >
-          <div className="trip-builder-col trip-builder-col-left">
+          <div className="trip-builder-col trip-builder-col-left" id="trip-preview" tabIndex={-1}>
             <TripPreview trip={trip} mode={previewMode} onMode={setPreviewMode} />
           </div>
 
-          <div className="trip-builder-col trip-builder-col-right">
+          <div className="trip-builder-col trip-builder-col-right" id="trip-round-editor" tabIndex={-1}>
             <TripRoundTabs
               trip={trip}
               draft={draft}
@@ -133,7 +143,7 @@ export function TripBuilderPage() {
             />
           </div>
         </div>
-      </main>
+      </section>
 
       <footer className="footer trip-builder-footer">
         <TripPublishBar trip={trip} onPublish={handlePublish} onDuplicate={handleDuplicate} />

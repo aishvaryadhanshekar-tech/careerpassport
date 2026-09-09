@@ -119,7 +119,7 @@
 .helper {
   margin: 10px 4px 0;
   font-size: 12px;
-  color: #9aa0a6;
+  color: var(--text-secondary);
   line-height: 1.45;
 }
 
@@ -158,7 +158,7 @@
   border: 0;
   background: transparent;
   cursor: pointer;
-  color: #9aa0a6;
+  color: var(--text-secondary);
   font-size: 16px;
   line-height: 1;
   padding: 0 2px;
@@ -180,14 +180,14 @@
   font-size: 10.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #9aa0a6;
+  color: var(--text-secondary);
   font-weight: 500;
   margin: 0;
 }
 
 .counter {
   font-size: 12px;
-  color: #9aa0a6;
+  color: var(--text-secondary);
 }
 
 .pills {
@@ -198,7 +198,7 @@
 
 .pill {
   border: 1px solid #d0d5dd;
-  color: #a0a4ab;
+  color: var(--text-secondary);
   background: #fff;
   border-radius: 999px;
   padding: 6px 12px;
@@ -229,7 +229,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px 16px;
 }
 
@@ -266,7 +266,7 @@
 }
 
 .pill-select.is-placeholder {
-  color: #9aa0a6;
+  color: var(--text-secondary);
 }
 
 .select-icon {
@@ -322,7 +322,7 @@
 }
 
 .salary-input-currency.is-placeholder {
-  color: #9aa0a6;
+  color: var(--text-secondary);
 }
 
 .area-input {
@@ -352,9 +352,11 @@
 
 .form-section-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px 16px;
 }
+
+.grid > *, .form-section-grid > * { min-width: 0; }
 
 .point-list {
   display: flex;
@@ -596,3 +598,27 @@
   color: #1f1b16;
   margin: 0 0 12px;
 }
+
+/* Shared molecule resilience without changing canvas node/handle geometry. */
+.btn { justify-content: center; }
+.btn:not(:disabled):hover { border-color: var(--accent); }
+.point-list-text, .tag-chip { overflow-wrap: anywhere; min-width: 0; }
+.tag-chip { max-width: 100%; }
+.tag-chip-x, .point-list-x, .chip .x { flex-shrink: 0; min-width: 24px; min-height: 24px; }
+.tag-suggestions [role=option] { padding: 8px 10px; cursor: pointer; border-radius: 6px; }
+.tag-suggestions [role=option][aria-selected=true] { background: var(--surface-selected); color: var(--text-primary); }
+@media (pointer: coarse) {
+  .btn, .choice-badge, .tab-btn, .sidenav-toggle, .editable-field-pencil,
+  .trip-choice-modal-close, .compose-modal-close, .tag-chip-x, .point-list-x, .chip .x { min-height: 44px; min-width: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .build-loading svg, .build-loading-text, .dot { animation: none; }
+  .build-loading-text { background: none; color: var(--text-primary); }
+}
+
+.editor-jump-links { display: none; }
+@media (max-width: 1024px) {
+  .editor-jump-links { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .editor-jump-links a { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 12px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface); color: var(--accent); font-size: 13px; font-weight: 600; }
+}
+@media (pointer: coarse) { .tab-edit-toggle { min-width: 44px; min-height: 44px; } }

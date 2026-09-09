@@ -16,9 +16,6 @@ export function TripPublishBar({ trip, onPublish, onDuplicate }: TripPublishBarP
   if (trip.status === "published") {
     return (
       <>
-        <p className="trip-publish-locked-banner">
-          This trip is published and locked. Editing means duplicating it.
-        </p>
         <div className="footer-actions">
           <button type="button" className="btn primary" onClick={onDuplicate}>
             Duplicate to edit

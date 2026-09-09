@@ -32,6 +32,7 @@ export function TagInput({
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const tags = splitTags(value);
   const matches = filterSuggestions(suggestions, query, tags);
   const resolvedPlaceholder = placeholder ?? (variant === "dropdown" ? "Select" : "Type and press Enter");
@@ -40,6 +41,7 @@ export function TagInput({
     const next = addTag(value, raw);
     if (next !== value) onChange(next);
     setQuery("");
+    setActiveIndex(-1);
   }
 
   return (
@@ -59,16 +61,27 @@ export function TagInput({
       ))}
       <input
         id={id}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open && matches.length > 0}
+        aria-controls={open && matches.length > 0 ? `${id}-suggestions` : undefined}
+        aria-activedescendant={open && activeIndex >= 0 && matches[activeIndex] ? `${id}-option-${activeIndex}` : undefined}
         className="tag-input-field"
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
+          setActiveIndex(-1);
           setOpen(true);
         }}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === ",") {
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault(); setOpen(true);
+            setActiveIndex(i => matches.length ? (i + (e.key === "ArrowDown" ? 1 : -1) + matches.length) % matches.length : -1);
+          } else if (e.key === "Escape") {
+            e.preventDefault(); setOpen(false); setActiveIndex(-1);
+          } else if (e.key === "Enter" || e.key === ",") {
             e.preventDefault();
-            commit(query);
+            commit(e.key === "Enter" && open && activeIndex >= 0 ? matches[activeIndex] ?? query : query);
           } else if (e.key === "Backspace" && query === "" && tags.length > 0) {
             onChange(removeTag(value, tags.at(-1) ?? ""));
           }
@@ -87,17 +100,13 @@ export function TagInput({
         </span>
       ) : null}
       {open && matches.length > 0 ? (
-        <ul className="tag-suggestions" role="listbox">
-          {matches.map((item) => (
-            <li key={item} role="option">
-              <button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => commit(item)}
-              >
-                {item}
-              </button>
-            </li>
+        <ul id={`${id}-suggestions`} className="tag-suggestions" role="listbox" aria-label="Suggestions">
+          {matches.map((item, index) => (
+            <li key={item} id={`${id}-option-${index}`} role="option"
+              aria-selected={index === activeIndex}
+              onMouseDown={e => e.preventDefault()}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => commit(item)}>{item}</li>
           ))}
         </ul>
       ) : null}

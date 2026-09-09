@@ -21,17 +21,17 @@ const ROWS = [
   {
     key: "requirements",
     label: "Requirements",
-    detail: "Pulling information from your Requirements tab…",
+    detail: "Reading requirements…",
   },
   {
     key: "sourcing",
     label: "Sourcing Playbook",
-    detail: "Pulling information from your Sourcing Playbook…",
+    detail: "Reading sourcing criteria…",
   },
   {
     key: "evaluation",
     label: "Evaluation Framework",
-    detail: "Pulling information from your Evaluation Framework…",
+    detail: "Reading evaluation criteria…",
   },
 ] as const;
 
@@ -66,9 +66,6 @@ export function AIBuildLoader({
         <h2 className="ai-build-loader-heading build-loading-text">
           Building your trip…
         </h2>
-        <p className="ai-build-loader-subheading">
-          Using signals from your role profile
-        </p>
 
         <div className="ai-build-loader-rows">
           {ROWS.map((row, index) => {

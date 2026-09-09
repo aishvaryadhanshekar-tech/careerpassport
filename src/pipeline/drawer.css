@@ -37,12 +37,18 @@
   border-bottom: 1px solid #e2e6e9;
   padding: 16px 20px;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.drawer-head-top {
+  display: flex;
   align-items: flex-start;
   gap: 16px;
 }
 
 .drawer-identity {
-  flex: 1;
+  flex: 1 1 200px;
   min-width: 0;
 }
 
@@ -86,6 +92,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .drawer-head-actions .btn,
@@ -95,12 +103,23 @@
   white-space: nowrap;
 }
 
+.drawer-stage-select {
+  flex: 0 1 auto;
+}
+
+.drawer-head-actions .btn:disabled,
+.note-mini-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .drawer-close {
+  flex: none;
   border: 0;
   background: transparent;
   font-size: 22px;
   line-height: 1;
-  color: #98a2b3;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 2px 8px;
   border-radius: 6px;
@@ -122,6 +141,7 @@
 
 .drawer-left,
 .drawer-right {
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -147,7 +167,7 @@
   padding: 0 20px;
   background: #fff;
   border-bottom: 1px solid #e2e6e9;
-  overflow-x: auto;
+  flex-wrap: wrap;
 }
 
 .drawer-tab {
@@ -182,6 +202,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
   padding: 10px 14px;
   background: #f7f8f9;
   border-bottom: 1px solid #e1e3e5;
@@ -295,6 +316,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
   padding: 8px 10px;
   border-top: 1px solid #e1e3e5;
   background: #f7f8f9;

@@ -233,8 +233,8 @@ export function CollectJobPage() {
           <h2 className="follow-up-title">Job details</h2>
           <p className="follow-up-sub">
             {missingVisible.length > 0
-              ? "We've pre-filled what we could from what you shared. Fields outlined in red still need your input."
-              : `All ${REQUIRED_COVERAGE_IDS.length} required fields covered. Review the rest below if you want, then continue.`}
+              ? "Complete the fields outlined in red."
+              : `All ${REQUIRED_COVERAGE_IDS.length} required fields completed.`}
           </p>
           <FieldGrid
             ids={COVERAGE_IDS}

@@ -1,3 +1,4 @@
+import { useDialogFocus } from "../shared/useDialogFocus";
 import { useState, type JSX } from "react";
 import { Switch } from "../ContextCard";
 import { generateTripRounds } from "../tripAIBuild";
@@ -30,7 +31,7 @@ export type TripAddLeverModalProps = {
 };
 
 /**
- * Modal shown from the "+ Add lever" button in TripRoundTabs. Asks how many
+ * Modal shown from the "+ Add round" button in TripRoundTabs. Asks how many
  * levers to add, at what difficulty, and whether to build them with AI.
  *
  * Styled to match TripCreateChoiceModal's dialog chrome (backdrop + card +
@@ -48,6 +49,7 @@ export function TripAddLeverModal({
   const [aiOn, setAiOn] = useState(true);
   const [manualRemaining, setManualRemaining] = useState<number | null>(null);
 
+  const dialogRef = useDialogFocus(open, resetAndClose);
   if (!open) return null;
 
   function resetAndClose() {
@@ -88,8 +90,10 @@ export function TripAddLeverModal({
       <div
         className="trip-choice-modal lever-add-modal"
         role="dialog"
+        ref={dialogRef}
+        tabIndex={-1}
         aria-modal="true"
-        aria-label="Add lever"
+        aria-label="Add round"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -103,9 +107,9 @@ export function TripAddLeverModal({
 
         {isManualPicking ? (
           <>
-            <h2 className="trip-choice-modal-heading">Pick a lever type</h2>
+            <h2 className="trip-choice-modal-heading">Pick a round type</h2>
             <p className="trip-choice-modal-subheading">
-              Pick 1 of {manualRemaining} remaining.
+              {manualRemaining} remaining.
             </p>
 
             <div className="stage-picker-grid">
@@ -134,14 +138,10 @@ export function TripAddLeverModal({
           </>
         ) : (
           <>
-            <h2 className="trip-choice-modal-heading">Add lever</h2>
-            <p className="trip-choice-modal-subheading">
-              Choose how many levers to add, at what difficulty, and whether to build them with
-              AI.
-            </p>
+            <h2 className="trip-choice-modal-heading">Add round</h2>
 
             <div className="lever-add-modal-field">
-              <span className="lever-add-modal-field-label">How many levers?</span>
+              <span className="lever-add-modal-field-label">How many rounds?</span>
               <div className="lever-add-modal-count-row">
                 {Array.from({ length: MAX_LEVER_COUNT }, (_, i) => i + 1).map((n) => (
                   <button
@@ -178,8 +178,8 @@ export function TripAddLeverModal({
 
             <button type="button" className="btn primary lever-add-modal-confirm" onClick={handleConfirm}>
               {aiOn
-                ? `Build ${count} lever${count === 1 ? "" : "s"} with AI`
-                : `Choose ${count} lever type${count === 1 ? "" : "s"}`}
+                ? `Build ${count} round${count === 1 ? "" : "s"} with AI`
+                : `Choose ${count} round type${count === 1 ? "" : "s"}`}
             </button>
           </>
         )}

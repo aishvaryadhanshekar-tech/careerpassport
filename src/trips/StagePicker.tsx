@@ -13,7 +13,6 @@ export function StagePicker({ trip, disabled, onChange }: StagePickerProps): JSX
     <section className="trip-card">
       <header className="trip-card-head">
         <h2>Add a stage</h2>
-        <p>Each stage reveals something specific — pick the ones that fit this role.</p>
       </header>
       <div className="trip-card-body">
         {disabled ? (

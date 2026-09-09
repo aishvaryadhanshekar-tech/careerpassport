@@ -1,6 +1,7 @@
 import { uid } from "./files";
 import { memoryStorage } from "./memoryStore";
 import { seedBoard } from "./seedCandidates";
+import { ROLE_BOARDS } from "./seedCandidatesByRole";
 import {
   ARCHIVE_STAGE_ID,
   MESSAGE_CHANNEL_LABELS,
@@ -49,6 +50,17 @@ function save(jobId: string, board: PipelineBoard): PipelineBoard {
   return board;
 }
 
+/** Persist the canvas board through the same store used by the legacy candidate views. */
+export function saveCanvasBoard(jobId: string, board: PipelineBoard): PipelineBoard {
+  return save(jobId, board);
+}
+
+/**
+ * Demo job ids are `job-seed-<role>` (see seedJobExamples in seedJobs.ts); the flagship seeded
+ * job (SEEDED_JOB_ID) keeps its own dedicated id and roster instead of following that pattern.
+ */
+const ROLE_BOARD_PREFIX = "job-seed-";
+
 /** Board for a job, seeding prototype data the first time the job is opened. */
 export function getBoard(jobId: string): PipelineBoard {
   const all = readAll();
@@ -56,7 +68,9 @@ export function getBoard(jobId: string): PipelineBoard {
   if (existing && Array.isArray(existing.stages) && Array.isArray(existing.candidates)) {
     return existing;
   }
-  return save(jobId, seedBoard());
+  const role = jobId.startsWith(ROLE_BOARD_PREFIX) ? jobId.slice(ROLE_BOARD_PREFIX.length) : null;
+  const roleBoard = role ? ROLE_BOARDS[role]?.() : undefined;
+  return save(jobId, roleBoard ?? seedBoard());
 }
 
 export function getCandidate(jobId: string, candidateId: string): Candidate | null {

@@ -1,8 +1,9 @@
+import { tabKeyboard } from "../shared/tabKeyboard";
 import { useState, type JSX } from "react";
 import { PlusIcon, SparkleIcon } from "../shared/icons";
 import { useBuildPhase } from "../shared/useBuildPhase";
 import { rewriteRoundQuestions } from "../tripAIBuild";
-import { STAGE_TYPE_META } from "../tripStages";
+import { removeStage, reorderStages, STAGE_TYPE_META } from "../tripStages";
 import { DIFFICULTIES, DIFFICULTY_LABELS } from "../types";
 import type {
   CustomQuestion,
@@ -130,6 +131,8 @@ export function TripRoundTabs({
       <div className="trip-round-tabs">
         {stickyHeader}
         <p className="trip-rounds-empty">No rounds yet.</p>
+        <button type="button" className="btn" onClick={() => setAddLeverModalOpen(true)}>＋ Add round</button>
+        <TripAddLeverModal open={addLeverModalOpen} trip={trip} draft={draft} onChange={onChange} onClose={() => setAddLeverModalOpen(false)} />
       </div>
     );
   }
@@ -140,12 +143,15 @@ export function TripRoundTabs({
     <div className="trip-round-tabs">
       {stickyHeader}
 
-      <div className="trip-round-tab-bar" role="tablist">
+      <div className="trip-round-tab-bar" role="tablist" onKeyDown={tabKeyboard}>
         {trip.stages.map((stage) => (
           <button
             key={stage.id}
             type="button"
             role="tab"
+            id={`round-tab-${stage.id}`}
+            aria-controls={`round-panel-${stage.id}`}
+            tabIndex={stage.id === activeStage.id ? 0 : -1}
             aria-selected={stage.id === activeStage.id}
             className={`trip-round-tab${stage.id === activeStage.id ? " active" : ""}`}
             onClick={() => setActiveId(stage.id)}
@@ -158,7 +164,7 @@ export function TripRoundTabs({
           <button
             type="button"
             className="trip-round-tab-add"
-            aria-label="Add lever"
+            aria-label="Add round"
             aria-haspopup="dialog"
             onClick={() => setAddLeverModalOpen(true)}
           >
@@ -175,8 +181,19 @@ export function TripRoundTabs({
         onClose={() => setAddLeverModalOpen(false)}
       />
 
-      <div className="trip-round-tab-panel" role="tabpanel">
+      <div className="trip-round-tab-panel" role="tabpanel" id={`round-panel-${activeStage.id}`} aria-labelledby={`round-tab-${activeStage.id}`}>
         <p className="trip-round-tab-blurb">{STAGE_TYPE_META[activeStage.type].blurb}</p>
+
+        <div className="trip-round-order-actions">
+          <button type="button" disabled={trip.stages[0]?.id === activeStage.id} onClick={() => { const index = trip.stages.findIndex((stage) => stage.id === activeStage.id); onChange({ stages: reorderStages(trip.stages, index, index - 1) }); }}>Move round earlier</button>
+          <button type="button" disabled={trip.stages.at(-1)?.id === activeStage.id} onClick={() => { const index = trip.stages.findIndex((stage) => stage.id === activeStage.id); onChange({ stages: reorderStages(trip.stages, index, index + 1) }); }}>Move round later</button>
+          <button type="button" onClick={() => onChange({ stages: removeStage(trip.stages, activeStage.id) })}>Remove round</button>
+        </div>
+
+        <label className="trip-round-duration-field">
+          <span>Candidate instructions</span>
+          <textarea rows={3} value={activeStage.spokenInstructions} onChange={(event) => onChange({ stages: trip.stages.map((stage) => stage.id === activeStage.id ? { ...stage, spokenInstructions: event.target.value } : stage) })} />
+        </label>
 
         <label className="trip-round-duration-field">
           <span>Time limit (minutes)</span>

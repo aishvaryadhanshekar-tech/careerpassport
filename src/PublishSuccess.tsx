@@ -1,3 +1,4 @@
+import { useDialogFocus } from "./shared/useDialogFocus";
 import { useEffect, type JSX } from "react";
 import "./PublishSuccess.css";
 import type { PublishDestinations } from "./types";
@@ -38,6 +39,7 @@ export function PublishSuccess({
 }): JSX.Element {
   // Hands off on its own. Escape/Enter still skip ahead — there is no visible button, so this
   // is the only way out for a keyboard user who does not want to wait.
+  const dialogRef = useDialogFocus(true, onDone);
   useEffect(() => {
     const timer = window.setTimeout(onDone, PUBLISH_SUCCESS_MS);
     function onKey(e: KeyboardEvent) {
@@ -63,6 +65,8 @@ export function PublishSuccess({
       <div
         className="publish-success"
         role="dialog"
+        ref={dialogRef}
+        tabIndex={-1}
         aria-modal="true"
         aria-labelledby="publish-success-title"
       >

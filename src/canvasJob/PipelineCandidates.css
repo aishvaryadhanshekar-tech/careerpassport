@@ -1,0 +1,81 @@
+.pipeline-candidates {
+  container: pipeline-candidates / inline-size;
+  min-width: 0;
+  color: #2e4039;
+}
+.pipeline-candidates button, .pipeline-candidates input, .pipeline-candidates select {
+  font: inherit;
+}
+.pipeline-candidates button { cursor: pointer; }
+.pipeline-candidates button:disabled { cursor: default; opacity: .5; }
+.pipeline-candidates-heading, .pipeline-candidates-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.pipeline-candidates-heading h2, .pipeline-rule-decision h3 { margin: 0; font-size: 16px; }
+.pipeline-candidates-heading > span { color: #687c72; font-size: 12px; }
+.pipeline-candidates-heading > button, .pipeline-candidates-actions > button, .pipeline-rule-decision > button {
+  border: 1px solid #dce4df;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  padding: 8px 12px;
+}
+.pipeline-candidates-actions > .funnel-primary { background: #376e59; color: #fff; }
+.pipeline-candidates-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+.pipeline-candidates-filters > input, .pipeline-candidates-filters > select {
+  flex: 1 1 180px;
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #dce4df;
+  border-radius: 8px;
+  background: #fff;
+}
+.pipeline-candidates-filters label { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.pipeline-candidate-list { list-style: none; padding: 0; margin: 0; }
+.pipeline-candidate-list > li + li { margin-top: 8px; }
+.pipeline-candidate-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #dce4df;
+  border-radius: 10px;
+  text-align: left;
+  background: #fff;
+  color: inherit;
+}
+.pipeline-candidate-row:hover { background: #f3f7f4; border-color: #7fa18d; }
+.pipeline-candidate-row > span { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.pipeline-candidate-row span > span { font-size: 12px; color: #687c72; }
+.pipeline-candidate-row .pipeline-decision-badge { color: #79580e; background: #fbf3dc; padding: 3px 6px; border-radius: 5px; }
+.pipeline-rule-decision, .pipeline-trip-responses { padding: 16px; border: 1px solid #dce4df; border-radius: 10px; background: #fff; margin: 16px 0; }
+.pipeline-rule-decision p, .pipeline-rule-decision li { font-size: 13px; line-height: 1.5; }
+.pipeline-rule-evidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: 12px; }
+.pipeline-rule-evidence label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.pipeline-rule-evidence input { width: 100%; min-width: 0; border: 1px solid #dce4df; border-radius: 8px; padding: 10px; background: #fff; }
+.pipeline-rule-result { margin: 14px 0; font-size: 13px; }
+.pipeline-candidates-actions { justify-content: flex-start; }
+.pipeline-outcome-preview summary, .pipeline-trip-responses summary { cursor: pointer; font-size: 13px; }
+.pipeline-outcome-preview p, .pipeline-trip-responses dd { white-space: pre-wrap; overflow-wrap: anywhere; }
+.pipeline-trip-responses dl > div { margin-top: 12px; }
+.pipeline-trip-responses dt { font-weight: 600; }
+.pipeline-trip-responses dd { margin: 6px 0 0; }
+.pipeline-candidates-empty { padding: 24px 12px; color: #687c72; text-align: center; }
+.pipeline-candidates-notice { padding: 10px 12px; border-radius: 8px; background: #edf6ef; font-size: 13px; }
+.pipeline-candidates-notice.is-error { color: #9b3732; background: #fff0ef; }
+/* The tray owns candidate selection; reuse all detail panes without a second queue. */
+.pipeline-candidate-review > :not(.hire-review):not(.hire-card),
+.pipeline-candidate-review > .hire-review > .hire-section-head > .hire-actions { display: none; }
+.pipeline-candidate-review > .hire-review { margin-top: 0; }
+@container pipeline-candidates (max-width: 640px) {
+  .pipeline-candidate-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .pipeline-candidate-review .hire-review-panes { grid-template-columns: minmax(0, 1fr); }
+  .pipeline-candidate-review .hire-review-panes > div + div { border-left: 0; padding-left: 0; border-top: 1px solid #dce4df; padding-top: 16px; }
+}

@@ -19,6 +19,7 @@
  * for the first paint before that effect runs. */
 .jd-page {
   --jd-header-h: 144px;
+  min-width: 0;
 }
 
 .jd-header {
@@ -31,13 +32,24 @@
 }
 
 .jd-header-inner {
+  min-width: 0;
   max-width: var(--page-max);
   margin: 0 auto;
   padding: 24px var(--page-pad) 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
+  .jd-page {
+    --page-pad: 16px;
+  }
+
+  .jd-header {
+    margin: -8px -16px 0;
+    padding: 0 16px;
+  }
+
   .jd-header-inner {
+    padding-top: 16px;
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -49,6 +61,7 @@
   gap: 10px;
   flex-wrap: nowrap;
   margin-bottom: 16px;
+  min-width: 0;
 }
 
 /* Icon-only back affordance ahead of the title — mirrors `.wizard-header-title .back-link` in
@@ -96,9 +109,18 @@
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: 999px;
+}
+
+.jd-status-badge--published {
   background: #e6f4ea;
   color: #1a7f37;
   border: 1px solid #bfe3c9;
+}
+
+.jd-status-badge--draft {
+  background: #f1f2f4;
+  color: #57606a;
+  border: 1px solid #d8dce1;
 }
 
 .jd-published-to {
@@ -113,7 +135,7 @@
   display: block;
   font-size: 11px;
   font-weight: 600;
-  color: #98a2b3;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.02em;
   margin-bottom: 8px;
@@ -134,7 +156,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   background: #f4f5f7;
-  color: #98a2b3;
+  color: var(--text-secondary);
   border: 1px solid #e2e6e9;
 }
 

@@ -170,10 +170,12 @@ export function JobOverviewTab() {
           onRoleProfile={onRoleProfile}
           onCurrency={onCurrency}
           footer={
-            <div className="jd-published-to">
-              <span className="jd-published-to-label">Published to</span>
-              <DestinationBadges destinations={job.publishDestinations} />
-            </div>
+            job.status === "Published" ? (
+              <div className="jd-published-to">
+                <span className="jd-published-to-label">Published to</span>
+                <DestinationBadges destinations={job.publishDestinations} />
+              </div>
+            ) : undefined
           }
         />
         <div className="preview-content">

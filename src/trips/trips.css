@@ -43,6 +43,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
   padding: 16px 20px;
   background: #fff;
   border: 1px solid #e2e6e9;
@@ -58,7 +59,7 @@
 }
 
 .trips-list-row-main {
-  flex: 1;
+  flex: 1 1 160px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -282,7 +283,7 @@
   margin-left: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #98a2b3;
+  color: var(--text-secondary);
 }
 
 .trip-round-tab-panel {
@@ -389,6 +390,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
   padding-top: 8px;
   border-top: 1px solid #e2e6e9;
 }
@@ -404,7 +406,7 @@
 
 .stage-picker-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -469,7 +471,7 @@
 
 .stage-row-head .drag-handle {
   cursor: grab;
-  color: #98a2b3;
+  color: var(--text-secondary);
 }
 
 .stage-row-head span:not(.drag-handle) {
@@ -482,7 +484,7 @@
 .stage-row-remove {
   border: none;
   background: transparent;
-  color: #98a2b3;
+  color: var(--text-secondary);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -512,7 +514,7 @@
 
 .stage-item-row .drag-handle {
   cursor: grab;
-  color: #98a2b3;
+  color: var(--text-secondary);
 }
 
 .stage-item-row input[type="text"],
@@ -578,6 +580,7 @@
   max-width: 560px;
   max-height: calc(100vh - 48px);
   overflow-y: auto;
+  min-width: 0;
   background: #fff;
   border-radius: 16px;
   padding: 28px;
@@ -605,7 +608,7 @@
 }
 
 .trip-choice-modal-heading {
-  margin: 0 32px 4px 0;
+  margin: 0 40px 16px 0;
   font-size: 18px;
   font-weight: 700;
   color: #1f1b16;
@@ -620,11 +623,13 @@
 
 .trip-choice-modal-options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 14px;
+  align-items: start;
 }
 
 .trip-choice-card {
+  min-width: 0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -654,16 +659,41 @@
   cursor: default;
 }
 
+/* TRP-03: rendered full-width below the two compact choice cards once AI is selected, rather
+   than nested inside the AI card itself (which used to squeeze these controls into half the
+   modal's width, leaving the manual card's half empty). */
 .trip-choice-ai-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 14px;
+  padding: 16px;
+  background: #fbfaf8;
+  border: 1px solid #e4e1db;
+  border-radius: 12px;
   cursor: default;
 }
 
+.trip-choice-secondary-link {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #5c5347;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.trip-choice-secondary-link:hover {
+  color: #1f1b16;
+}
+
 .trip-choice-ai-field {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -922,3 +952,19 @@
   width: 100%;
   justify-content: center;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-build-loader-icon svg, .ai-build-loader-row-status svg, .trip-generate-btn svg { animation: none; }
+}
+
+.trip-choice-ai-trigger { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 0; background: transparent; border: 0; text-align: left; color: inherit; cursor: pointer; }
+
+/* Round controls are shared by the full-page editor and canvas inspector. */
+.trip-round-order-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.trip-round-order-actions button { border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface); color: var(--text-primary); font-size: 12px; padding: 8px 10px; cursor: pointer; }
+.trip-round-order-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.trip-round-duration-field:has(textarea) { flex-direction: column; align-items: stretch; }
+.trip-round-duration-field textarea { width: 100%; min-width: 0; min-height: 88px; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: 8px; resize: vertical; background: var(--surface); color: var(--text-primary); font-size: 13px; font-weight: 400; line-height: 1.5; }
+.trip-round-rewrite-row > select { flex: 1; min-width: 0; }
+.trip-round-rewrite-row > button { flex-shrink: 0; white-space: nowrap; }
+.trip-round-rewrite-row { flex-wrap: wrap; }

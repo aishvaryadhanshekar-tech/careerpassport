@@ -180,7 +180,7 @@ export function JobDetailsPanel({
             <h2 className="follow-up-title">Job details</h2>
             <p className="follow-up-sub">
               {missingVisible.length > 0
-                ? "We've pre-filled what we could from what you shared. Fields outlined in red still need your input."
+                ? "Complete the highlighted fields."
                 : `All ${REQUIRED_COVERAGE_IDS.length} required fields covered.`}
             </p>
             <FieldGrid

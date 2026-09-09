@@ -1,3 +1,5 @@
+import { useDialogFocus } from "../shared/useDialogFocus";
+import { tabKeyboard } from "../shared/tabKeyboard";
 import { useEffect, useRef, useState, type JSX } from "react";
 import { addNote, moveCandidate, setRating, toggleTag } from "../candidatesStore";
 import { PROFILE } from "../profile";
@@ -89,7 +91,12 @@ function NoteComposer({ onSubmit }: { onSubmit: (body: string) => void }): JSX.E
         >
           {recording ? "● Recording…" : "Voice"}
         </button>
-        <button type="button" className="note-mini-btn">
+        <button
+          type="button"
+          className="note-mini-btn"
+          disabled
+          title="Not available in this preview"
+        >
           Schedule
         </button>
         <span className="spacer" />
@@ -110,7 +117,7 @@ function NoteComposer({ onSubmit }: { onSubmit: (body: string) => void }): JSX.E
 }
 
 function TimelineList({ events }: { events: TimelineEvent[] }): JSX.Element {
-  if (events.length === 0) return <p className="drawer-empty">Nothing has happened yet.</p>;
+  if (events.length === 0) return <p className="drawer-empty">No activity yet.</p>;
   return (
     <ul className="timeline">
       {events
@@ -142,7 +149,7 @@ function SkillMatrix({
   if (criteria.length === 0) {
     return (
       <p className="drawer-empty">
-        No evaluation criteria defined for this job yet — add them in the Role Profile.
+        Add evaluation criteria in the Role Profile.
       </p>
     );
   }
@@ -209,7 +216,12 @@ function ResumeViewer({ candidate }: { candidate: Candidate }): JSX.Element {
     <div className="resume-frame">
       <div className="resume-toolbar">
         <span>{candidate.resumeFileName}</span>
-        <button type="button" className="note-mini-btn">
+        <button
+          type="button"
+          className="note-mini-btn"
+          disabled
+          title="Not available in this preview"
+        >
           Open CV
         </button>
       </div>
@@ -278,6 +290,7 @@ export function CandidateDrawer({
   onClose: () => void;
   onBoardChange: (board: PipelineBoard) => void;
 }): JSX.Element {
+  const dialogRef = useDialogFocus(true, onClose);
   const [docTab, setDocTab] = useState<DocTab>("resume");
   const [sideTab, setSideTab] = useState<SideTab>("feedback");
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -311,45 +324,32 @@ export function CandidateDrawer({
       <div
         className="drawer"
         role="dialog"
+        ref={dialogRef}
+        tabIndex={-1}
         aria-modal="true"
         aria-label={`${candidate.name} details`}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="drawer-head">
-          <div className="drawer-identity">
-            <div className="drawer-name-row">
-              <h2 className="drawer-name">{candidate.name}</h2>
-              <span className="drawer-origin">{origin}</span>
-              {candidate.aiFlag ? (
-                <span className={`ai-flag ai-flag-${candidate.aiFlag}`}>
-                  {AI_FLAG_LABELS[candidate.aiFlag]}
-                </span>
-              ) : null}
+          <div className="drawer-head-top">
+            <div className="drawer-identity">
+              <div className="drawer-name-row">
+                <h2 className="drawer-name">{candidate.name}</h2>
+                <span className="drawer-origin">{origin}</span>
+                {candidate.aiFlag ? (
+                  <span className={`ai-flag ai-flag-${candidate.aiFlag}`}>
+                    {AI_FLAG_LABELS[candidate.aiFlag]}
+                  </span>
+                ) : null}
+              </div>
+              <p className="drawer-contact">
+                <span>{candidate.email}</span>
+                <span>·</span>
+                <span>{candidate.phone}</span>
+                <span>·</span>
+                <span>{candidate.location}</span>
+              </p>
             </div>
-            <p className="drawer-contact">
-              <span>{candidate.email}</span>
-              <span>·</span>
-              <span>{candidate.phone}</span>
-              <span>·</span>
-              <span>{candidate.location}</span>
-            </p>
-          </div>
-          <div className="drawer-head-actions">
-            <button type="button" className="btn ghost">
-              Update CV
-            </button>
-            <select
-              className="pill-select select-icon"
-              aria-label="Stage"
-              value={candidate.stageId}
-              onChange={(e) => onBoardChange(moveCandidate(jobId, candidate.id, e.target.value))}
-            >
-              {stages.map((stage) => (
-                <option key={stage.id} value={stage.id}>
-                  {stage.label}
-                </option>
-              ))}
-            </select>
             <button
               type="button"
               ref={closeRef}
@@ -360,11 +360,33 @@ export function CandidateDrawer({
               ×
             </button>
           </div>
+          <div className="drawer-head-actions">
+            <button
+              type="button"
+              className="btn ghost"
+              disabled
+              title="Not available in this preview"
+            >
+              Update CV
+            </button>
+            <select
+              className="pill-select select-icon drawer-stage-select"
+              aria-label="Stage"
+              value={candidate.stageId}
+              onChange={(e) => onBoardChange(moveCandidate(jobId, candidate.id, e.target.value))}
+            >
+              {stages.map((stage) => (
+                <option key={stage.id} value={stage.id}>
+                  {stage.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </header>
 
         <div className="drawer-body">
           <div className="drawer-left">
-            <div className="drawer-tabbar" role="tablist" aria-label="Candidate documents">
+            <div className="drawer-tabbar" role="tablist" onKeyDown={tabKeyboard} aria-label="Candidate documents">
               {docTabs.map((t) => (
                 <button
                   key={t.id}
@@ -420,7 +442,7 @@ export function CandidateDrawer({
           </div>
 
           <aside className="drawer-right">
-            <div className="drawer-tabbar" role="tablist" aria-label="Candidate activity">
+            <div className="drawer-tabbar" role="tablist" onKeyDown={tabKeyboard} aria-label="Candidate activity">
               {(
                 [
                   { id: "feedback", label: "Feedback" },

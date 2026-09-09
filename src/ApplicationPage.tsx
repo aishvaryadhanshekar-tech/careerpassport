@@ -139,7 +139,10 @@ export function ApplicationPage() {
 
   return (
     <div className="app-shell create-job application-page">
-      <div className="application-split">
+      <nav className="editor-jump-links" aria-label="Application workspace">
+        <a href="#application-fields">Edit form</a><a href="#application-preview">Preview</a>
+      </nav>
+      <div className="application-split" id="application-preview">
         {/* Preview sits first in the DOM as well as visually, so keyboard tab order
          * matches reading order. */}
         <ApplicationPreview
@@ -149,7 +152,7 @@ export function ApplicationPage() {
           onMode={setMode}
           activeAnchor={activeAnchor}
         />
-        <div className="application-editors" ref={editorsRef}>
+        <div className="application-editors" id="application-fields" tabIndex={-1} ref={editorsRef}>
           <ContextCard config={config} onChange={patch} />
           <StandardFieldsCard config={config} onChange={patch} />
           <CustomQuestionsCard config={config} onChange={patch} />

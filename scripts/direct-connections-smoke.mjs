@@ -1,0 +1,32 @@
+import {expect} from '@playwright/test';
+export async function runDirectConnections(page){
+ await page.setViewportSize({width:1512,height:982});
+ const close=page.getByRole('button',{name:'Close detail panel',exact:true});if(await close.count())await close.click();
+ await page.locator('.react-flow__controls-fitview').click();
+ const firstMessage=page.locator('.react-flow__node').filter({has:page.locator('.fn-communication')}).first();
+ const messageId=await firstMessage.getAttribute('data-id');
+ const message=page.locator(`.react-flow__node[data-id="${messageId}"]`);
+ const root=page.locator('.react-flow__node[data-id="job"]');
+ const drag=async(from,to)=>{await from.hover({force:true});const a=await from.boundingBox(),b=await to.boundingBox();expect(a).toBeTruthy();expect(b).toBeTruthy();await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:20});await page.mouse.up();};
+ await expect(root).toBeInViewport();await expect(message).toBeInViewport();
+ await drag(root.locator('[data-handleid="out-right"]'),message.locator('[data-handleid="in-left"]'));
+ let edge=page.locator(`.react-flow__edge[data-testid="rf__edge-job->${messageId}"]`);
+ await expect(edge).toHaveCount(1);
+ await expect(edge.locator('.react-flow__edge-path')).toHaveCSS('stroke','rgb(181, 130, 53)');
+ const source=page.locator('.react-flow__node[data-id="application"]');
+ await drag(edge.locator('.react-flow__edgeupdater-source'),source.locator('[data-handleid="out-right"]'));
+ edge=page.locator(`.react-flow__edge[data-testid="rf__edge-application->${messageId}"]`);
+ await expect(edge).toHaveCount(1);
+ await page.getByRole('button',{name:'Save',exact:true}).click();
+ await page.reload();
+ await expect(edge).toHaveCount(1);
+ await page.getByRole('button',{name:'Reset canvas layout',exact:true}).click();await expect(edge).toHaveCount(1);
+ await edge.locator('.react-flow__edge-path').evaluate(el=>el.dispatchEvent(new MouseEvent('click',{bubbles:true})));
+ await page.getByRole('button',{name:'Remove link',exact:true}).click();
+ await expect(edge).toHaveCount(0);await expect(message).toHaveCount(1);
+ await page.locator('.react-flow__controls-fitview').click();
+ await expect(message).toBeInViewport();
+ await drag(message.locator('[data-handleid="out-left"]'),root.locator('[data-handleid="in-right"]'));
+ await expect(page.locator(`.react-flow__edge[data-testid="rf__edge-${messageId}->job"]`)).toHaveCount(1);
+ console.log('PASS: drag from side ports, reconnect an endpoint, consistent message color, save/reload/reset and remove-link without deleting nodes.');
+}

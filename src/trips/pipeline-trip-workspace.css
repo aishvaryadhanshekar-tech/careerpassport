@@ -1,0 +1,74 @@
+.pipeline-trip-workspace { min-width: 0; display: flex; flex-direction: column; gap: 14px; container: pipeline-trip / inline-size; }
+.pipeline-trip-header, .pipeline-trip-header > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pipeline-trip-header > div { min-width: 0; }
+.pipeline-trip-workspace .pipeline-trip-header h3 { margin: 0; overflow-wrap: anywhere; }
+.pipeline-trip-library-heading { margin: 0; font-size: 14px; }
+/* TRP-05: the editor header is a compact back link beside the title, not two competing
+   full-width rows — so it aligns to the start instead of spreading its children apart. */
+.pipeline-trip-header-editor { justify-content: flex-start; }
+.pipeline-trip-back { flex-shrink: 0; padding: 6px 10px; font-size: 12px; border: 0; background: none; color: var(--text-secondary, #607368); }
+.pipeline-trip-back:hover { color: inherit; }
+.pipeline-trip-header .pipeline-trip-title-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; min-width: 0; flex: 0 1 auto; }
+.pipeline-trip-library, .pipeline-trip-assign { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pipeline-trip-workspace .pipeline-trip-library-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 12px; text-align: left; }
+.pipeline-trip-library-row > span:first-child { min-width: 0; }
+.pipeline-trip-library-row-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pipeline-trip-kind-badge { font-size: 10px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: var(--text-secondary, #607368); background: var(--surface-muted, #eef2ef); border-radius: 999px; padding: 3px 8px; }
+.pipeline-trip-library-row strong, .pipeline-trip-candidate strong { overflow-wrap: anywhere; }
+.pipeline-trip-library-row small, .pipeline-trip-candidate small { display: block; color: var(--text-secondary, #607368); font-size: 11px; margin-top: 4px; overflow-wrap: anywhere; }
+/* TRP-02: reuse the shared underline `.tabs`/`.tab-btn` treatment (see src/Tabs.tsx and
+   role-detail.css) instead of the boxed aria-pressed selector buttons this used to render.
+   `.funnel-workspace button` (funnel.css) styles every inspector button with a solid border —
+   these two-class selectors out-specificity it so the tab strip keeps its quiet underline look
+   whether this workspace is embedded in the canvas inspector or not. */
+.pipeline-trip-workspace .tabs { margin-bottom: 0; flex-wrap: nowrap; }
+.pipeline-trip-workspace .tab-btn { border: none; border-bottom: 2px solid transparent; background: none; border-radius: 0; }
+/* Higher specificity than the reset above (3 classes vs 2) so it wins regardless of CSS
+   load order, keeping the active underline visible instead of the reset's transparent one. */
+.pipeline-trip-workspace .tab-btn.active { border-bottom-color: #0f766e; }
+.pipeline-trip-fields { min-width: 0; padding: 0; margin: 0; border: 0; display: flex; flex-direction: column; gap: 14px; }
+.pipeline-trip-fields:disabled :is(input, textarea, select) { opacity: .8; }
+.pipeline-trip-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; font-size: 12px; font-weight: 600; }
+.pipeline-trip-field :is(input, textarea, select) { width: 100%; min-width: 0; max-width: 100%; font-weight: 400; }
+.pipeline-trip-workspace .trip-round-sticky-header { position: static; padding-bottom: 0; gap: 12px; background: transparent; }
+.pipeline-trip-workspace .trip-card { margin: 0; min-width: 0; }
+.pipeline-trip-workspace .trip-card-head { padding: 12px; }
+.pipeline-trip-workspace .trip-card-body { padding: 12px; }
+.pipeline-trip-workspace .trip-round-tab-bar { flex-wrap: wrap; }
+/* Strips the generic inspector button border/background (funnel.css) so round tabs keep their
+   own underline-tab look (trips.css) instead of looking like boxed form choices (TRP-02). */
+.pipeline-trip-workspace .trip-round-tab { padding: 8px; font-size: 11px; border: none; border-bottom: 2px solid transparent; background: transparent; border-radius: 0; }
+.pipeline-trip-workspace .trip-round-tab.active { border-bottom-color: #1f1b16; }
+.pipeline-trip-workspace .trip-round-tab-panel { padding-inline: 0; }
+.pipeline-trip-workspace .trip-round-rewrite-row { flex-wrap: wrap; }
+.pipeline-trip-workspace .trip-round-duration-field { min-width: 0; flex-direction: column; align-items: stretch; gap: 6px; }
+.pipeline-trip-workspace .trip-round-duration-field > span { flex-shrink: 0; }
+.pipeline-trip-workspace .trip-round-duration-field :is(input, select) { min-width: 0; max-width: 100%; }
+.pipeline-trip-publish { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border-subtle, #d6e2da); }
+.pipeline-trip-publish .footer-actions { margin-left: auto; }
+.pipeline-trip-workspace > .preview-pane { position: static; width: 100%; }
+.pipeline-trip-roster { display: flex; flex-direction: column; min-width: 0; max-height: 340px; overflow: auto; }
+.pipeline-trip-candidate { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle, #d6e2da); }
+.pipeline-trip-candidate > span { flex: 1; min-width: 0; }
+.pipeline-trip-candidate > input { flex: 0 0 auto; }
+.pipeline-trip-candidate > small { flex: 0 1 80px; text-align: right; }
+.pipeline-trip-invite { display: inline-block; margin: 6px 0 12px 24px; font-size: 11px; }
+.trip-round-order-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.trip-round-duration-field textarea { width: 100%; min-width: 0; }
+.pipeline-trip-notice, .pipeline-trip-error { margin: 0; padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.5; background: #f0f5f1; }
+.pipeline-trip-error { color: #914839; background: #fff2ee; }
+.pipeline-trip-workspace .trip-choice-modal-backdrop, .pipeline-trip-workspace .ai-build-loader-overlay { padding: 12px; }
+.pipeline-trip-workspace .trip-choice-modal { padding: 20px; max-height: calc(100% - 24px); }
+.pipeline-trip-workspace .trip-choice-modal-close { display: grid; place-items: center; padding: 0; width: 32px; height: 32px; font-size: 22px; line-height: 1; top: 12px; right: 12px; }
+.pipeline-trip-workspace .trip-choice-modal-heading { margin: 0 36px 16px 0; line-height: 1.4; }
+.pipeline-trip-workspace .editable-field-pencil { display: grid; place-items: center; padding: 4px; flex-shrink: 0; }
+.pipeline-trip-workspace .trip-choice-modal-options { flex-wrap: wrap; }
+.pipeline-trip-workspace .trip-choice-card { min-width: 0; }
+.pipeline-trip-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; clip: rect(0, 0, 0, 0); overflow: hidden; white-space: nowrap; }
+@container pipeline-trip (max-width: 440px) {
+  .pipeline-trip-workspace .trip-choice-modal-options { display: flex; flex-direction: column; }
+  .pipeline-trip-workspace .trip-choice-card { width: 100%; }
+  .pipeline-trip-workspace .stage-picker-grid { grid-template-columns: minmax(0, 1fr); }
+  .pipeline-trip-workspace .trip-choice-modal-heading { font-size: 18px; padding-right: 0; }
+  .pipeline-trip-workspace .lever-add-modal-count-row { flex-wrap: wrap; }
+}

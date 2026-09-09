@@ -12,7 +12,7 @@ import {
   upsertJobFromDraft,
   startNewJob,
 } from "./jobsStore";
-import { SEEDED_JOB_ID } from "./seedJobs";
+import { SEEDED_JOB_ID, seedJobExamples } from "./seedJobs";
 
 describe("jobsStore", () => {
   beforeEach(() => {
@@ -122,10 +122,10 @@ describe("seeded demo job", () => {
     memoryStorage.clear();
   });
 
-  it("adds one published job the first time it runs", () => {
+  it("adds seven distinct jobs with draft and published examples", () => {
     ensureSeedJobs();
     const jobs = listJobs();
-    expect(jobs).toHaveLength(1);
+    expect(jobs).toHaveLength(7);
     expect(jobs[0].id).toBe(SEEDED_JOB_ID);
     expect(jobs[0].status).toBe("Published");
     expect(jobs[0].title).toBe("Senior Backend Engineer, Payments");
@@ -133,10 +133,25 @@ describe("seeded demo job", () => {
     expect(jobs[0].salaryLabel).toContain("INR");
   });
 
+  it("provides independent complete snapshots for every sample", () => {
+    ensureSeedJobs();
+    const jobs = listJobs();
+    expect(new Set(jobs.map(job => job.title)).size).toBe(7);
+    expect(new Set(jobs.map(job => job.status))).toEqual(new Set(['Draft', 'Published']));
+    for (const job of jobs) {
+      expect(job.snapshot.fields.designation.value).toBe(job.title);
+      expect(job.snapshot.application?.items.length).toBeGreaterThan(0);
+      expect(job.snapshot.roleProfile.department.value).toBeTruthy();
+    }
+    const examples = seedJobExamples();
+    examples[0].draft.fields.designation.value = 'Changed';
+    expect(examples[1].draft.fields.designation.value).toBe('Senior Product Designer');
+  });
+
   it("is idempotent", () => {
     ensureSeedJobs();
     ensureSeedJobs();
-    expect(listJobs()).toHaveLength(1);
+    expect(listJobs()).toHaveLength(7);
   });
 
   it("carries a full snapshot so the details page has something to render", () => {
@@ -150,9 +165,9 @@ describe("seeded demo job", () => {
   it("stays deleted — a later ensureSeedJobs does not bring it back", () => {
     ensureSeedJobs();
     deleteJobs([SEEDED_JOB_ID]);
-    expect(listJobs()).toEqual([]);
+    expect(listJobs()).toHaveLength(6);
     ensureSeedJobs();
-    expect(listJobs()).toEqual([]);
+    expect(listJobs()).toHaveLength(6);
   });
 
   it("leaves user-created jobs alone", () => {
@@ -165,7 +180,7 @@ describe("seeded demo job", () => {
     deleteJobs([SEEDED_JOB_ID]);
 
     const jobs = listJobs();
-    expect(jobs).toHaveLength(1);
+    expect(jobs).toHaveLength(7);
     expect(jobs[0].id).toBe(id);
   });
 });

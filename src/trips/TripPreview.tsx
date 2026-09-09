@@ -1,3 +1,4 @@
+import { tabKeyboard } from "../shared/tabKeyboard";
 import { useState } from "react";
 import { DeviceFrame } from "../shared/DeviceFrame";
 import { DeviceToggle } from "../shared/DeviceToggle";
@@ -58,7 +59,7 @@ function TripPreviewScreen({ trip }: { trip: Trip }) {
           <p className="trip-rounds-empty">No rounds yet.</p>
         ) : (
           <>
-            <div className="preview-tabbar" role="tablist" aria-label="Trip rounds">
+            <div className="preview-tabbar" role="tablist" onKeyDown={tabKeyboard} aria-label="Trip rounds">
               {trip.stages.map((stage) => (
                 <button
                   key={stage.id}

@@ -166,7 +166,7 @@
 
 .interim-inline {
   font-style: italic;
-  color: #9aa0a6;
+  color: var(--text-secondary);
 }
 
 .composer-foot {
@@ -176,6 +176,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
   padding: 10px 14px;
   background: #fff;
   border-top: 1px solid #d5d9dc;
@@ -186,7 +187,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
+
+.composer-foot > .btn { margin-left: auto; flex-shrink: 0; }
 
 .composer .helper {
   margin-left: 16px;
@@ -300,7 +304,7 @@
 
 .hint-item.mentioned {
   text-decoration: line-through;
-  color: #9aa0a6;
+  color: var(--text-secondary);
 }
 
 .composer-tool-btn {
@@ -340,6 +344,9 @@
 }
 
 .follow-up {
+  width: 100%;
+  min-width: 0;
+  container: job-fields / inline-size;
   max-width: 960px;
   margin: 0 auto;
   background: #fff;
@@ -352,4 +359,8 @@
   margin: 8px 4px 0;
   font-size: 12px;
   color: #a54800;
+}
+
+@container job-fields (max-width: 560px) {
+  .follow-up .form-section-grid, .follow-up .grid { grid-template-columns: minmax(0, 1fr); }
 }

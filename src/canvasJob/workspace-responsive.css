@@ -1,0 +1,128 @@
+/* Layout follows the actual workspace and inspector widths, including app navigation. */
+.funnel-workspace { container: hiring-canvas / inline-size; }
+.funnel-workspace .funnel-body { min-width: 0; position: relative; }
+.funnel-workspace .funnel-body > .funnel-inspector {
+  position: relative;
+  inset: auto;
+  width: clamp(340px, var(--inspector-width, min(42%, 640px)), calc(100% - 280px));
+  min-width: 340px;
+  max-width: none;
+  flex-shrink: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  container: inspector / inline-size;
+}
+.funnel-workspace .funnel-inspector > header { gap: 12px; padding: 16px; }
+.funnel-inspector > header > div { min-width: 0; overflow-wrap: anywhere; }
+.funnel-inspector > header > button { flex-shrink: 0; }
+.funnel-workspace .funnel-inspector-scroll { padding: 16px; min-width: 0; }
+.funnel-inspector :is(.hire-field, .hire-form-grid > *, .hire-signals > *, .hire-library > *, .hire-client-layout > *, .funnel-child > *, .app-card-head-title) { min-width: 0; }
+.funnel-inspector :is(h2, h3, h4, p, a, label, button, strong, small) { overflow-wrap: anywhere; }
+.funnel-inspector :is(.hire-actions, .hire-condition, .demo-clock, .demo-section-head, .demo-tabs, .app-card-head, .app-card-head-actions, .tab-edit-actions, .funnel-person summary) { flex-wrap: wrap; }
+.funnel-workspace .funnel-inspector input:is([type=radio], [type=checkbox]) { width: auto; flex: 0 0 auto; padding: 0; }
+.funnel-inspector :is(.hire-form-grid, .hire-review-panes, .hire-library) { align-items: start; }
+.funnel-inspector .hire-client-layout { grid-template-columns: minmax(0, 170px) minmax(0, 1fr); }
+.funnel-inspector .hire-signals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.funnel-inspector .demo-metrics { flex-wrap: wrap; }
+.funnel-inspector .demo-metrics > div { flex: 1 1 90px; }
+.funnel-inspector .canvas-application-panel { min-width: 0; }
+.funnel-inspector .demo-application > main { min-width: 0; }
+@container inspector (max-width: 560px) {
+  .funnel-inspector :is(.hire-review-panes, .hire-client-layout, .hire-library) { grid-template-columns: minmax(0, 1fr); }
+  .funnel-inspector .hire-review-panes > div + div { border-left: 0; border-top: 1px solid #e1e8df; padding: 16px 0 0; }
+  .funnel-inspector .hire-client-layout nav { display: flex; gap: 8px; overflow-x: auto; }
+  .funnel-inspector .hire-client-layout nav > button { flex: 0 0 150px; min-width: 0; }
+  .funnel-inspector .app-card-head { padding: 12px; align-items: center; }
+  .funnel-inspector .field-row { grid-template-columns: 16px minmax(0, 1fr); row-gap: 8px; }
+  .funnel-inspector .field-row > :last-child { grid-column: 2; justify-self: start; }
+}
+@container inspector (max-width: 420px) {
+  .funnel-inspector :is(.hire-form-grid, .hire-signals) { grid-template-columns: minmax(0, 1fr); }
+  .funnel-inspector .hire-card { padding: 12px; }
+}
+@container hiring-canvas (max-width: 740px) {
+  .funnel-workspace .funnel-body { flex-direction: column; }
+  .funnel-workspace .funnel-surface { min-height: 240px; }
+  .funnel-workspace .funnel-body > .funnel-inspector { width: 100%; min-width: min(340px, 100%); max-width: 100%; height: 48%; max-height: 52%; flex: 0 1 48%; border-left: 0; border-top: 1px solid #e0e7e3; box-shadow: none; }
+}
+/* Keep the initial composer light and proposals compact without scaling text rendering. */
+.funnel-workspace .canvas-assistant-trigger { width: 28px; height: 28px; flex-basis: 28px; font-size: 19px; border-radius: 8px; }
+.canvas-node-assistant { gap: 6px; }
+.canvas-node-chat { padding: 9px; border-radius: 12px; }
+.canvas-node-chat > header { gap: 6px; margin-bottom: 6px; }
+.canvas-node-chat header strong { font-size: 11px; }
+.canvas-node-chat header small { font-size: 9px; margin-top: 2px; }
+.canvas-chat-log p { font-size: 11px; padding: 8px; margin-bottom: 6px; }
+.canvas-chat-proposal { font-size: 11px; }
+.funnel-workspace .canvas-chat-composer textarea { font-size: 12px; min-height: 34px; padding: 7px 2px; }
+.funnel-workspace .canvas-chat-composer button { padding: 5px; }
+/* Preserve compact switch geometry instead of inheriting general button padding. */
+.funnel-workspace .funnel-inspector .switch { width: 36px; height: 20px; flex: 0 0 36px; padding: 2px; border: 0; border-radius: 999px; background: #d0d5dd; }
+.funnel-workspace .funnel-inspector .switch.on { background: #2f5d50; }
+
+/* Titles and cards size to their remaining content, without a byline spacer. */
+.funnel-header > div:first-of-type { min-width: 0; }
+.funnel-header h1, .funnel-inspector h2 { margin: 0; overflow-wrap: anywhere; }
+.funnel-header > button, .funnel-status { flex-shrink: 0; }
+.funnel-header-actions { flex-wrap: wrap; }
+.funnel-header-actions button { white-space: nowrap; }
+.funnel-start { min-height: 0; overflow: auto; padding: 32px 24px 72px; }
+.funnel-start-icon { flex-shrink: 0; margin-bottom: 16px; }
+.funnel-start h2 { margin: 0; }
+.funnel-start-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(100%, 740px); margin: 24px 0; align-items: stretch; }
+/* Exactly two entry choices: two equal columns sized to their cards, centered as one group with the heading (no stale third track). */
+.funnel-start-options--entry { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(100%, 492px); margin-inline: auto; }
+.funnel-workspace .funnel-start-options button { width: auto; min-width: 0; min-height: 0; padding: 20px; gap: 12px; overflow-wrap: anywhere; }
+.canvas-node-chat > header > div { min-width: 0; }
+.canvas-node-chat > header > button { flex-shrink: 0; }
+@container hiring-canvas (max-width: 740px) {
+  .funnel-header { padding: 12px; gap: 8px; flex-wrap: wrap; }
+  .funnel-header-actions { width: 100%; margin-left: 0; }
+  .funnel-header-actions small { display: none; }
+  .funnel-start { justify-content: flex-start; }
+  .funnel-start-options, .funnel-start-options--entry { grid-template-columns: minmax(0, 1fr); max-width: 360px; }
+}
+@container hiring-canvas (max-width: 400px) {
+  .funnel-header h1 { font-size: 16px; }
+  .funnel-header > div:first-of-type { flex: 1; }
+  .funnel-header-actions { gap: 6px; }
+  .funnel-header-actions button { flex: 1; padding: 8px; font-size: 11px; }
+  .funnel-start { padding-inline: 16px; }
+}
+/* Start-screen utilities participate in scrolling rather than covering choice cards. */
+.funnel-start > .workspace-canvas-controls { position: static; order: 1; align-self: flex-end; flex-shrink: 0; margin-top: auto; padding-top: 16px; }
+/* One title column and two adjacent actions across every inspector variant. */
+.funnel-workspace .funnel-inspector > header { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; justify-content:initial; column-gap:8px; }
+.funnel-workspace .funnel-inspector > header > div { min-width:0; }
+.funnel-workspace .funnel-inspector > header > button { margin:0; width:36px; height:36px; padding:0; display:grid; place-items:center; }
+
+/* Readable metadata retains the compact assistant and node dimensions. */
+.funnel-header-actions small, .fn-sub, .funnel-panel-help,
+.canvas-node-chat header small, .canvas-global-message small { color: var(--text-secondary); }
+.canvas-node-chat header small, .canvas-global-message small { font-size: 11px; }
+.funnel-workspace button:focus-visible { outline-color: var(--focus-ring); }
+
+/* CAN-07: while a hiring detail panel is expanded on a narrow screen, collapse the
+   repeated global chrome (app top bar, workflow tabs, review banner) so the panel's own
+   header/content reaches the fold sooner. Nothing is removed — only hidden — and every
+   element reappears exactly as it was the moment the panel is no longer expanded. */
+@media (max-width: 760px) {
+  body.funnel-panel-expanded .sidenav,
+  body.funnel-panel-expanded .pipeline-nav,
+  body.funnel-panel-expanded .pipeline-stage-strip,
+  body.funnel-panel-expanded .pipeline-review-banner {
+    display: none;
+  }
+  /* Compact job identity/back affordance in place of the full job header. */
+  body.funnel-panel-expanded .funnel-header {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  body.funnel-panel-expanded .funnel-header h1 {
+    font-size: 15px;
+  }
+  body.funnel-panel-expanded .funnel-header-actions,
+  body.funnel-panel-expanded .funnel-status {
+    display: none;
+  }
+}

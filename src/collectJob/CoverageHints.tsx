@@ -64,8 +64,7 @@ export function CoverageHints({
           aria-label="Coverage hints"
         >
           <p className="hints-intro">
-            Mention these while you talk — we’ll extract them when you
-            Continue.
+            Include these details before continuing.
           </p>
           <ul className="hints-list">
             {REQUIRED_COVERAGE_IDS.map((id) => (

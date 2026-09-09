@@ -1,3 +1,4 @@
+import { useDialogFocus } from "./shared/useDialogFocus";
 import { useMemo, useState, type JSX } from "react";
 import "./ShareComposeModal.css";
 
@@ -65,6 +66,9 @@ export function ShareComposeModal({
   applicationLink,
   onClose,
 }: ShareComposeModalProps): JSX.Element {
+  const dialogRef = useDialogFocus(true, onClose);
+  const [copyNotice, setCopyNotice] = useState("");
+  const [copyError, setCopyError] = useState(false);
   const [platform, setPlatform] = useState<SharePlatform>("LinkedIn");
   const [tone, setTone] = useState<ShareTone>("Warm");
   const [sender, setSender] = useState("Demo Recruiter");
@@ -86,16 +90,18 @@ export function ShareComposeModal({
   async function handleCopyLink() {
     try {
       await navigator.clipboard.writeText(applicationLink);
+      setCopyError(false); setCopyNotice("Application link copied.");
     } catch {
-      // ignore clipboard failures
+      setCopyError(true); setCopyNotice("Clipboard unavailable. Select the displayed text and copy it manually.");
     }
   }
 
   async function handleCopyMessage() {
     try {
       await navigator.clipboard.writeText(message);
+      setCopyError(false); setCopyNotice("Message copied.");
     } catch {
-      // ignore clipboard failures
+      setCopyError(true); setCopyNotice("Clipboard unavailable. Select the displayed text and copy it manually.");
     }
   }
 
@@ -108,6 +114,8 @@ export function ShareComposeModal({
       <div
         className="compose-modal"
         role="dialog"
+        ref={dialogRef}
+        tabIndex={-1}
         aria-modal="true"
         aria-label="Share the application link"
         onClick={(event) => event.stopPropagation()}
@@ -121,12 +129,12 @@ export function ShareComposeModal({
           ×
         </button>
 
+        {copyNotice && <p role={copyError ? "alert" : "status"} className="compose-copy-notice">{copyNotice}</p>}
         <div className="compose-modal-linkbar">
           <span className="compose-modal-linkbar-icon" aria-hidden="true">
             🔗
           </span>
           <span className="compose-modal-linkbar-label">Application link</span>
-          <span className="compose-modal-ready">✓ READY TO SHARE</span>
           <button
             type="button"
             className="compose-modal-btn compose-modal-btn-primary compose-modal-copylink"
@@ -140,10 +148,6 @@ export function ShareComposeModal({
 
         <div className="compose-modal-columns">
           <div className="compose-modal-settings">
-            <div className="compose-modal-section-label">
-              COMPOSER SETTINGS
-            </div>
-
             <label className="compose-modal-field">
               <span className="compose-modal-field-label">PLATFORM</span>
               <select

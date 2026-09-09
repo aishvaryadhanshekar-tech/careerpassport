@@ -1,3 +1,4 @@
+import { tabKeyboard } from "./shared/tabKeyboard";
 import { useEffect, useRef, useState } from "react";
 import { STANDARD_FIELD_META } from "./applicationCatalog";
 import { splitTags } from "./formControlUtils";
@@ -332,7 +333,7 @@ function PreviewApplyScreen({
       {showTabs ? (
         <>
           {headerNode}
-          <div className="preview-tabbar" role="tablist" aria-label="Job preview sections">
+          <div className="preview-tabbar" role="tablist" onKeyDown={tabKeyboard} aria-label="Job preview sections">
             <button
               type="button"
               role="tab"
@@ -394,8 +395,7 @@ function AutofillCard() {
         <span aria-hidden="true">⚡</span> Autofill application
       </p>
       <p>
-        Save time by importing your resume in one of the following formats:
-        .pdf, .doc, .docx, .odt, or .rtf.
+        Resume formats: .pdf, .doc, .docx, .odt, or .rtf.
       </p>
       <button type="button" className="preview-import" disabled>
         Import resume from

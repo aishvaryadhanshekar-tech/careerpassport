@@ -1,0 +1,201 @@
+.funnel-workspace .funnel-node {
+  --node-accent: #527968;
+  --node-tint: #edf4ef;
+  box-sizing: border-box;
+  width: 260px;
+  min-height: 104px;
+  padding: 16px;
+  border: 1px solid #d2ddd7;
+  border-radius: 16px;
+  background: #fff;
+  color: #263c37;
+  box-shadow: 0 2px 3px #233a2d06, 0 6px 18px #233a2d09;
+  cursor: grab;
+  user-select: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.funnel-workspace .funnel-node.fn-round,
+.funnel-workspace .funnel-node.fn-trip {
+  --node-accent: #7c669d;
+  --node-tint: #f1edf7;
+}
+
+.funnel-workspace .funnel-node.fn-communication {
+  --node-accent: #99743e;
+  --node-tint: #faf3e6;
+}
+
+.funnel-workspace .funnel-node.fn-capability {
+  --node-accent: #60798f;
+  --node-tint: #edf2f6;
+}
+
+.funnel-workspace .funnel-node:hover {
+  border-color: #9bb4a7;
+  box-shadow: 0 3px 6px #233a2d08, 0 10px 24px #233a2d13;
+}
+
+.funnel-workspace .funnel-node.fn-selected {
+  border-color: #387b60;
+  box-shadow: 0 0 0 2px #387b60, 0 0 0 6px #387b6012, 0 8px 22px #233a2d0b;
+}
+
+.funnel-workspace .funnel-node:focus-visible {
+  outline: 3px solid #80b6a3;
+  outline-offset: 5px;
+}
+
+.funnel-workspace .react-flow__node.dragging .funnel-node,
+.funnel-workspace .funnel-node:active {
+  cursor: grabbing;
+}
+
+.funnel-workspace .react-flow__node.dragging .funnel-node {
+  box-shadow: 0 12px 28px #233a2d24;
+}
+
+.funnel-workspace .funnel-node .fn-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  height: auto;
+  min-height: 26px;
+}
+
+.funnel-workspace .funnel-node .fn-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--node-accent);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: .7px;
+}
+
+.funnel-workspace .funnel-node .fn-kind-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--node-tint);
+  color: var(--node-accent);
+}
+
+.funnel-workspace .funnel-node .fn-kind-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.funnel-workspace .funnel-node .fn-drag-hint {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: #94a59b;
+  font-size: 15px;
+}
+
+.funnel-workspace .funnel-node .fn-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0 0;
+  text-align: left;
+  border: 0;
+  background: transparent;
+}
+
+.funnel-workspace .funnel-node .fn-main strong {
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: -.2px;
+  overflow-wrap: anywhere;
+}
+
+.funnel-workspace .funnel-node .fn-main span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: #778b80;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.funnel-workspace .funnel-node .fn-collapse {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-top: 13px;
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid #e6ede8;
+  border-radius: 0;
+  background: transparent;
+  color: #597466;
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.funnel-workspace .funnel-node .fn-collapse:hover {
+  color: #245f48;
+  background: transparent;
+}
+
+.funnel-workspace .funnel-node .fn-footer-hint {
+  display: block;
+  margin-top: 12px;
+  color: #7b8f82;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.funnel-workspace .funnel-node .react-flow__handle {
+  width: 8px;
+  height: 8px;
+  border: 2px solid #fff;
+  background: #a6bbb0;
+}
+
+.funnel-workspace .funnel-node.fn-selected .react-flow__handle {
+  background: #387b60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .funnel-workspace .funnel-node {
+    transition: none;
+  }
+}
+
+.funnel-workspace .funnel-node .fn-main > span:empty { display: none; }
+
+/* Workflow, candidate stages, activities and attachments have different silhouettes. */
+.funnel-workspace .funnel-node.fn-job { border-top: 4px solid #266b53; background: #f1f7f3; }
+.funnel-workspace .funnel-node.fn-stage { border-radius: 32px; background: #e6f1eb; border: 2px solid #87b09a; padding: 16px 20px; }
+.funnel-workspace .fn-stage .fn-main strong { font-size: 18px; }
+.funnel-workspace .fn-stage .fn-main span { color: #386c55; font-weight: 600; }
+.funnel-workspace .funnel-node.fn-round, .funnel-workspace .funnel-node.fn-application { border-left: 4px solid #629aaa; border-radius: 10px; }
+.funnel-workspace .funnel-node.fn-trip { border-left: 4px solid #9a7fbb; background: #fbf9fd; border-radius: 12px; }
+.funnel-workspace .funnel-node.fn-communication { border: 1px dashed #c3a06b; background: #fffcf5; border-radius: 8px; min-height: 0; }
+.fn-outcome { font-style: normal; font-size: 10px; color: #397b5c; }
+.fn-outcome-failure { color: #a45448; }
+
+.fn-workflow-tools{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}.funnel-workspace .fn-workflow-tools button,.funnel-workspace .fn-configure{font-size:10px;padding:5px 7px;background:#fff;border:1px solid #d6e2dc;border-radius:5px}.funnel-workspace .fn-configure{margin-top:12px;color:#477584}
+.funnel-workspace .pipeline-port{width:9px;height:9px;background:#fff;border:1.5px solid #729486;opacity:0;transition:opacity .12s;z-index:8}.funnel-workspace .funnel-node:hover .pipeline-port,.funnel-workspace .fn-selected .pipeline-port,.funnel-workspace .pipeline-port.connecting{opacity:1}.funnel-workspace .pipeline-port-out{background:#54846d;cursor:crosshair}.funnel-workspace .pipeline-port-in.port-top,.funnel-workspace .pipeline-port-in.port-bottom{left:46%}.funnel-workspace .pipeline-port-out.port-top,.funnel-workspace .pipeline-port-out.port-bottom{left:54%}.funnel-workspace .pipeline-port-in.port-left,.funnel-workspace .pipeline-port-in.port-right{top:44%}.funnel-workspace .pipeline-port-out.port-left,.funnel-workspace .pipeline-port-out.port-right{top:56%}.funnel-workspace .fn-communication{border:1px solid #d9b877!important;border-radius:28px!important;background:#fff5db!important}.funnel-workspace .fn-communication .pipeline-port{border-color:#b58235}.funnel-workspace .fn-communication .pipeline-port-out{background:#b58235}
+.pipeline-connection-actions{position:absolute;top:58px;left:12px;z-index:15;display:flex;align-items:center;gap:8px;background:#fff;padding:8px;border:1px solid #d9e3dc;border-radius:9px;font-size:12px;box-shadow:0 4px 15px #263c371a}
+.funnel-workspace .pipeline-port-in.port-top,.funnel-workspace .pipeline-port-out.port-bottom{left:50%}.funnel-workspace .pipeline-port-out.port-top,.funnel-workspace .pipeline-port-in.port-bottom{left:62%}.funnel-workspace .pipeline-port-out.port-right,.funnel-workspace .pipeline-port-in.port-left{top:50%}.funnel-workspace .pipeline-port-in.port-right,.funnel-workspace .pipeline-port-out.port-left{top:65%}

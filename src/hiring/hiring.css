@@ -1,0 +1,863 @@
+.hiring-workspace .demo-application {
+  height: auto;
+  overflow: visible;
+  padding: 0;
+  min-height: 0;
+}
+.hiring-workspace .demo-application > main {
+  padding: 16px 0;
+  max-width: none;
+  margin: 0;
+}
+.hire-candidate-page {
+  height: 100dvh;
+  overflow: auto;
+  background: #f3f6ef;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+.hire-candidate-page > .hiring-workspace {
+  max-width: 840px;
+  margin: auto;
+}
+.hire-candidate-page h1 {
+  font:
+    32px/1.3 Georgia,
+    serif;
+}
+.hire-chrome {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.hire-chrome > button {
+  font-size: 10px;
+  padding: 7px 8px;
+}
+.hire-chrome-backdrop {
+  position: fixed;
+  inset: 0;
+  background: #182d2755;
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 10vh;
+  z-index: 100;
+}
+.hire-chrome-dialog {
+  width: min(520px, 90vw);
+  max-height: 76vh;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #dce6db;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 20px 80px #102f2925;
+}
+.hire-chrome-dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.hire-chrome-dialog h3 {
+  font-size: 17px;
+}
+.hire-chrome-dialog > input {
+  margin: 12px 0;
+}
+.hire-chrome-dialog .hire-chrome-result {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  width: 100%;
+  border: 0;
+  margin: 3px 0;
+  padding: 11px;
+}
+.hire-chrome-result small {
+  font-size: 10px;
+  color: #89968b;
+  margin-top: 4px;
+}
+.hire-chrome-dialog > small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin: 16px 10px 4px;
+  color: #8e9c91;
+}
+@media (max-width: 1250px) {
+  .hire-chrome > button:first-child {
+    display: none;
+  }
+  .funnel-header {
+    gap: 9px;
+  }
+  .funnel-header-actions {
+    gap: 5px;
+  }
+}
+@media (max-width: 1000px) {
+  .hire-chrome > button:last-child {
+    display: none;
+  }
+}
+.funnel-inspector.funnel-hiring-panel {
+  width: min(880px, 64vw);
+  min-width: 560px;
+  flex-shrink: 0;
+}
+.fn-capability {
+  border-left: 3px solid #8e9faf;
+  background: #fbfcfd;
+}
+.dot-capability {
+  background: #8e9faf;
+}
+.hiring-workspace {
+  color: #283d3a;
+  font:
+    13px/1.6 Inter,
+    system-ui,
+    sans-serif;
+  min-width: 0;
+  padding-bottom: 24px;
+}
+.hiring-workspace h2 {
+  font-size: 23px;
+  line-height: 1.3;
+  margin: 12px 0;
+}
+.hiring-workspace h3 {
+  font-size: 15px;
+  margin: 8px 0;
+}
+.hiring-workspace h4 {
+  margin: 5px 0;
+}
+.hiring-workspace p {
+  margin: 8px 0 14px;
+}
+.hiring-workspace button {
+  font: inherit;
+  border: 1px solid #d7dfdc;
+  border-radius: 7px;
+  background: white;
+  color: #24473f;
+  padding: 7px 11px;
+  cursor: pointer;
+  line-height: 1.4;
+  text-align: left;
+}
+.hiring-workspace button:hover {
+  background: #edf5f1;
+  border-color: #93b5a9;
+}
+.hiring-workspace button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.hiring-workspace button.funnel-primary {
+  background: #255b4c;
+  color: white;
+  border-color: #255b4c;
+}
+.hiring-workspace a {
+  color: #236c59;
+  text-decoration: underline;
+}
+.hiring-workspace :focus-visible {
+  outline: 2px solid #b36c45;
+  outline-offset: 2px;
+}
+.hiring-workspace input:not([type="checkbox"]):not([type="radio"]),
+.hiring-workspace select,
+.hiring-workspace textarea {
+  font: inherit;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #d6dfdb;
+  background: #fff;
+  border-radius: 6px;
+  color: #243e35;
+  padding: 9px 10px;
+  box-sizing: border-box;
+}
+.hiring-workspace input[type="checkbox"],
+.hiring-workspace input[type="radio"] {
+  accent-color: #2f6654;
+  width: auto;
+  margin-right: 7px;
+}
+.hiring-workspace textarea {
+  resize: vertical;
+  min-height: 88px;
+}
+.hire-demo-label {
+  letter-spacing: 1.5px;
+  font-size: 9px;
+  color: #687c74;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.hire-demo-label > span {
+  width: 6px;
+  height: 6px;
+  background: #3b816b;
+  border-radius: 100%;
+}
+.hire-demo-label small {
+  margin-left: auto;
+  letter-spacing: 0;
+  font-size: 10px;
+}
+.hire-intro {
+  font-size: 14px;
+  color: #64776f;
+  max-width: 650px;
+}
+.hire-muted {
+  font-size: 12px;
+  color: #718078;
+}
+.hire-callout {
+  border: 1px solid #e6d7b4;
+  background: #fcf8ee;
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #796342;
+}
+.hire-notice,
+.hire-error {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #e8f4ed;
+  color: #285c46;
+  margin: 12px 0;
+}
+.hire-error {
+  background: #fff0eb;
+  color: #943b2a;
+}
+.hire-notice button,
+.hire-error button {
+  padding: 0 5px;
+  background: transparent;
+  border: 0;
+}
+.hire-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  border-bottom: 1px solid #e0e7e2;
+  padding: 4px 0 0;
+  margin: 16px 0;
+  scrollbar-width: thin;
+}
+/* Selected-state fill retained for other selector/segmented controls (candidate nav, stage
+   strip, library list, tag chips) — everything except `.hire-tabs`, which gets its own
+   borderless underline treatment below. */
+.hiring-workspace .is-active {
+  background: #e4efe8;
+  color: #245543;
+  border-color: #94b5a3;
+}
+/* Scoped borderless tab: main Pipeline nav (.tabs/.tab-btn) visual style at a smaller scale.
+   Class repeated to out-specify both the generic `.funnel-workspace button` base and the
+   `.hiring-workspace .is-active` selected-state rule above, without touching either. */
+.hire-tabs.hire-tabs button {
+  flex-shrink: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: #667085;
+  padding: 8px 4px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hire-tabs.hire-tabs button:hover {
+  background: transparent;
+  color: #245543;
+}
+.hire-tabs.hire-tabs button.is-active {
+  background: transparent;
+  color: #1f1b16;
+  border-color: transparent;
+  border-bottom-color: #245543;
+}
+.hire-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 14px 0;
+}
+/* Role & comp groups fields by task with spacing/legends only — no extra copy. */
+.hire-form-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hire-field-group {
+  border: 0;
+  margin: 0;
+  padding: 0 0 10px;
+  min-width: 0;
+}
+.hire-field-group legend {
+  padding: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #7d9082;
+}
+.hire-comp-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.hire-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #576d63;
+}
+.hire-field > span {
+  text-transform: none;
+  letter-spacing: 0.1px;
+}
+.hire-wide {
+  grid-column: 1/-1;
+}
+.hire-form-grid .hire-field {
+  margin-bottom: 0;
+}
+.hire-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.hire-actions > input:not([type="checkbox"]),
+.hire-actions > select,
+.hire-actions > .hire-filter {
+  flex: 1;
+  min-width: 120px;
+  max-width: 280px;
+}
+/* Visible dimension label above each activity/segment filter, so two "All" selects
+   (category vs. actor) stay distinguishable without relying on aria-label alone. */
+.hire-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7d73;
+}
+.hire-filter select {
+  font-size: 12px;
+  font-weight: 400;
+  width: 100%;
+}
+.hire-actions > label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.hire-sticky-actions {
+  background: #f9fbf8;
+  border-top: 1px solid #dce5dc;
+  margin: 20px -10px -10px;
+  padding: 12px 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.hire-sticky-actions small {
+  margin-right: auto;
+  font-size: 11px;
+  color: #7d8982;
+}
+.hire-card {
+  border: 1px solid #dce4df;
+  border-radius: 10px;
+  background: #fff;
+  padding: 16px;
+  margin: 12px 0;
+  min-width: 0;
+}
+.hire-card small {
+  color: #77867d;
+  font-size: 10px;
+}
+.hire-card p {
+  overflow-wrap: anywhere;
+}
+.hire-form-grid > .hire-card {
+  margin: 0;
+}
+.hire-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+/* TRP-04: compact return-to-library action atop a focused template/agent editor. */
+.hire-back-link {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #567b66;
+  cursor: pointer;
+}
+.hire-back-link:hover {
+  color: #1f1b16;
+}
+.hire-brief {
+  border-radius: 12px;
+  background: #f5f8f6;
+  border: 1px solid #d6e2da;
+  color: #263c37;
+  padding: 24px;
+  margin: 14px 0;
+}
+.hire-brief span,
+.hire-brief small {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #607368;
+}
+.hire-brief h2 {
+  /* Inherits the app's sans font and .hiring-workspace h2 title scale (23px/1.3) —
+     matches nearby person/role identities instead of an unrelated serif hierarchy. */
+  margin: 14px 0;
+  overflow-wrap: anywhere;
+}
+.hire-brief p {
+  color: #607368;
+}
+.hire-pre {
+  white-space: pre-wrap;
+}
+.hire-empty {
+  padding: 30px 22px;
+  text-align: center;
+  border: 1px dashed #d7e2da;
+  border-radius: 9px;
+  color: #79877f;
+  background: #f7faf7;
+  margin: 16px 0;
+}
+.hire-export {
+  padding: 24px;
+  background: white;
+  border: 1px solid #e1e5df;
+  margin-top: 20px;
+}
+.hire-export h1 {
+  font:
+    32px Georgia,
+    serif;
+  color: #245745;
+}
+.hire-export section {
+  break-inside: avoid;
+}
+.hire-link {
+  font-size: 11px;
+  color: #799284;
+  overflow-wrap: anywhere;
+}
+.hire-condition {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  margin: 8px 0;
+}
+.hire-condition > .hire-field {
+  flex: 1;
+  min-width: 0;
+}
+.hire-condition > button {
+  margin-bottom: 12px;
+}
+.hire-filter {
+  border: 1px solid #e0e6e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0;
+}
+.hiring-workspace summary {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 12px;
+}
+.hire-table-wrap {
+  overflow: auto;
+  border: 1px solid #e1e6e1;
+  border-radius: 9px;
+  margin: 12px 0;
+}
+.hire-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+}
+.hire-table th {
+  background: #f2f6f2;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #7a887e;
+  font-weight: 500;
+}
+.hire-table td,
+.hire-table th {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e9eee8;
+}
+.hire-table td > small {
+  display: block;
+  color: #8c948c;
+  font-size: 10px;
+}
+.hire-table td > button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-weight: 600;
+}
+.hire-bulk {
+  border: 1px solid #bcd3c4;
+  background: #edf5ed;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.hire-bulk select {
+  max-width: 240px;
+}
+.hire-signals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 14px 0;
+}
+.hire-signals > div {
+  background: #f1f6ef;
+  border-radius: 7px;
+  padding: 10px;
+}
+.hire-signals small,
+.hire-signals strong {
+  display: block;
+}
+.hire-signals strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+/* Secondary review filters collapse behind a named disclosure so the candidate list
+   starts closer to the top; values stay applied whether the disclosure is open or not. */
+.hire-secondary-filters {
+  margin: 4px 0 12px;
+}
+.hire-secondary-filters summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #4a6357;
+  cursor: pointer;
+}
+.hire-secondary-filters .hire-actions {
+  margin-top: 10px;
+}
+.hire-filter-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #245543;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+.hire-stage-strip {
+  display: flex;
+  gap: 6px;
+  overflow: auto;
+  padding: 4px 0 14px;
+}
+.hire-stage-strip button {
+  white-space: nowrap;
+  font-size: 11px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.hire-stage-strip strong {
+  font-size: 12px;
+  border-radius: 5px;
+  background: #f1f5ef;
+  padding: 1px 6px;
+}
+.hire-candidate-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px !important;
+}
+.hire-candidate-card small {
+  color: #7d8c82;
+}
+.hire-review {
+  border-top: 2px solid #7a9e87;
+  padding-top: 14px;
+  margin-top: 20px;
+}
+.hire-review-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.hire-review-panes > div {
+  min-width: 0;
+}
+.hire-review-panes > div + div {
+  border-left: 1px solid #e1e8df;
+  padding-left: 18px;
+}
+.hire-review-panes .hire-tabs button {
+  font-size: 10px;
+  padding: 6px;
+}
+.hire-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 12px 0;
+}
+.hire-tags button {
+  font-size: 11px;
+  border-radius: 20px;
+  padding: 5px 10px;
+}
+.hire-tags label {
+  font-size: 11px;
+}
+.hire-timeline {
+  border-left: 2px solid #cbdcd0;
+  padding: 8px 14px;
+  margin: 12px 0;
+  white-space: pre-wrap;
+}
+.hire-timeline small {
+  display: block;
+  color: #839087;
+  font-size: 10px;
+}
+.hire-template-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+  background: #f3f7f2;
+  border: 1px solid #dce6d9;
+  padding: 16px;
+  font: 12px/1.7 inherit;
+  margin: 14px 0;
+}
+.hire-library {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 16px 0;
+}
+.hire-library button {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+}
+.hire-library small {
+  font-size: 10px;
+  color: #839087;
+}
+.hire-pill {
+  border-radius: 20px;
+  background: #eaf1e9;
+  padding: 3px 10px;
+  font-size: 10px;
+  color: #4e765b;
+}
+.hire-lever {
+  min-width: 0;
+  border: 1px solid #d7e1d8;
+  border-radius: 9px;
+  margin: 18px 0;
+  padding: 16px;
+}
+.hire-lever legend {
+  font-size: 12px;
+  font-weight: 600;
+  color: #587565;
+  padding: 0 7px;
+}
+.hire-lever:disabled input,
+.hire-lever:disabled textarea,
+.hire-lever:disabled select {
+  background: #f7f9f5;
+  color: #738171;
+  opacity: 1;
+}
+.hire-list-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 7px 0;
+  gap: 10px;
+}
+.hire-list-row span {
+  font-size: 10px;
+  color: #6c8b75;
+}
+.hire-client-layout {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 18px;
+}
+.hire-client-layout nav > button {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 7px 0;
+  gap: 7px;
+  padding: 12px;
+}
+.hire-client-layout nav small {
+  font-size: 10px;
+  color: #788e7f;
+}
+.hire-chat {
+  padding: 18px 0;
+}
+.hire-chat article {
+  padding: 12px;
+  background: #f0f5ee;
+  border-radius: 10px;
+  margin: 14px 25px 14px 0;
+}
+.hire-chat article.from-you {
+  background: #e7f1eb;
+  color: #263c37;
+  margin: 14px 0 14px 25px;
+}
+.hire-chat small {
+  font-size: 9px;
+  opacity: 0.7;
+}
+.hire-chat p {
+  margin-bottom: 4px;
+}
+@media (max-width: 1050px) {
+  .funnel-inspector.funnel-hiring-panel {
+    width: 65vw;
+    min-width: 460px;
+  }
+  .hire-review-panes {
+    grid-template-columns: 1fr;
+  }
+  .hire-review-panes > div + div {
+    border-left: 0;
+    border-top: 1px solid #e1e8df;
+    padding: 16px 0;
+  }
+  .hire-client-layout {
+    grid-template-columns: 1fr;
+  }
+  .hire-client-layout nav {
+    display: flex;
+    overflow: auto;
+  }
+  .hire-client-layout nav > button {
+    min-width: 160px;
+  }
+}
+@media (max-width: 720px) {
+  .funnel-inspector.funnel-hiring-panel {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    z-index: 30;
+  }
+  .hire-form-grid,
+  .hire-signals,
+  .hire-comp-range {
+    grid-template-columns: 1fr;
+  }
+  .hire-condition {
+    flex-wrap: wrap;
+  }
+  .hire-library {
+    grid-template-columns: 1fr;
+  }
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .hire-export,
+  .hire-export * {
+    visibility: visible;
+  }
+  .hire-export {
+    position: absolute;
+    inset: 0;
+    padding: 20px;
+    border: 0;
+    overflow: visible;
+  }
+  .funnel-inspector,
+  .funnel-inspector-scroll,
+  .funnel-body,
+  .funnel-workspace,
+  #root,
+  body {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}

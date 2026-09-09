@@ -10,6 +10,14 @@
  *   (1200 - 2*40 padding - 11*24 gutters) / 12
  * ------------------------------------------------------------------------- */
 :root {
+  color-scheme: light;
+  --surface: #fff;
+  --surface-subtle: #f5f8f6;
+  --surface-selected: #e7f1eb;
+  --border-subtle: #d6e2da;
+  --text-primary: #263c37;
+  --text-secondary: #607368;
+  --accent: #266b53;
   --page-max: 1200px;
   --page-pad: 40px;
   --grid-gutter: 24px;
@@ -48,3 +56,16 @@ select {
 a {
   color: #1f1b16;
 }
+
+/* Shared keyboard and reading affordances, including standalone candidate pages. */
+:root { --focus-ring: #266b53; }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+::selection { background: #d9ece1; color: #263c37; }
+input, textarea { caret-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--text-secondary); opacity: 1; }
+a { text-underline-offset: .18em; }
+.skip-link { position: fixed; z-index: 3000; top: 8px; left: 8px; padding: 12px 16px; background: var(--surface); color: var(--accent); border-radius: 8px; transform: translateY(-160%); }
+.skip-link:focus { transform: translateY(0); }

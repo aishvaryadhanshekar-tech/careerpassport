@@ -1,3 +1,4 @@
+import { useDialogFocus } from "../shared/useDialogFocus";
 import { useState, type JSX } from "react";
 import { SparkleIcon } from "../shared/icons";
 import { DIFFICULTIES, DIFFICULTY_LABELS } from "../types";
@@ -17,6 +18,12 @@ export type TripCreateChoiceModalProps = {
   onClose: () => void;
   onSelectManual: () => void;
   onSelectAI: (opts: { difficulty: Difficulty; pipelineStageId: string }) => void;
+  /**
+   * TRP-01: a secondary creation path for component trips (`ops.assessments`), reachable from
+   * this same canonical Create control instead of a second "Generate AI trip" entry point
+   * elsewhere. Omit to hide the option (e.g. for callers that only ever create full Trips).
+   */
+  onSelectComponent?: () => void;
 };
 
 export function TripCreateChoiceModal({
@@ -25,11 +32,13 @@ export function TripCreateChoiceModal({
   onClose,
   onSelectManual,
   onSelectAI,
+  onSelectComponent,
 }: TripCreateChoiceModalProps): JSX.Element | null {
   const [aiSelected, setAiSelected] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [pipelineStageId, setPipelineStageId] = useState("");
 
+  const dialogRef = useDialogFocus(open, handleClose);
   if (!open) return null;
 
   function handleClose() {
@@ -53,6 +62,8 @@ export function TripCreateChoiceModal({
       <div
         className="trip-choice-modal"
         role="dialog"
+        ref={dialogRef}
+        tabIndex={-1}
         aria-modal="true"
         aria-label="How do you want to build this trip?"
         onClick={(event) => event.stopPropagation()}
@@ -69,9 +80,6 @@ export function TripCreateChoiceModal({
         <h2 className="trip-choice-modal-heading">
           How do you want to build this trip?
         </h2>
-        <p className="trip-choice-modal-subheading">
-          You can start from scratch or let us draft the rounds for you.
-        </p>
 
         <div className="trip-choice-modal-options">
           <button
@@ -81,76 +89,77 @@ export function TripCreateChoiceModal({
           >
             <span className="trip-choice-card-title">Build manually</span>
             <span className="trip-choice-card-blurb">
-              Start from a blank template and fill it in yourself.
+              Start with a blank trip.
             </span>
           </button>
 
-          <div
+          <button
+            type="button"
             className={`trip-choice-card trip-choice-card-ai${aiSelected ? " trip-choice-card-expanded" : ""}`}
-            role="button"
-            tabIndex={0}
-            onClick={() => setAiSelected(true)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") setAiSelected(true);
-            }}
+            aria-expanded={aiSelected}
+            onClick={() => setAiSelected(value => !value)}
           >
-            <span className="trip-choice-card-badge">Recommended</span>
             <span className="trip-choice-card-title">
               <SparkleIcon />
               Build with AI
             </span>
             <span className="trip-choice-card-blurb">
-              We'll auto-generate rounds using your role's playbook —
-              recommended.
+              Draft rounds from the role’s playbook.
             </span>
-
-            {aiSelected ? (
-              <div className="trip-choice-ai-options" onClick={(e) => e.stopPropagation()}>
-                <label className="trip-choice-ai-field">
-                  <span>Difficulty</span>
-                  <select
-                    className="pill-select select-icon"
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-                  >
-                    {DIFFICULTIES.map((d) => (
-                      <option key={d} value={d}>
-                        {DIFFICULTY_LABELS[d]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="trip-choice-ai-field">
-                  <span>Pipeline stage</span>
-                  <select
-                    className={`pill-select select-icon${pipelineStageId ? "" : " is-placeholder"}`}
-                    value={pipelineStageId}
-                    onChange={(e) => setPipelineStageId(e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Choose a stage
-                    </option>
-                    {stages.map((stage) => (
-                      <option key={stage.id} value={stage.id}>
-                        {stage.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <button
-                  type="button"
-                  className="btn primary"
-                  disabled={!pipelineStageId}
-                  onClick={handleBuild}
-                >
-                  Build trip
-                </button>
-              </div>
-            ) : null}
-          </div>
+          </button>
         </div>
+
+        {aiSelected ? (
+          <div className="trip-choice-ai-options" onClick={(e) => e.stopPropagation()}>
+            <label className="trip-choice-ai-field">
+              <span>Difficulty</span>
+              <select
+                className="pill-select select-icon"
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+              >
+                {DIFFICULTIES.map((d) => (
+                  <option key={d} value={d}>
+                    {DIFFICULTY_LABELS[d]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="trip-choice-ai-field">
+              <span>Pipeline stage</span>
+              <select
+                className={`pill-select select-icon${pipelineStageId ? "" : " is-placeholder"}`}
+                value={pipelineStageId}
+                onChange={(e) => setPipelineStageId(e.target.value)}
+              >
+                <option value="" disabled>
+                  Choose a stage
+                </option>
+                {stages.map((stage) => (
+                  <option key={stage.id} value={stage.id}>
+                    {stage.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              type="button"
+              className="btn primary"
+              disabled={!pipelineStageId}
+              onClick={handleBuild}
+            >
+              Build trip
+            </button>
+          </div>
+        ) : null}
+
+        {onSelectComponent ? (
+          <button type="button" className="trip-choice-secondary-link" onClick={onSelectComponent}>
+            Or create a trip component instead
+          </button>
+        ) : null}
       </div>
     </div>
   );

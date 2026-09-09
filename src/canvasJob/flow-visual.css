@@ -1,0 +1,72 @@
+/* Workflow visual system. Geometry and interaction rules remain with their owners. */
+.funnel-workspace {
+  --flow-ink: #243c34;
+  --flow-line: #dce5df;
+  --flow-muted: #63786d;
+  background: #f7f9f7;
+  color: var(--flow-ink);
+}
+.funnel-workspace .funnel-header { padding: 17px 24px; gap: 14px; border-bottom-color: var(--flow-line); }
+.funnel-workspace .funnel-header h1 { font-size: 20px; letter-spacing: -.5px; font-weight: 650; }
+.funnel-workspace .funnel-header-actions { gap: 8px; }
+.funnel-workspace .funnel-header-actions button { border-radius: 9px; padding: 9px 15px; font-weight: 550; }
+.funnel-workspace .funnel-primary { background: #285d49; border-color: #285d49; box-shadow: 0 2px 3px #1c403512; }
+.funnel-workspace .funnel-primary:hover { background: #204c3b; }
+.funnel-workspace .funnel-status { background: #edf5ef; border-color: #d4e4d9; color: #36664c; padding: 5px 10px; }
+.funnel-workspace .pipeline-nav { gap: 4px; padding: 0 24px; min-height: 51px; }
+.funnel-workspace .pipeline-nav > button { position: relative; border: 0; border-radius: 0; padding: 16px 17px; background: transparent; color: var(--flow-muted); font-weight: 550; }
+.funnel-workspace .pipeline-nav > button[aria-selected=true] { color: #285d49; background: transparent; }
+.funnel-workspace .pipeline-nav > button[aria-selected=true]::after { content: ''; position: absolute; height: 3px; border-radius: 3px 3px 0 0; bottom: 0; left: 16px; right: 16px; background: #397958; }
+.funnel-workspace .pipeline-nav > button:hover { background: #f5f8f6; }
+.funnel-workspace .pipeline-mode-label { font-size: 11px; }
+.funnel-workspace .pipeline-review-banner { background: #f0f6f2; border-bottom: 1px solid #e0ebe3; padding: 10px 24px; }
+.funnel-workspace .pipeline-review-banner button { padding: 7px 11px; font-weight: 550; background: #fff; }
+.funnel-workspace .funnel-surface { background: #f7f9f7; }
+.funnel-workspace .funnel-node { border-color: #d1ded6; box-shadow: 0 2px 3px #20382d05, 0 8px 20px #20382d08; }
+.funnel-workspace .funnel-node .fn-kind-icon { border-radius: 7px; background: var(--node-tint); }
+.funnel-workspace .funnel-node .fn-kind-icon svg { width: 17px; height: 17px; }
+.funnel-workspace .funnel-node .fn-kind { letter-spacing: .55px; font-size: 10px; }
+.funnel-workspace .funnel-node .fn-main strong { letter-spacing: -.25px; }
+.funnel-workspace .funnel-node.fn-stage { background: #edf5ef; border-color: #b6d0c0; }
+.funnel-workspace .funnel-node.fn-job { background: #fff; border-top-color: #477b61; }
+.funnel-workspace .funnel-node.fn-trip { background: #fbf9fe; border-left-color: #9b80b9; }
+.funnel-workspace .funnel-node.fn-round,
+.funnel-workspace .funnel-node.fn-application { background: #f9fbfd; border-left-color: #6894a4; --node-tint: #eaf2f6; --node-accent: #476f81; }
+.funnel-workspace .funnel-node.fn-selected { border-color: #3e8060; box-shadow: 0 0 0 2px #3e8060, 0 8px 24px #243c3415; }
+.funnel-workspace .funnel-node:hover { box-shadow: 0 4px 8px #243c3408, 0 12px 26px #243c3412; }
+.funnel-workspace .fn-workflow-tools { gap: 6px; padding-top: 12px; border-top: 1px solid #e7ede9; }
+.funnel-workspace .fn-workflow-tools button { color: #526d5e; background: #f8faf8; border-color: #e1e9e3; border-radius: 6px; }
+.funnel-workspace .funnel-body > .funnel-inspector { border-left-color: var(--flow-line); background: #fff; }
+.funnel-workspace .funnel-inspector > header { background: #fff; border-bottom: 1px solid var(--flow-line); padding: 18px 20px; }
+.funnel-workspace .funnel-inspector > header h2 { font-size: 18px; letter-spacing: -.35px; line-height: 1.4; }
+.funnel-workspace .funnel-inspector-scroll { padding: 20px; }
+.funnel-workspace .pipeline-detail-breadcrumbs { background: #f8faf8; padding-inline: 17px; }
+.funnel-workspace .funnel-inspector :is(input,textarea,select) { border-color: #d9e3dc; border-radius: 8px; }
+.funnel-workspace .funnel-inspector :is(input,textarea,select):focus { border-color: #668f76; }
+.funnel-workspace .pipeline-picker { background: #f7faf8; border-color: #d4e3d8; padding: 16px; }
+.funnel-workspace .pipeline-rule { background: #fafcfb; border-color: #e0e8e2; }
+.funnel-workspace .pipeline-library-filters { padding: 12px; background: #f7f9f7; border: 1px solid #e4ebe6; border-radius: 10px; }
+.funnel-workspace .pipeline-stage-strip { padding: 12px 24px; }
+.funnel-workspace .pipeline-stage-strip button { border-radius: 8px; font-size: 12px; }
+.funnel-workspace .canvas-authoring-toolbar { border-color: #d1dfd6; background: #fff; box-shadow: 0 3px 8px #263c3408, 0 14px 35px #263c3414; }
+.funnel-workspace .canvas-block-tools > button { border-color: transparent; border-radius: 8px; background: transparent; gap: 5px; }
+.funnel-workspace .canvas-block-tools > button:hover { background: #edf4ef; }
+.funnel-workspace .canvas-block-tools > button > span:first-child { display: grid; place-items: center; color: #4d7260; }
+.funnel-workspace .canvas-global-trigger { border-radius: 8px; background: #edf5ef; color: #285d49; font-weight: 600; }
+.funnel-workspace .canvas-global-assistant { border-color: #d3e1d8; box-shadow: 0 8px 30px #263c3412; }
+@container hiring-canvas (max-width: 740px) {
+  .funnel-workspace .funnel-header { padding: 12px; gap: 8px; }
+  .funnel-workspace .funnel-header h1 { font-size: 17px; }
+  .funnel-workspace .pipeline-nav { padding-inline: 8px; }
+  .funnel-workspace .pipeline-nav > button { padding: 14px 12px; }
+  .funnel-workspace .pipeline-review-banner, .funnel-workspace .pipeline-stage-strip { padding-inline: 12px; }
+  .funnel-workspace .funnel-inspector-scroll { padding: 16px; }
+}
+/* The toolbar responds to the canvas left beside a resized inspector. */
+.funnel-workspace .funnel-surface { container: flow-surface / inline-size; }
+@container flow-surface (max-width: 560px) {
+  .funnel-workspace .canvas-authoring-toolbar { gap: 2px; padding: 4px; }
+  .funnel-workspace .canvas-block-tools { flex: 1; gap: 1px; }
+  .funnel-workspace .canvas-block-tools > button { flex: 1; min-width: 0; flex-direction: column; padding: 5px 4px; font-size: 10px; gap: 4px; }
+  .funnel-workspace .canvas-authoring-toolbar .canvas-global-trigger { padding: 7px 5px; font-size: 11px; flex-shrink: 0; }
+}

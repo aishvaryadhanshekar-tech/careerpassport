@@ -1,18 +1,11 @@
 import { seedApplication } from "./seedApplication";
-import { createDraft, type JobDraft } from "./types";
+import { buildTripWithAI } from "./tripAIBuild";
+import { createDraft, type Difficulty, type JobDraft, type StageType } from "./types";
 
 /**
- * One ready-made published job, so the prototype opens on a populated Jobs list instead of
- * the empty state. Pairs with the pipeline seed in seedCandidates.ts — `getBoard` seeds a
- * board for whatever job id it is first asked about, so this job gets that board for free.
- *
- * Deterministic on purpose — fixed id, fixed timestamps derived from a fixed BASE rather
- * than Date.now(). Same reasoning as seedCandidates: the list looks identical on every
- * reload, and `formatUpdated` still renders a sensible relative age.
- *
- * Exports the draft rather than a finished JobRecord: JobRecord and `salaryLabel` live in
- * jobsStore, which imports this module, so building the record here would be circular and
- * would duplicate the salary formatting. jobsStore assembles the record instead.
+ * Stable sample identities and complete role snapshots. Candidate boards are seeded
+ * lazily for each job by the existing candidate store. Record construction remains
+ * in jobsStore to avoid a circular dependency and duplicate salary formatting.
  */
 export const SEEDED_JOB_ID = "job-seed-senior-backend";
 
@@ -139,6 +132,98 @@ export function seedJobDraft(): JobDraft {
 
   draft.application = seedApplication(draft);
   draft.publishDestinations = { internal: true, marketplace: true };
+  draft.trips = attachedTrips(draft, [
+    { stageId: "screened", types: ["rapid_fire", "coding_round"] },
+    { stageId: "interviewing", types: ["case_study"] },
+  ], "hard");
 
   return draft;
+}
+
+type TripGroup = { stageId: "screened" | "interviewing"; types: StageType[] };
+
+/**
+ * One AI-prefilled Trip per group, each attached at its own pipeline stage — same generator the
+ * product uses. Splitting rounds across groups (rather than one Trip with every round) is what
+ * gives jobs a genuinely different number of Trips, not just different round content.
+ */
+const TRIP_GROUP_LABEL: Record<TripGroup["stageId"], string> = {
+  screened: "Screening",
+  interviewing: "Final round",
+};
+
+function attachedTrips(draft: JobDraft, groups: TripGroup[], difficulty: Difficulty) {
+  return groups.map((group) => {
+    const trip = buildTripWithAI(draft, { difficulty, pipelineStageId: group.stageId, types: group.types });
+    // Distinguish multi-Trip jobs' Trips by name — otherwise two Trips on one job both come out
+    // titled "<role> Trip", which reads as a duplicate rather than two distinct stages of work.
+    if (groups.length > 1) trip.title = `${trip.title} — ${TRIP_GROUP_LABEL[group.stageId]}`;
+    return trip;
+  });
+}
+
+/**
+ * Complete, independent role snapshots for exploring different hiring journeys.
+ * `tripGroups` gives each role a distinct shape: how many Trips it has, which stage each one
+ * lands on, and which rounds make it up — so demo pipelines genuinely differ in structure, not
+ * just in round-content flavor.
+ */
+const ADDITIONAL_ROLES = [
+  { id: 'product-designer', title: 'Senior Product Designer', department: 'Design', industry: 'B2B SaaS', location: 'Bangalore', mode: 'Hybrid', salary: '₹28–38L', experience: '4–7', status: 'Published' as const, skills: 'Interaction design, user research, Figma, design systems and accessible interfaces', outcome: 'Own the onboarding experience from research through shipped product', companies: 'Freshworks, Postman, Chargebee', tripGroups: [{ stageId: 'screened', types: ['flaunt_or_flex'] }, { stageId: 'interviewing', types: ['pick_and_defend', 'do_a_demo'] }] as TripGroup[], tripDifficulty: 'medium' as Difficulty },
+  { id: 'frontend-engineer', title: 'Frontend Engineer, Platform', department: 'Engineering', industry: 'Developer tools', location: 'Remote, India', mode: 'Remote', salary: '₹24–36L', experience: '3–5', status: 'Published' as const, skills: 'React, TypeScript, browser performance, accessibility and component testing', outcome: 'Build a fast, accessible developer dashboard and shared component library', companies: 'BrowserStack, Postman, Hasura', tripGroups: [{ stageId: 'screened', types: ['rapid_fire', 'coding_round', 'ai_critic'] }] as TripGroup[], tripDifficulty: 'medium' as Difficulty },
+  { id: 'product-manager', title: 'Product Manager, Growth', department: 'Product', industry: 'Consumer technology', location: 'Mumbai', mode: 'Hybrid', salary: '₹32–45L', experience: '4–6', status: 'Draft' as const, skills: 'Experiment design, funnel analysis, customer discovery and roadmap prioritization', outcome: 'Improve activation and retention through measurable product experiments', companies: 'Meesho, Swiggy, Zepto', tripGroups: [{ stageId: 'screened', types: ['case_study', 'rank_order', 'pick_and_defend'] }] as TripGroup[], tripDifficulty: 'medium' as Difficulty },
+  { id: 'data-analyst', title: 'Data Analyst', department: 'Data', industry: 'E-commerce', location: 'Hyderabad', mode: 'Hybrid', salary: '₹14–22L', experience: '2–4', status: 'Published' as const, skills: 'SQL, Python, dashboard design, statistics and stakeholder communication', outcome: 'Turn marketplace and fulfilment data into decisions for operations teams', companies: 'Flipkart, Amazon, Myntra', tripGroups: [{ stageId: 'screened', types: ['multiple_choice', 'coding_round'] }, { stageId: 'interviewing', types: ['case_study'] }] as TripGroup[], tripDifficulty: 'easy' as Difficulty },
+  { id: 'customer-success', title: 'Customer Success Manager', department: 'Customer Success', industry: 'B2B SaaS', location: 'Pune', mode: 'Remote', salary: '₹16–24L', experience: '3–5', status: 'Published' as const, skills: 'Enterprise onboarding, account planning, renewal management and product adoption', outcome: 'Help enterprise customers adopt the platform and achieve their rollout goals', companies: 'Zoho, Freshworks, CleverTap', tripGroups: [{ stageId: 'screened', types: ['rapid_fire', 'pick_and_defend', 'case_study'] }] as TripGroup[], tripDifficulty: 'medium' as Difficulty },
+  { id: 'operations-lead', title: 'Operations Lead, Last Mile', department: 'Operations', industry: 'Logistics', location: 'Delhi NCR', mode: 'On-site', salary: '₹20–30L', experience: '5–8', status: 'Draft' as const, skills: 'Delivery operations, capacity planning, vendor management and team leadership', outcome: 'Improve delivery reliability across a growing network of city hubs', companies: 'Delhivery, Blue Dart, Shadowfax', tripGroups: [{ stageId: 'screened', types: ['binary_choice', 'rank_order', 'case_study'] }] as TripGroup[], tripDifficulty: 'medium' as Difficulty },
+];
+
+function additionalDraft(role: typeof ADDITIONAL_ROLES[number]): JobDraft {
+  const draft = createDraft();
+  const values = {
+    designation: role.title, experienceYears: role.experience, location: role.location,
+    workMode: role.mode, salary: role.salary, industryType: role.industry,
+    companyType: 'Product', experienceType: 'Full-time', mustHaves: role.skills,
+    disqualifier: `No relevant experience in ${role.department.toLowerCase()}`,
+    redFlags: 'Cannot explain their own contribution to a recent project',
+    searchStrategy: `Look for teams at ${role.companies}`, evaluationCriteria: role.outcome,
+  };
+  for (const [key, value] of Object.entries(values)) {
+    draft.fields[key as keyof JobDraft['fields']] = { value, source: 'extracted' };
+  }
+  draft.transcript = `Hire a ${role.title} with ${role.experience} years of experience. ${role.outcome}. ${role.skills}. Based in ${role.location}; ${role.mode.toLowerCase()}, ${role.salary} per year.`;
+  draft.analysedOnce = true;
+  draft.flagsPromptShown = true;
+  draft.salaryCurrency = 'INR';
+  draft.salaryPeriod = 'Per year';
+  draft.roleProfile = {
+    headline: { value: role.title, source: 'extracted' },
+    portrait: { value: role.outcome, source: 'extracted' },
+    department: { value: role.department, source: 'extracted' },
+    avoidLookalikes: 'Experience without clear ownership of outcomes',
+    evaluationFramework: [
+      { id: `eval-${role.id}-skills`, label: role.skills, type: 'must_have', importance: 'critical' },
+      { id: `eval-${role.id}-ownership`, label: role.outcome, type: 'qualitative', importance: 'important', grades: ['Limited', 'Clear', 'Strong'] },
+    ],
+  };
+  draft.roleProfileGenerated = true;
+  draft.preview = { idealCandidate: role.outcome, expectedSkills: role.skills, targetCompanies: role.companies, industrySectors: role.industry };
+  draft.previewGenerated = true;
+  draft.application = seedApplication(draft);
+  draft.publishDestinations = { internal: true, marketplace: role.status === 'Published' };
+  draft.trips = attachedTrips(draft, role.tripGroups, role.tripDifficulty);
+  return draft;
+}
+
+/** Static ids only — safe to read without re-running draft generation (which mints new uids). */
+export const DEMO_JOB_IDS: string[] = [SEEDED_JOB_ID, ...ADDITIONAL_ROLES.map((role) => `job-seed-${role.id}`)];
+
+export function seedJobExamples() {
+  return [
+    { id: SEEDED_JOB_ID, status: 'Published' as const, createdAt: SEEDED_JOB_CREATED_AT, updatedAt: SEEDED_JOB_UPDATED_AT, draft: seedJobDraft() },
+    ...ADDITIONAL_ROLES.map((role, index) => ({
+      id: `job-seed-${role.id}`, status: role.status,
+      createdAt: BASE - (18 - index) * DAY, updatedAt: BASE - (index + 1) * DAY,
+      draft: additionalDraft(role),
+    })),
+  ];
 }

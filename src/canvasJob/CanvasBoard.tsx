@@ -17,11 +17,14 @@ import type { CanvasStatuses } from "./canvasStatus";
 const nodeTypes = { canvasStep: CanvasStepNode };
 const edgeTypes = { canvasFlow: CanvasFlowEdge };
 
-const NODE_ORDER: { id: CanvasNodeId; title: string; icon: CanvasStepNodeData["icon"]; x: number }[] = [
-  { id: "jobDetails", title: "Job Details", icon: "details", x: 60 },
-  { id: "roleProfile", title: "Role Profile", icon: "roleProfile", x: 400 },
-  { id: "application", title: "Application", icon: "application", x: 740 },
-  { id: "publish", title: "Preview & Publish", icon: "publish", x: 1080 },
+const NODE_ORDER: { id: CanvasNodeId; title: string; icon: CanvasStepNodeData["icon"]; x: number; y: number }[] = [
+  { id: "jobDetails", title: "Job Details", icon: "details", x: 60, y: 120 },
+  { id: "roleProfile", title: "Role Profile", icon: "roleProfile", x: 400, y: 120 },
+  { id: "application", title: "Application Form", icon: "application", x: 740, y: 120 },
+  { id: "publish", title: "Preview & Publish", icon: "publish", x: 1080, y: 120 },
+  { id: "prospects", title: "Prospects", icon: "prospects", x: 140, y: 390 },
+  { id: "pipeline", title: "Pipeline", icon: "pipeline", x: 520, y: 390 },
+  { id: "interview", title: "Interview Process", icon: "interview", x: 900, y: 390 },
 ];
 
 const SUBTITLE: Record<CanvasNodeId, (statuses: CanvasStatuses) => string> = {
@@ -45,6 +48,9 @@ const SUBTITLE: Record<CanvasNodeId, (statuses: CanvasStatuses) => string> = {
       : s.publish === "done"
         ? "Live and accepting candidates"
         : "Review and go live",
+  prospects: () => "Applications and incoming candidates",
+  pipeline: () => "Trips and active assessments",
+  interview: () => "Rounds, trips, and communications",
 };
 
 export function CanvasBoard({
@@ -60,10 +66,10 @@ export function CanvasBoard({
 }) {
   const nodes = useMemo<Node[]>(
     () =>
-      NODE_ORDER.map(({ id, title, icon, x }) => ({
+      NODE_ORDER.map(({ id, title, icon, x, y }) => ({
         id,
         type: "canvasStep",
-        position: { x, y: 140 },
+        position: { x, y },
         draggable: false,
         data: {
           title,
@@ -85,6 +91,9 @@ export function CanvasBoard({
         type: "canvasFlow",
         data: { powered: statuses.jobDetails === "done" } satisfies CanvasFlowEdgeData,
       },
+      { id: "publish-prospects", source: "publish", target: "prospects", type: "canvasFlow", data: { powered: statuses.publish === "done" } satisfies CanvasFlowEdgeData },
+      { id: "prospects-pipeline", source: "prospects", target: "pipeline", type: "canvasFlow", data: { powered: statuses.prospects === "active" } satisfies CanvasFlowEdgeData },
+      { id: "pipeline-interview", source: "pipeline", target: "interview", type: "canvasFlow", data: { powered: statuses.pipeline === "active" } satisfies CanvasFlowEdgeData },
       {
         id: "roleProfile-application",
         source: "roleProfile",

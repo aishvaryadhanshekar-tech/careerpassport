@@ -51,12 +51,36 @@ export function AppShell() {
   const label = sidenavToggleLabel(collapsed);
 
   return (
-    <div className={`layout${collapsed ? " sidenav-collapsed" : ""}`}>
+    <div className={`layout${collapsed ? " sidenav-collapsed" : ""}`} onKeyDown={event => { if (event.key === "Escape") setProfileOpen(false); }}>
+      <a className="skip-link" href="#workspace-content">Skip to content</a>
       <aside
         id="workspace-sidenav"
         className="sidenav"
         aria-label="Workspace"
       >
+        <div className="workspace-brand-row">
+          <Link to="/" className="workspace-brand" aria-label="CareerPassport home">CareerPassport</Link>
+            <button
+              type="button"
+              className="sidenav-toggle"
+              aria-label={label}
+              aria-expanded={!collapsed}
+              aria-controls="workspace-sidenav"
+              title={label}
+              onClick={toggleSidenav}
+            >
+              <SidebarIcon />
+            </button>
+        </div>
+        <nav className="sidenav-nav">
+          <NavLink
+            to="/"
+            className={() => `sidenav-item${jobsOn ? " on" : ""}`}
+          >
+            <BriefcaseIcon />
+            <span className={collapsed ? "sr-only" : undefined}>Jobs</span>
+          </NavLink>
+        </nav>
         <div className="sidenav-profile-block">
           <div className="sidenav-profile">
             <button
@@ -85,17 +109,7 @@ export function AppShell() {
                 </span>
               </span>
             </button>
-            <button
-              type="button"
-              className="sidenav-toggle"
-              aria-label={label}
-              aria-expanded={!collapsed}
-              aria-controls="workspace-sidenav"
-              title={label}
-              onClick={toggleSidenav}
-            >
-              <SidebarIcon />
-            </button>
+
           </div>
           {profileOpen ? (
             <div id="sidenav-profile-panel" className="sidenav-profile-panel">
@@ -107,15 +121,6 @@ export function AppShell() {
             </div>
           ) : null}
         </div>
-        <nav className="sidenav-nav">
-          <NavLink
-            to="/"
-            className={() => `sidenav-item${jobsOn ? " on" : ""}`}
-          >
-            <BriefcaseIcon />
-            <span className={collapsed ? "sr-only" : undefined}>Jobs</span>
-          </NavLink>
-        </nav>
       </aside>
       <div className="layout-main">
         {isWizard ? (
@@ -135,9 +140,9 @@ export function AppShell() {
             </div>
           </header>
         ) : null}
-        <div className="layout-content">
+        <main id="workspace-content" className="layout-content" tabIndex={-1}>
           <Outlet />
-        </div>
+        </main>
       </div>
     </div>
   );

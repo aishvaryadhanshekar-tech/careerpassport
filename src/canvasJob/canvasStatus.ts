@@ -68,7 +68,8 @@ export function getCanvasStatuses(draft: JobDraft, job: JobRecord | null): Canva
 
   const publish: CanvasNodeStatus = !appDone ? "pending" : pubDone ? "done" : "active";
 
-  return { jobDetails, roleProfile, application, publish };
+  const funnelStatus: CanvasNodeStatus = appDone ? "active" : "pending";
+  return { jobDetails, roleProfile, application, publish, prospects: funnelStatus, pipeline: funnelStatus, interview: funnelStatus };
 }
 
 export function isNodeUnlocked(id: CanvasNodeId, statuses: CanvasStatuses): boolean {

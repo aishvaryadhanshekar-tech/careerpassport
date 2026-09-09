@@ -8,7 +8,7 @@ export function SettingsPage() {
         <div>
           <h1 className="page-title">Settings</h1>
           <p className="page-sub" style={{ marginBottom: 0 }}>
-            Placeholder account details. Sign-in is not wired up yet.
+            Demo account · Sign-in unavailable
           </p>
         </div>
       </header>

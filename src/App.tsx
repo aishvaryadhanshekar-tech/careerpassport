@@ -1,7 +1,10 @@
+import { TripAssignmentExperience } from "./demo/TripAssignmentExperience";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { ApplicationPage } from "./ApplicationPage";
-import { CanvasJobPage } from "./canvasJob/CanvasJobPage";
+import { FunnelWorkspace } from "./canvasJob/FunnelWorkspace";
+import { DemoApplication } from "./demo/DemoApplication";
+import { AssessmentExperience } from "./hiring/AssessmentExperience";
 import { CollectJobPage } from "./CollectJobPage";
 import { JobDetailsPage } from "./JobDetailsPage";
 import { CommunicationsTab } from "./job/CommunicationsTab";
@@ -19,11 +22,15 @@ export function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/demo/trip/:id/:assignmentId" element={<TripAssignmentExperience />} />
+        <Route path="/demo/apply/:id" element={<DemoApplication />} />
+        <Route path="/demo/assessment/:id/:assessmentId/:candidateId" element={<AssessmentExperience />} />
         <Route element={<AppShell />}>
           <Route path="/" element={<JobsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/create-job" element={<CollectJobPage />} />
-          <Route path="/create-job-canvas" element={<CanvasJobPage />} />
+          <Route path="/create-job-canvas" element={<FunnelWorkspace />} />
+          <Route path="/jobs/:id/canvas" element={<FunnelWorkspace />} />
           <Route path="/role-profile" element={<RoleProfilePage />} />
           <Route path="/step-2" element={<ApplicationPage />} />
           <Route path="/step-3" element={<Step3Page />} />

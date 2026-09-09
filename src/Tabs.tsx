@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { tabKeyboard } from "./shared/tabKeyboard";
+import { useEffect, useRef, type ReactNode } from "react";
 
 export type TabItem = {
   id: string;
@@ -16,13 +17,24 @@ export function Tabs({
   onChange: (id: string) => void;
   ariaLabel: string;
 }) {
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  // Tab bars that don't fit their container scroll horizontally rather than wrapping
+  // (see .job-pagetabs); activating a clipped tab — by click, keyboard, or route change —
+  // should still bring it into view.
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [active]);
+
   return (
-    <div className="tabs" role="tablist" aria-label={ariaLabel}>
+    <div className="tabs" role="tablist" onKeyDown={tabKeyboard} aria-label={ariaLabel}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
+          ref={active === tab.id ? activeRef : undefined}
           type="button"
           role="tab"
+          tabIndex={active === tab.id ? 0 : -1}
           id={`tab-${tab.id}`}
           aria-selected={active === tab.id}
           aria-controls={`tabpanel-${tab.id}`}

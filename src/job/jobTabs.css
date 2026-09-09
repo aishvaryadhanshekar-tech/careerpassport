@@ -4,20 +4,26 @@
 /* Scoped so restyling the page-level bar cannot leak into the `.tabs`/`.tab-btn` rules in
  * styles/role-detail.css, which Role Profile, Step 4 and the Overview sub-tabs all share. */
 .job-pagetabs .tabs {
+  flex-wrap: nowrap;
+  min-width: 0;
   gap: 2px;
   margin-bottom: 0;
   border-bottom: 1px solid #d5d9dc;
 }
 
 .job-pagetabs .tab-btn {
+  flex: none;
+  min-width: 0;
   padding: 12px 18px;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 /* `.jd-header`'s border-bottom comes from `.job-pagetabs .tabs` above, so the gap to the tab
  * body only needs to come from `.preview-main`'s own top padding — not doubled up here. */
 .job-tab-body {
   padding-top: 0;
+  min-width: 0;
 }
 
 /* Sticky Role Details / Application Summary sub-tabs inside the Overview tab (see
@@ -33,6 +39,7 @@
 }
 
 .jo-subtabs-sticky .tabs {
+  flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
@@ -54,6 +61,7 @@
   background: #fdf6e8;
   border: 1px solid #eadfc4;
   border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .next-step-nudge-link {
@@ -66,12 +74,14 @@
 /* Post-publish "done for you / needs your call" panel (see NextStepNudge.tsx JobActionSummary). */
 .job-action-summary {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  align-items: start;
   gap: 16px;
   margin-bottom: 16px;
 }
 
 .job-action-summary-section {
+  min-width: 0;
   padding: 14px 16px;
   background: #fff;
   border: 1px solid #e2e6e9;
@@ -102,6 +112,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .job-action-summary-contact {
@@ -122,6 +133,7 @@
   align-items: center;
   gap: 10px;
   padding: 6px 0;
+  flex-wrap: wrap;
 }
 
 .job-action-row-name {
@@ -139,6 +151,8 @@
   align-items: center;
   gap: 6px;
   margin-left: auto;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* The Application Summary sub-tab's edit toggle sits above the card, not inside its header,
@@ -190,4 +204,40 @@
  * and its columns scroll horizontally rather than reflowing. */
 .preview-page .preview-main.is-wide {
   max-width: none;
+}
+
+@media (max-width: 900px) {
+  .job-action-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .job-pagetabs .tab-btn {
+    flex: none;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .job-action-row-actions {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .jo-subtabs-sticky {
+    padding-top: 8px;
+  }
+
+  .jd-page .comms-item {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .jd-page .comms-item-main {
+    flex: 1 1 180px;
+  }
+
+  .jd-page .comms-item-tags {
+    justify-content: flex-start;
+  }
 }

@@ -1,0 +1,35 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/canvasJob/funnel.css"
+        ],
+        "createdAt": "2026-09-06T07:38:48.056Z",
+        "reason": "prior audits (2026-09-06 impeccable-ui-audit, CAN-canvas findings) explicitly preserve fn-job/fn-trip/fn-communication colored borders as deliberate semantic node-type distinctions, not decorative accents"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "src/canvasJob/funnel.css"
+        ],
+        "createdAt": "2026-09-06T07:38:48.101Z",
+        "reason": "same semantic node-type border colors as above; rounded card + colored border is the intentional node treatment across the canvas graph"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/hiring/hiring.css"
+        ],
+        "createdAt": "2026-09-06T07:38:48.138Z",
+        "reason": "fn-capability border-left matches the same preserved semantic node-type color scheme as fn-trip/fn-communication in funnel.css"
+      }
+    ]
+  }
+}

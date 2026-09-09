@@ -1,19 +1,14 @@
 import { persistableDraft } from "./applyAnalysis";
 import { uid } from "./files";
 import { memoryStorage } from "./memoryStore";
-import {
-  SEEDED_JOB_CREATED_AT,
-  SEEDED_JOB_ID,
-  SEEDED_JOB_UPDATED_AT,
-  seedJobDraft,
-} from "./seedJobs";
+import { seedJobExamples } from "./seedJobs";
 import { STORAGE_KEY, saveDraft } from "./storage";
 import { createDraft, type JobDraft, type PublishDestinations } from "./types";
 
 export const JOBS_KEY = "cp.jobs.v1";
 export const CURRENT_JOB_ID_KEY = "cp.currentJobId";
 /** Set once ensureSeedJobs has run, so deleting the seeded job does not resurrect it. */
-export const JOBS_SEEDED_KEY = "cp.jobs.seeded.v1";
+export const JOBS_SEEDED_KEY = "cp.jobs.seeded.v2";
 
 export type JobStatus = "Draft" | "Published";
 
@@ -46,7 +41,7 @@ function writeList(jobs: JobRecord[]) {
 }
 
 /**
- * Writes the demo job the first time it is called, and only then. Guarded by its own marker
+ * Writes the sample job catalogue the first time it is called, and only then. Guarded by its own marker
  * rather than by "is the list empty?" — otherwise deleting the seeded job would bring it
  * straight back on the next read. Safe to call more than once.
  */
@@ -54,21 +49,18 @@ export function ensureSeedJobs(): void {
   if (memoryStorage.getItem(JOBS_SEEDED_KEY)) return;
   memoryStorage.setItem(JOBS_SEEDED_KEY, "1");
   const existing = readList();
-  if (existing.some((job) => job.id === SEEDED_JOB_ID)) return;
-  const draft = seedJobDraft();
-  const record: JobRecord = {
-    id: SEEDED_JOB_ID,
-    createdAt: SEEDED_JOB_CREATED_AT,
-    updatedAt: SEEDED_JOB_UPDATED_AT,
-    status: "Published",
-    title: draft.fields.designation.value,
-    location: draft.fields.location.value,
-    workMode: draft.fields.workMode.value,
-    salaryLabel: salaryLabel(draft),
-    publishDestinations: draft.publishDestinations,
-    snapshot: persistableDraft(draft),
-  };
-  writeList([...existing, record]);
+  const additions: JobRecord[] = seedJobExamples()
+    .filter(example => !existing.some(job => job.id === example.id))
+    .map(({ id, createdAt, updatedAt, status, draft }) => ({
+      id, createdAt, updatedAt, status,
+      title: draft.fields.designation.value,
+      location: draft.fields.location.value,
+      workMode: draft.fields.workMode.value,
+      salaryLabel: salaryLabel(draft),
+      publishDestinations: draft.publishDestinations,
+      snapshot: persistableDraft(draft),
+    }));
+  writeList([...existing, ...additions]);
 }
 
 export function listJobs(): JobRecord[] {
@@ -149,6 +141,12 @@ export function getJob(id: string): JobRecord | null {
 
 export function deleteJobs(ids: string[]) {
   const drop = new Set(ids);
+  if (typeof window !== "undefined") {
+    for (const id of ids) {
+      window.localStorage.removeItem(`cp.demo.v1.project.${id}`);
+      window.localStorage.removeItem(`cp.funnel.${id}`);
+    }
+  }
   writeList(readList().filter((job) => !drop.has(job.id)));
   const current = memoryStorage.getItem(CURRENT_JOB_ID_KEY);
   if (current && drop.has(current)) {

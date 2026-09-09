@@ -138,7 +138,7 @@ export function JobActionSummary({
   return (
     <div className="job-action-summary">
       <section className="job-action-summary-section">
-        <h3>Done for you</h3>
+        <h3>Completed</h3>
         <ul className="job-action-summary-stats">
           <li>{sourced} candidate{sourced === 1 ? "" : "s"} sourced</li>
           <li>{tripsCompleted} Trip{tripsCompleted === 1 ? "" : "s"} completed and scored</li>
@@ -147,9 +147,9 @@ export function JobActionSummary({
       </section>
 
       <section className="job-action-summary-section">
-        <h3>Needs your call</h3>
+        <h3>Needs attention</h3>
         {!hasAnyNeedsCall ? (
-          <p className="jd-empty">Nothing needs you right now.</p>
+          <p className="jd-empty">No pending actions.</p>
         ) : (
           <>
             <ul className="job-action-summary-stats">
@@ -171,7 +171,7 @@ export function JobActionSummary({
               ) : null}
               {flagged > 0 ? (
                 <li>
-                  {flagged} candidate{flagged === 1 ? "" : "s"} flagged by the agent for a closer look
+                  {flagged} candidate{flagged === 1 ? "" : "s"} flagged for review
                   <Link to={`/jobs/${jobId}/pipeline`} className="next-step-nudge-link">
                     Review in Pipeline
                   </Link>

@@ -1,3 +1,4 @@
+import { useDialogFocus } from "../shared/useDialogFocus";
 import { useEffect, useRef, useState, type JSX } from "react";
 import type { PipelineStage } from "../types";
 
@@ -27,6 +28,7 @@ export function BulkActionsBar({
 }): JSX.Element {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [moveValue, setMoveValue] = useState("");
+  const dialogRef = useDialogFocus(confirmOpen, () => setConfirmOpen(false));
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -97,6 +99,8 @@ export function BulkActionsBar({
           <div
             className="jobs-dialog"
             role="alertdialog"
+            ref={dialogRef}
+            tabIndex={-1}
             aria-modal="true"
             aria-labelledby="bulk-archive-title"
             aria-describedby="bulk-archive-copy"

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useEffect, useRef, useState, type JSX, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import {
   MESSAGE_CHANNEL_LABELS,
   MESSAGE_INTENT_LABELS,
@@ -33,6 +33,8 @@ export function SendMessageMenu({
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<MessageTemplate | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const templates = templatesForStage(stageId);
 
   useEffect(() => {
@@ -51,14 +53,42 @@ export function SendMessageMenu({
     };
   }, [open]);
 
+  // TRP-08: initial focus + arrow-key navigation for the template choice step, since role="menu"
+  // alone doesn't supply either. The nested preview/form step drops the menu role entirely
+  // (arbitrary form content isn't valid inside role="menu") and instead gets its own focus.
+  useEffect(() => {
+    if (!open) return;
+    const target = preview
+      ? menuRef.current?.querySelector<HTMLButtonElement>(".msg-preview-back")
+      : menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]');
+    target?.focus();
+  }, [open, preview]);
+
+  function onMenuKeyDown(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (preview) return;
+    const items = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? []);
+    if (!items.length) return;
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+    let destination: number | null = null;
+    if (e.key === "ArrowDown") destination = (index + 1 + items.length) % items.length;
+    else if (e.key === "ArrowUp") destination = (index - 1 + items.length) % items.length;
+    else if (e.key === "Home") destination = 0;
+    else if (e.key === "End") destination = items.length - 1;
+    if (destination === null) return;
+    e.preventDefault();
+    items[destination]?.focus();
+  }
+
   function close() {
     setOpen(false);
     setPreview(null);
+    triggerRef.current?.focus();
   }
 
   return (
     <div className="msg-menu-wrap" ref={wrapRef} onClick={(e) => e.stopPropagation()}>
       <button
+        ref={triggerRef}
         type="button"
         className={buttonClassName}
         aria-haspopup="menu"
@@ -76,7 +106,13 @@ export function SendMessageMenu({
       </button>
 
       {open ? (
-        <div className="msg-menu" role="menu">
+        <div
+          className="msg-menu"
+          ref={menuRef}
+          role={preview ? undefined : "menu"}
+          aria-label={preview ? undefined : "Templates for this stage"}
+          onKeyDown={onMenuKeyDown}
+        >
           {preview ? (
             <div className="msg-preview">
               <button

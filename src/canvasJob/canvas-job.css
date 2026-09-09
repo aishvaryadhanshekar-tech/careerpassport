@@ -48,6 +48,8 @@
   min-width: 260px;
 }
 
+.canvas-node:nth-child(n) { transition: transform 200ms ease-out; }
+
 .canvas-node-handle {
   opacity: 0;
   pointer-events: none;
@@ -122,8 +124,8 @@
 }
 
 .canvas-node-done .canvas-node-icon {
-  background: #0f766e;
-  color: #fff;
+  background: #e7f1eb;
+  color: #263c37;
 }
 
 .canvas-node-text {
@@ -169,8 +171,8 @@
 }
 
 .canvas-node-status-pill-done {
-  background: #0f766e;
-  color: #fff;
+  background: #e7f1eb;
+  color: #263c37;
 }
 
 /* --- edges --- */
@@ -213,7 +215,6 @@
   font-size: 13px;
   font-weight: 600;
   border: 1px solid #e2e6e9;
-  border-left: 3px solid #667085;
   box-shadow: 0 16px 40px rgba(31, 27, 22, 0.12);
   max-width: min(520px, calc(100% - 48px));
 }
@@ -228,10 +229,6 @@
   border-radius: 999px;
   background: rgba(102, 112, 133, 0.12);
   color: #667085;
-}
-
-.canvas-ai-nudge-progress {
-  border-left-color: #b45309;
 }
 
 .canvas-ai-nudge-progress .canvas-ai-nudge-icon {
@@ -378,8 +375,8 @@
 
 .canvas-ask-ai-msg-user {
   align-self: flex-end;
-  background: #0f766e;
-  color: #fff;
+  background: #e7f1eb;
+  color: #263c37;
 }
 
 .canvas-ask-ai-msg-ai {
@@ -468,6 +465,32 @@
   flex-direction: column;
   gap: 16px;
 }
+
+/* Funnel stage detail panels */
+.canvas-funnel-panel { gap: 18px; }
+.funnel-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #dfe5e7;
+  border-radius: 14px;
+  background: #fff;
+}
+.funnel-count { font-size: 32px; line-height: 1; font-weight: 800; color: #0f766e; }
+.funnel-summary small, .canvas-candidate-row small, .canvas-trip-row small, .canvas-communication-row small { display: block; margin-top: 3px; color: #667085; font-size: 12px; }
+.canvas-funnel-section { padding: 14px; border: 1px solid #dfe5e7; border-radius: 14px; background: #fff; }
+.canvas-funnel-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.canvas-funnel-section-head h3 { margin: 0; font-size: 14px; }
+.canvas-funnel-section-head > span { color: #667085; font-size: 12px; }
+.canvas-candidate-list, .canvas-trip-row, .canvas-communication-row { display: flex; flex-direction: column; gap: 8px; }
+.canvas-candidate-row, .canvas-trip-row, .canvas-communication-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #eef0f2; }
+.canvas-candidate-row > div, .canvas-trip-row > div, .canvas-communication-row > div { flex: 1; min-width: 0; }
+.canvas-candidate-row strong, .canvas-trip-row strong, .canvas-communication-row strong { font-size: 13px; }
+.candidate-status, .canvas-communication-row > span { flex: none; color: #0f766e; font-size: 11px; font-weight: 700; }
+.canvas-trip-row select { border: 1px solid #d0d5dd; border-radius: 8px; padding: 6px; background: #fff; color: #1f1b16; font-size: 12px; }
+.btn.small { padding: 6px 9px; font-size: 11px; white-space: nowrap; }
+.muted { color: #667085; font-size: 13px; margin: 0; }
 
 .canvas-application-meta,
 .canvas-publish-actions {

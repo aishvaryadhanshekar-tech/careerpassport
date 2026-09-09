@@ -1,7 +1,9 @@
+import { useDialogFocus } from "./shared/useDialogFocus";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createJobEntryRoute } from "./canvasJob/creationEntry";
 import { filterJobs } from "./jobsListQuery";
+import { demoService } from './demo/service';
 import {
   deleteJobs,
   formatUpdated,
@@ -17,12 +19,18 @@ type View = "table" | "cards";
 export function JobsPage() {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<JobRecord[]>(() => listJobs());
-  const [view, setView] = useState<View>("table");
+  // Narrow screens default to cards — the table needs real width for job identity and salary
+  // to stay readable — but any explicit choice (see setView below) always wins from then on.
+  const [view, setView] = useState<View>(() =>
+    typeof window !== "undefined" && window.innerWidth < 780 ? "cards" : "table",
+  );
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [menuId, setMenuId] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
   const [pendingDelete, setPendingDelete] = useState<string[] | null>(null);
+  const dialogRef = useDialogFocus(Boolean(pendingDelete), () => setPendingDelete(null));
   const cancelRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,7 +101,7 @@ export function JobsPage() {
   function open(id: string) {
     const job = getJob(id);
     if (job?.status === "Published") {
-      navigate(`/jobs/${id}`);
+      navigate(`/jobs/${id}/canvas`);
       return;
     }
     if (openJob(id)) navigate(createJobEntryRoute());
@@ -101,6 +109,15 @@ export function JobsPage() {
 
   function toggleOne(id: string, on: boolean) {
     setSelected((ids) => (on ? [...ids, id] : ids.filter((item) => item !== id)));
+  }
+
+  function status(job: JobRecord) {
+    const value = demoService().get(job.id)?.operations?.setup.status;
+    return value ? value[0].toUpperCase() + value.slice(1) : job.status;
+  }
+  async function copyLink(id: string) {
+    try { await navigator.clipboard.writeText(`${location.origin}/demo/apply/${id}`); setNotice('Application link copied.'); }
+    catch { setNotice('Could not copy. Open the job to copy the application link manually.'); }
   }
 
   function toggleAll(on: boolean) {
@@ -139,6 +156,7 @@ export function JobsPage() {
           {isEmpty ? "Jobs" : `Jobs (${jobs.length})`}
         </h1>
         <div className="jobs-actions">
+          <button className="btn" aria-label="Job settings" onClick={() => navigate('/settings')}>Settings</button>
           {selected.length > 0 ? (
             <>
               <span className="jobs-selected-count">
@@ -208,15 +226,15 @@ export function JobsPage() {
       </header>
 
       <div className="jobs-body">
+        {notice && <p role="status">{notice}</p>}
         <div className="jobs-panel">
           <div className="jobs-panel-body">
             {isEmpty ? (
               <div className="empty-jobs">
                 <JobsEmptyIllustration />
-                <h2 className="empty-jobs-title">Welcome to your jobs</h2>
+                <h2 className="empty-jobs-title">No jobs yet</h2>
                 <p className="empty-jobs-sub">
-                  Jobs help you collect the role details and start hiring. Create
-                  a job to get started.
+                  Create a job to start hiring.
                 </p>
                 <button
                   type="button"
@@ -304,7 +322,7 @@ export function JobsPage() {
                         <td>{job.workMode}</td>
                         <td>{job.salaryLabel}</td>
                         <td>
-                          <span className="status-loz">{job.status}</span>
+                          <span className="status-loz">{status(job)}</span>
                         </td>
                         <td className="num">{formatUpdated(job.updatedAt)}</td>
                         <td
@@ -313,6 +331,7 @@ export function JobsPage() {
                           onKeyDown={stopRow}
                         >
                           <JobMenu
+                            onCopy={() => void copyLink(job.id)}
                             open={menuId === job.id}
                             label={`Actions for ${job.title}`}
                             onToggle={() =>
@@ -342,6 +361,7 @@ export function JobsPage() {
                         onClick={(e) => e.stopPropagation()}
                       />
                       <JobMenu
+                        onCopy={() => void copyLink(job.id)}
                         open={menuId === job.id}
                         label={`Actions for ${job.title}`}
                         onToggle={() =>
@@ -357,7 +377,7 @@ export function JobsPage() {
                     >
                       <div className="job-card-top">
                         <h2>{job.title}</h2>
-                        <span className="status-loz">{job.status}</span>
+                        <span className="status-loz">{status(job)}</span>
                       </div>
                       <p>
                         {job.location} · {job.workMode}
@@ -381,6 +401,8 @@ export function JobsPage() {
           <div
             className="jobs-dialog"
             role="alertdialog"
+            ref={dialogRef}
+            tabIndex={-1}
             aria-modal="true"
             aria-labelledby="jobs-delete-title"
             aria-describedby="jobs-delete-copy"
@@ -413,11 +435,13 @@ function stopRow(e: { stopPropagation: () => void }) {
 }
 
 function JobMenu({
+  onCopy,
   open,
   label,
   onToggle,
   onDelete,
 }: {
+  onCopy: () => void;
   open: boolean;
   label: string;
   onToggle: () => void;
@@ -437,6 +461,7 @@ function JobMenu({
       </button>
       {open ? (
         <div className="job-menu-pop" role="menu">
+          <button type="button" role="menuitem" className="job-menu-item" onClick={onCopy}>Copy application link</button>
           <button
             type="button"
             role="menuitem"

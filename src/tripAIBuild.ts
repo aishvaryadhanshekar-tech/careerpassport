@@ -96,6 +96,120 @@ function caseStudyQuestions(cards: InferenceCard[], difficulty: Difficulty): Cus
   });
 }
 
+function binaryChoiceQuestions(cards: InferenceCard[], difficulty: Difficulty): CustomQuestion[] {
+  const redFlags = sentencesOf(cardContent(cards, "redFlags"));
+  const tribal = sentencesOf(cardContent(cards, "tribalDetails"));
+  const seeds = [...redFlags, ...tribal];
+  const fallback = [
+    "You'd rather ship something imperfect today than something polished next week.",
+    "A second opinion is worth pausing for, even under deadline pressure.",
+    "The instructions were clear enough — no need to ask a clarifying question.",
+  ];
+  const source = seeds.length > 0 ? seeds : fallback;
+  const count = Math.min(Math.max(source.length, 2), maxCountForDifficulty(4, difficulty));
+  return Array.from({ length: count }, (_, i) => {
+    const seed = source[i % source.length];
+    return question({ prompt: seed, type: "multiple_choice", options: ["Agree", "Disagree"] });
+  });
+}
+
+function pickAndDefendQuestions(cards: InferenceCard[], difficulty: Difficulty): CustomQuestion[] {
+  const idealCandidate = sentencesOf(cardContent(cards, "idealCandidate"));
+  const skills = sentencesOf(cardContent(cards, "skills"));
+  const seeds = [...idealCandidate, ...skills];
+  const fallback = [
+    "Two reasonable paths forward, only time to take one",
+    "A trade-off between doing it right and doing it now",
+  ];
+  const source = seeds.length > 0 ? seeds : fallback;
+  const count = Math.min(Math.max(source.length, 1), maxCountForDifficulty(2, difficulty));
+  return Array.from({ length: count }, (_, i) => {
+    const seed = source[i % source.length];
+    return question({
+      prompt: `Given this trade-off, pick a side and defend it: ${seed}`,
+      type: "paragraph",
+    });
+  });
+}
+
+function rankOrderQuestions(cards: InferenceCard[], difficulty: Difficulty): CustomQuestion[] {
+  const evaluation = sentencesOf(cardContent(cards, "evaluationCriteria"));
+  const skills = sentencesOf(cardContent(cards, "skills"));
+  const seeds = [...evaluation, ...skills];
+  const fallback = ["Speed", "Quality", "Cost", "Team morale"];
+  const source = seeds.length > 0 ? seeds : fallback;
+  const count = Math.min(Math.max(source.length, 1), maxCountForDifficulty(1, difficulty));
+  return Array.from({ length: count }, (_, i) => {
+    const seed = source[i % source.length];
+    return question({
+      prompt: `Rank what matters most here, and explain why in that order: ${seed}`,
+      type: "paragraph",
+    });
+  });
+}
+
+function aiCriticQuestions(cards: InferenceCard[], difficulty: Difficulty): CustomQuestion[] {
+  const idealCandidate = sentencesOf(cardContent(cards, "idealCandidate"));
+  const evaluation = sentencesOf(cardContent(cards, "evaluationCriteria"));
+  const seeds = [...idealCandidate, ...evaluation];
+  const fallback = ["Your first answer skipped the failure case — what happens when it breaks?"];
+  const source = seeds.length > 0 ? seeds : fallback;
+  const count = Math.min(Math.max(source.length, 1), maxCountForDifficulty(1, difficulty));
+  return Array.from({ length: count }, (_, i) => {
+    const seed = source[i % source.length];
+    return question({
+      prompt: `An interviewer pushes back on this: "${seed}" How do you respond?`,
+      type: "paragraph",
+    });
+  });
+}
+
+function codingRoundQuestions(cards: InferenceCard[], difficulty: Difficulty): CustomQuestion[] {
+  const skills = sentencesOf(cardContent(cards, "skills"));
+  const seeds = skills;
+  const fallback = ["Write the function signature and outline your approach before coding"];
+  const source = seeds.length > 0 ? seeds : fallback;
+  const count = Math.min(Math.max(source.length, 1), maxCountForDifficulty(2, difficulty));
+  return Array.from({ length: count }, (_, i) => {
+    const seed = source[i % source.length];
+    return question({
+      prompt: `Solve this and explain your approach: ${seed}`,
+      type: "paragraph",
+    });
+  });
+}
+
+function doADemoQuestions(cards: InferenceCard[], difficulty: Difficulty): CustomQuestion[] {
+  const idealCandidate = sentencesOf(cardContent(cards, "idealCandidate"));
+  const skills = sentencesOf(cardContent(cards, "skills"));
+  const seeds = [...idealCandidate, ...skills];
+  const fallback = ["Walk through a real piece of your work, live, as if presenting to the team"];
+  const source = seeds.length > 0 ? seeds : fallback;
+  const count = Math.min(Math.max(source.length, 1), maxCountForDifficulty(1, difficulty));
+  return Array.from({ length: count }, (_, i) => {
+    const seed = source[i % source.length];
+    return question({
+      prompt: `Record yourself working through this: ${seed}`,
+      type: "paragraph",
+    });
+  });
+}
+
+function flauntOrFlexQuestions(cards: InferenceCard[], difficulty: Difficulty): CustomQuestion[] {
+  const idealCandidate = sentencesOf(cardContent(cards, "idealCandidate"));
+  const seeds = idealCandidate;
+  const fallback = ["Show us something you made that you're proud of, and why it matters to you"];
+  const source = seeds.length > 0 ? seeds : fallback;
+  const count = Math.min(Math.max(source.length, 1), maxCountForDifficulty(1, difficulty));
+  return Array.from({ length: count }, (_, i) => {
+    const seed = source[i % source.length];
+    return question({
+      prompt: `Present your best work related to: ${seed}`,
+      type: "paragraph",
+    });
+  });
+}
+
 function spokenInstructionsFor(type: StageType): string {
   switch (type) {
     case "rapid_fire":
@@ -104,6 +218,20 @@ function spokenInstructionsFor(type: StageType): string {
       return "Pick the option that best matches how you'd actually respond.";
     case "case_study":
       return "Take your time and walk through your thinking in full sentences.";
+    case "binary_choice":
+      return "Answer with no middle option — go with your instinct.";
+    case "pick_and_defend":
+      return "Choose one side and argue for it — there's no credit for hedging.";
+    case "rank_order":
+      return "Order these by what matters most to you, and say why.";
+    case "ai_critic":
+      return "Respond to the pushback as you would in a live conversation.";
+    case "coding_round":
+      return "Write out your approach; working code matters more than polish here.";
+    case "do_a_demo":
+      return "Record yourself talking through the work, screen and voice together.";
+    case "flaunt_or_flex":
+      return "Show, don't just tell — bring the actual work.";
     default:
       return "";
   }
@@ -117,6 +245,20 @@ function questionsForType(type: StageType, cards: InferenceCard[], difficulty: D
       return multipleChoiceQuestions(cards, difficulty);
     case "case_study":
       return caseStudyQuestions(cards, difficulty);
+    case "binary_choice":
+      return binaryChoiceQuestions(cards, difficulty);
+    case "pick_and_defend":
+      return pickAndDefendQuestions(cards, difficulty);
+    case "rank_order":
+      return rankOrderQuestions(cards, difficulty);
+    case "ai_critic":
+      return aiCriticQuestions(cards, difficulty);
+    case "coding_round":
+      return codingRoundQuestions(cards, difficulty);
+    case "do_a_demo":
+      return doADemoQuestions(cards, difficulty);
+    case "flaunt_or_flex":
+      return flauntOrFlexQuestions(cards, difficulty);
     default:
       return [];
   }
@@ -144,11 +286,11 @@ function deriveTripTitle(draft: JobDraft): string {
 
 export function buildTripWithAI(
   draft: JobDraft,
-  opts: { difficulty: Difficulty; pipelineStageId: string },
+  opts: { difficulty: Difficulty; pipelineStageId: string; types?: StageType[] },
 ): Trip {
   const cards = deriveInferenceCards(draft);
   const spine = generateSpine(cards, draft);
-  const stages = generateTripRounds(cards, draft, DEFAULT_ROUND_TYPES, opts.difficulty);
+  const stages = generateTripRounds(cards, draft, opts.types ?? DEFAULT_ROUND_TYPES, opts.difficulty);
   const now = Date.now();
   return {
     id: uid(),

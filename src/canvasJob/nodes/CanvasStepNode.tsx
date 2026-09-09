@@ -4,7 +4,7 @@ import type { CanvasNodeStatus } from "../../types";
 export type CanvasStepNodeData = {
   title: string;
   subtitle: string;
-  icon: "details" | "roleProfile" | "application" | "publish";
+  icon: "details" | "roleProfile" | "application" | "publish" | "prospects" | "pipeline" | "interview";
   status: CanvasNodeStatus;
   onOpen: () => void;
 };
@@ -40,6 +40,15 @@ function NodeIcon({ icon }: { icon: CanvasStepNodeData["icon"] }) {
         <path d="M7 7h6M7 10h6M7 13h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       </svg>
     );
+  }
+  if (icon === "prospects") {
+    return <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.4"/><circle cx="14" cy="8" r="2" stroke="currentColor" strokeWidth="1.4"/><path d="M2.5 16c.6-3 2.1-4.5 4.5-4.5s3.9 1.5 4.5 4.5M11 15.5c.4-2 1.4-3.2 3-3.2 1.7 0 2.7 1 3.2 3.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+  }
+  if (icon === "pipeline") {
+    return <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 5h14M3 10h10M3 15h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><circle cx="16" cy="10" r="2" fill="currentColor"/></svg>;
+  }
+  if (icon === "interview") {
+    return <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M6 8h8M6 11h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="m13 14 2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
   }
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">

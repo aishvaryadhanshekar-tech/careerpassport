@@ -1,0 +1,171 @@
+/* Reference-led Operate theme: flat surfaces, clear sections, restrained emphasis.
+   Imported last; behavior and responsive geometry remain in component-owned sheets. */
+:root {
+  --surface: #fff;
+  --surface-subtle: #f4f6f9;
+  --surface-selected: #edf1f7;
+  --border-subtle: #dce2e9;
+  --text-primary: #202b3b;
+  --text-secondary: #626d7c;
+  --accent: #344c70;
+  --focus-ring: #44638c;
+  --reference-amber: #8a611b;
+  --reference-amber-soft: #fcf5e7;
+  --reference-rule: #e3e7ed;
+}
+body { background: #f5f7fa; color: var(--text-primary); }
+:where(h1,h2,h3,h4) { color: var(--text-primary); }
+.page-title, .jd-title { color: var(--text-primary); font-size: 26px; font-weight: 650; letter-spacing: -.6px; }
+::selection { background: #dfe7f2; color: #263851; }
+.page-sub, .page-prompt { color: var(--text-secondary); }
+/* Navigation separates workspace identity from personal settings. */
+.sidenav { height: 100dvh; background: #fff; border-color: var(--reference-rule); gap: 24px; }
+.workspace-brand-row { display: flex; align-items: center; gap: 8px; min-height: 36px; padding-inline: 6px; }
+.workspace-brand { color: #202d44; font-size: 15px; font-weight: 700; letter-spacing: -.4px; text-decoration: none; min-width: 0; }
+.sidenav .sidenav-profile-block { margin-top: auto; border-bottom: 0; border-top: 1px solid var(--reference-rule); padding-top: 14px; padding-bottom: 0; }
+.sidenav .sidenav-profile-panel { position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; z-index: 30; background: #fff; border: 1px solid var(--border-subtle); box-shadow: 0 8px 28px #1d2b4214; }
+.sidenav .sidenav-item.on { color: #293951; background: #eef2f7; border: 1px solid #e0e6ee; }
+.sidenav-avatar { background: #edf0f5; color: #344258; }
+.layout.sidenav-collapsed .workspace-brand { display: none; }
+.layout.sidenav-collapsed .workspace-brand-row { padding: 0; justify-content: center; }
+.layout.sidenav-collapsed .workspace-brand-row .sidenav-toggle { margin: 0; }
+.layout.sidenav-collapsed .sidenav-profile-panel { top: auto; bottom: 16px; left: 64px; right: auto; width: 240px; }
+.wizard-header { background: #f8f9fb; border-color: var(--reference-rule); }
+.wizard-header-inner { max-width: 1120px; }
+.stepper .stepper-step { display: flex; flex-direction: row; align-items: center; gap: 12px; background: transparent; border-radius: 8px; }
+.stepper-number { flex: 0 0 30px; height: 28px; display: grid; place-items: center; border: 1px solid #d4dce6; border-radius: 6px; font-size: 11px; font-weight: 500; color: #657185; }
+.stepper-copy { min-width: 0; }
+.stepper .stepper-step.current { background: transparent; color: var(--reference-amber); }
+.stepper .current .stepper-number { border-color: #b58c40; color: var(--reference-amber); background: var(--reference-amber-soft); border-radius: 50%; }
+.stepper .current .stepper-name { color: var(--reference-amber); }
+.stepper .stepper-name { font-weight: 600; }
+/* Shared actions, fields and selection: primary action wins, metadata supports. */
+.btn { color: var(--text-primary); border-color: #d6dee8; background: #fff; font-weight: 550; }
+.btn.primary, .compose-modal-btn-primary { background: #293c59; border-color: #293c59; color: #fff; }
+.btn.primary:hover { background: #21324c; }
+.btn.ghost, .btn.text { color: #465a76; }
+.btn.danger { color: #a33e36; }
+.pill-input, .pill-select, .point-list-field, .tag-input, .salary-input { border-color: #d8e0e9; color: var(--text-primary); border-radius: 8px; }
+.field label, .editable-field-label { color: #526077; font-weight: 550; }
+.choice-badge.selected { color: #2d4569; background: #edf2f8; border-color: #9baec6; }
+.tabs .tab-btn.active { border-bottom-color: #344c70; color: #283c5a; }
+.footer { border-color: var(--reference-rule); background: #fff; }
+/* Jobs, role summaries and review surfaces. */
+.jobs-header { background: #f8f9fb; border-color: var(--reference-rule); }
+.jobs-panel { border-color: var(--reference-rule); border-radius: 12px; box-shadow: none; }
+.jobs-table th { background: #f9fafc; color: #697586; font-size: 11px; letter-spacing: .7px; }
+.jobs-table td { border-color: #e8ecf1; }
+.jobs-table tbody tr:hover { background: #f6f8fb; }
+.jobs-table td { color: var(--text-secondary); }
+.jobs-table td b, .job-card h2 { color: #263851; }
+.view-toggle button.on { background: #eaf0f7; color: #334b6e; }
+.job-card { border-color: var(--reference-rule); box-shadow: none; }
+.preview-sidebar-card, .role-summary-card { border-color: var(--reference-rule); box-shadow: none; }
+.preview-sidebar-card { align-items: stretch; text-align: left; }
+.preview-sidebar-tags { justify-content: flex-start; }
+.preview-sidebar-summary { background: #f0f4f9; border-color: #e1e7f0; }
+.preview-sidebar-summary p { color: #465d79; }
+.jd-summary-name, .preview-sidebar-name { color: #243650; font-size: 19px; letter-spacing: -.35px; }
+.jd-summary-stat-label, .preview-sidebar-detail-row dt { color: #667286; font-size: 11px; letter-spacing: .3px; }
+/* Editors use proximity and a divider instead of a box around each section. */
+.application-editors > .app-card,
+.role-profile-page .jd-cards > .app-card,
+.preview-content .jd-cards > .app-card,
+.trip-builder-page .trip-card,
+.pipeline-trip-workspace .trip-card { background: transparent; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+.application-editors > .app-card > .app-card-head,
+.role-profile-page .jd-cards > .app-card > .app-card-head,
+.preview-content .jd-cards > .app-card > .app-card-head,
+.trip-builder-page .trip-card-head,
+.pipeline-trip-workspace .trip-card-head { background: transparent; padding: 0 0 14px; border-bottom: 1px solid #dce3ec; }
+.application-editors > .app-card > .app-card-body,
+.role-profile-page .jd-cards > .app-card > .app-card-body,
+.preview-content .jd-cards > .app-card > .app-card-body,
+.trip-builder-page .trip-card-body,
+.pipeline-trip-workspace .trip-card-body { padding: 20px 0 0; }
+.application-editors { gap: 32px; }
+.app-card-head h2, .trip-card-head h2, .trip-card-head h3 { font-size: 14px; font-weight: 600; color: #3e4e64; }
+.context-block + .context-block { padding-top: 24px; margin-top: 24px; }
+.context-block-head { margin-bottom: 12px; }
+.context-block-head h3 { font-size: 14px; font-weight: 550; }
+.context-text { background: #fff; border-color: #d9e1eb; color: #2f3e52; font-size: 14px; line-height: 1.65; }
+.field-row { border-color: #e3e8ef; padding-block: 14px; }
+.field-row strong { font-weight: 550; }
+.field-required { color: #69778a; }
+.application-split > .preview-pane { background: #eef1f5; border-radius: 18px; padding: 20px 12px; }
+.trip-builder-col-left { background: #eef1f5; border-radius: 18px; padding: 20px 12px; }
+.trip-builder-page .trip-builder-header { padding-block: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--reference-rule); }
+.trip-builder-page .trip-builder-header .jd-title { font-size: 26px; }
+.trip-builder-header .jd-header-row { margin-bottom: 0; }
+.trips-list-row { border-color: var(--reference-rule); border-radius: 10px; box-shadow: none; }
+.trips-list-row:hover { background: #f7f9fc; border-color: #b5c3d5; }
+.trips-list-row-title { color: #263851; font-weight: 600; }
+.question-block { border-color: var(--reference-rule); }
+.option-input, .q-prompt { color: #2b3a50; }
+.trip-round-tab.active { color: #344c70; border-bottom-color: #344c70; }
+/* Workflow chrome is neutral; graph colors still explain node roles and outcomes. */
+.funnel-workspace { --flow-ink: #25354a; --flow-muted: #657286; --flow-line: #e0e6ed; background: #f5f7fa; color: var(--flow-ink); }
+.funnel-workspace .funnel-surface { background: #f5f7fa; }
+.funnel-workspace .funnel-header h1 { color: #25354a; }
+.funnel-workspace .funnel-primary { background: #2f4464; border-color: #2f4464; color: #fff; }
+.funnel-workspace .funnel-primary:hover { background: #263955; }
+.funnel-workspace .pipeline-nav > button[aria-selected=true] { color: #2f4464; }
+.funnel-workspace .pipeline-nav > button[aria-selected=true]::after { background: #526c91; }
+.funnel-workspace .pipeline-review-banner { background: #f1f4f8; border-color: #e1e7ef; }
+.funnel-workspace .pipeline-review-banner strong { color: #354964; }
+.funnel-workspace .funnel-inspector > header { background: #fafbfd; }
+.funnel-workspace .funnel-inspector > header h2 { color: #263850; }
+.funnel-workspace .pipeline-detail-breadcrumbs { background: #fff; }
+.funnel-workspace .pipeline-library-filters { background: #f5f7fa; border-color: #e3e8ef; }
+.funnel-workspace .pipeline-picker { background: #f6f8fb; border-color: #d6e0ec; }
+.funnel-workspace .fn-workflow-tools { border-color: #e2e8ed; }
+.funnel-workspace .fn-workflow-tools button { background: #f7f9fc; color: #52677f; border-color: #e1e7ed; }
+.funnel-workspace .canvas-authoring-toolbar { border-color: #d7e1eb; box-shadow: 0 4px 10px #24354c08, 0 12px 30px #24354c12; }
+.funnel-workspace .canvas-global-trigger { color: #365375; background: #eff3f8; }
+/* Hiring capabilities, libraries, candidate rows and dense evidence. */
+.hiring-workspace { color: #2d3c50; }
+.hiring-workspace h2 { color: #26374e; font-size: 21px; }
+.hiring-workspace h3 { color: #394d65; font-weight: 600; }
+.hiring-workspace .hire-field > span { color: #52647c; font-size: 12px; font-weight: 550; }
+.hiring-workspace .hire-card { border-color: #e0e6ee; box-shadow: none; }
+.hiring-workspace .hire-card .hire-card { border: 0; border-top: 1px solid #e3e8ef; border-radius: 0; padding-inline: 0; background: transparent; }
+.hiring-workspace .hire-tabs { border-bottom: 1px solid #dce3ed; }
+.hiring-workspace .hire-tabs.hire-tabs button.is-active { color: #344f73; background: transparent; border-color: transparent; border-bottom-color: #344f73; }
+.hiring-workspace .hire-table th { color: #627187; background: #f6f8fb; font-size: 11px; }
+.hiring-workspace .hire-table td { border-color: #e4e9f0; }
+.hiring-workspace .hire-muted, .hiring-workspace .hire-card small { color: #657386; }
+.pipeline-trip-library-row, .pipeline-candidate-row { box-shadow: none; }
+.funnel-workspace .pipeline-trip-library-row { border-color: #e2e8ef; padding: 16px; border-radius: 9px; }
+.funnel-workspace .pipeline-trip-library-row:hover { background: #f5f8fc; }
+.pipeline-candidate-row { border-color: #e0e6ef; padding: 16px; }
+.pipeline-candidate-row:hover { background: #f5f8fc; border-color: #a8bbd0; }
+.pipeline-candidate-row strong { color: #2b3d57; }
+.candidate-card, .drawer { border-color: #dfe6ee; }
+.drawer-head { background: #f8fafc; border-color: #e0e6ee; }
+/* Candidate-facing pages share the same quiet visual frame. */
+.demo-application, .hire-candidate-page { background: #f3f5f9; color: #2d3d53; }
+.demo-application > main { border-color: #e0e6ef; border-radius: 16px; box-shadow: 0 6px 24px #25374b06; }
+.demo-application h1 { color: #24364e; font-size: 27px; font-weight: 650; letter-spacing: -.5px; }
+.demo-application h2 { color: #3d506b; font-weight: 600; }
+.demo-application input, .demo-application textarea, .demo-application select { border-color: #d9e1eb; }
+.demo-application button[type=submit] { background: #30496b; color: white; }
+.demo-application .demo-context, .demo-application small { color: #65758b; }
+@media (max-width: 1024px) {
+  .stepper .stepper-step { gap: 8px; padding-inline: 8px; }
+  .stepper-number { flex-basis: 26px; height: 26px; }
+}
+@media (max-width: 720px) {
+  .sidenav { height: auto; gap: 8px; }
+  .workspace-brand-row { padding: 0; }
+  .workspace-brand { display: none; }
+  .sidenav .sidenav-profile-block { margin: 0 0 0 auto; border: 0; padding: 0; flex: 1; min-width: 0; }
+  .sidenav .sidenav-profile-panel { bottom: auto; top: calc(100% + 8px); left: auto; width: min(260px, calc(100vw - 24px)); }
+  .layout.sidenav-collapsed .sidenav-profile-panel { top: calc(100% + 8px); bottom: auto; left: auto; right: 0; width: min(260px, calc(100vw - 24px)); }
+  .stepper-number { display: none; }
+  .stepper .stepper-step { padding: 8px 5px; }
+  .wizard-header .page-title { font-size: 24px; }
+  .trip-builder-page .trip-builder-header { padding-block: 16px; }
+  .trip-builder-page .trip-builder-header .jd-title { font-size: 24px; }
+  .application-split > .preview-pane, .trip-builder-col-left { padding: 16px 8px; border-radius: 12px; }
+  .application-editors { gap: 26px; }
+}

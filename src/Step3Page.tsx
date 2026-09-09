@@ -111,7 +111,7 @@ export function Step3Page() {
 
   return (
     <div className="app-shell create-job preview-page">
-      <main className="preview-main">
+      <section className="preview-main">
         <div className="preview-layout">
           <RoleSidebar
             draft={draft}
@@ -149,7 +149,7 @@ export function Step3Page() {
             </TabPanel>
           </div>
         </div>
-      </main>
+      </section>
       <footer className="footer">
         <div className="footer-actions">
           <button type="button" className="btn ghost" onClick={() => navigate(wizardBackTo(4))}>

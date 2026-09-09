@@ -58,8 +58,7 @@ export function CommunicationsTab(): JSX.Element {
       <header className="comms-tab-head">
         <h2>Templates</h2>
         <p>
-          Messages a hiring manager can send from the Pipeline board. Each card offers the
-          templates scoped to that candidate's stage, plus anything listed under Any stage.
+          Available in Pipeline by candidate stage, plus templates for any stage.
         </p>
       </header>
 
@@ -75,14 +74,17 @@ export function CommunicationsTab(): JSX.Element {
             </div>
             <ul className="comms-list">
               {group.templates.map((template) => {
-                const open = openId === template.id;
+                // TRP-07: keyed by group+template, not just template.id — a template shared
+                // across multiple stages must expand independently in each stage's list.
+                const key = `${group.key}-${template.id}`;
+                const open = openId === key;
                 return (
-                  <li key={`${group.key}-${template.id}`}>
+                  <li key={key}>
                     <button
                       type="button"
                       className={`comms-item intent-${template.intent}`}
                       aria-expanded={open}
-                      onClick={() => setOpenId(open ? null : template.id)}
+                      onClick={() => setOpenId(open ? null : key)}
                     >
                       <span className="comms-item-main">
                         <span className="comms-item-name">{template.name}</span>

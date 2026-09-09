@@ -71,7 +71,7 @@ export function updateTrip(draft: JobDraft, tripId: string, patch: Partial<Trip>
   return {
     ...draft,
     trips: draft.trips.map((trip) =>
-      trip.id === tripId ? { ...trip, ...patch, updatedAt: Date.now() } : trip,
+      trip.id === tripId && trip.status !== "published" ? { ...trip, ...patch, updatedAt: Date.now() } : trip,
     ),
   };
 }
@@ -85,7 +85,7 @@ export function duplicateTrip(draft: JobDraft, tripId: string): { draft: JobDraf
   if (!source) return { draft, tripId };
   const now = Date.now();
   const clone: Trip = {
-    ...source,
+    ...structuredClone(source),
     id: uid(),
     title: `${source.title} (copy)`,
     status: "draft",

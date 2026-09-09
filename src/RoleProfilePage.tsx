@@ -119,7 +119,7 @@ export function RoleProfilePage() {
 
   return (
     <div className="app-shell create-job preview-page role-profile-page">
-      <main className="preview-main">
+      <section className="preview-main">
         <div className="preview-layout">
           <RoleSidebar
             draft={draft}
@@ -175,7 +175,7 @@ export function RoleProfilePage() {
         </TabPanel>
           </div>
         </div>
-      </main>
+      </section>
       <footer className="footer">
         <div className="footer-actions">
           <button type="button" className="btn ghost" onClick={() => navigate(wizardBackTo(2))}>

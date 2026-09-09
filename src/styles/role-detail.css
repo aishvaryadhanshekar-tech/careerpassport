@@ -37,6 +37,7 @@
 }
 
 .preview-sidebar-name {
+  overflow-wrap: anywhere;
   margin: 0;
   font-size: 17px;
   font-weight: 700;
@@ -107,7 +108,7 @@
   margin: 0 0 2px;
   font-size: 11px;
   font-weight: 600;
-  color: #98a2b3;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -135,7 +136,7 @@
   margin: 0;
   font-size: 11px;
   font-weight: 600;
-  color: #98a2b3;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -188,6 +189,8 @@
   gap: 4px;
   border-bottom: 1px solid #d5d9dc;
   margin-bottom: 20px;
+  overflow-x: auto;
+  min-width: 0;
 }
 
 .role-profile-page .app-card + .tabs {
@@ -195,6 +198,7 @@
 }
 
 .tab-btn {
+  flex-shrink: 0;
   border: 0;
   background: none;
   padding: 10px 16px;
@@ -331,3 +335,14 @@
     padding: 24px 16px 40px;
   }
 }
+
+@container role-page (max-width: 860px) {
+  .preview-sidebar, .preview-content { grid-column: span 12; }
+  .preview-sidebar { position: static; }
+}
+
+@container role-page (max-width: 640px) {
+  .preview-page .preview-main { padding-inline: 0; }
+  .jd-summary-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.preview-page { container: role-page / inline-size; }

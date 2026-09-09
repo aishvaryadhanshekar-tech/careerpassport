@@ -43,8 +43,9 @@ export function Stepper({ current }: { current: StepIndex }) {
           const reachable = isStepReachable(current, step.index);
           const body = (
             <>
-              <span className="stepper-name">{step.name}</span>
-              <span className="stepper-blurb">{step.blurb}</span>
+              <span className="stepper-number" aria-hidden="true">{String(step.index).padStart(2, "0")}</span>
+              <span className="stepper-copy"><span className="stepper-name">{step.name}</span>
+              <span className="stepper-blurb">{step.blurb}</span></span>
             </>
           );
           return (

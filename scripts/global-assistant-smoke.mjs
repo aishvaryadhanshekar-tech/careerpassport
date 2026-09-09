@@ -1,0 +1,71 @@
+import { expect } from '@playwright/test';
+
+export async function runGlobalAssistantAudit(page) {
+  for (const width of [1512, 1024, 780, 390, 320]) {
+    await page.setViewportSize({ width, height: 720 });
+    await expect(page.getByRole('button', { name: /Build from scratch/ })).toBeInViewport();
+    const overflow = await page.locator('.funnel-start').evaluate(el => el.scrollWidth - el.clientWidth);
+    expect(overflow, `Start choices at ${width}px`).toBeLessThanOrEqual(1);
+    await page.screenshot({ path: `/tmp/careerpassport-start-${width}.png` });
+  }
+  await page.setViewportSize({ width: 1512, height: 982 });
+  await page.getByRole('button', { name: /Build from scratch/ }).click();
+  const panel = page.getByRole('region', { name: 'Canvas AI assistant' });
+  const input = page.getByLabel('Canvas AI request');
+  const trigger = page.getByRole('button', { name: 'Ask AI', exact: true });
+  await expect(page.locator('.react-flow__node')).toHaveCount(1);
+  await expect(page.locator('.funnel-inspector')).toHaveCount(0);
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(input).toBeFocused();
+  await expect(page.getByLabel('AI model', { exact: true })).toHaveValue('Claude');
+  const title = await page.locator('.funnel-header h1').textContent();
+  await page.getByRole('button', { name: 'Build pipeline', exact: true }).click();
+  await expect(input).toHaveValue(/Build a hiring pipeline/);
+  await page.getByRole('button', { name: 'Send canvas request' }).click();
+  await expect(panel).toContainText('Demo · no changes');
+  await expect(page.getByRole('log', { name: 'Canvas conversation' })).toContainText('Suggested pipeline:');
+  await expect(page.locator('.react-flow__node')).toHaveCount(1);
+  await expect(page.locator('.funnel-header h1')).toHaveText(title);
+  await page.getByLabel('AI model', { exact: true }).selectOption('Gemini');
+  await input.fill('My next idea');
+  await page.keyboard.press('Escape');
+  await expect(panel).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await expect(input).toHaveValue('My next idea');
+  await expect(page.getByLabel('AI model', { exact: true })).toHaveValue('Gemini');
+  await expect(page.getByRole('log', { name: 'Canvas conversation' })).toContainText('Build a hiring pipeline');
+  await page.locator('.react-flow__node[data-id="job"] .fn-main').evaluate(el => el.click());
+  await expect(page.locator('.funnel-inspector')).toBeVisible();
+  await expect(panel).toBeVisible();
+  await page.screenshot({ path: '/tmp/careerpassport-global-assistant-desktop.png', fullPage: true });
+  await page.getByRole('button', { name: 'Ask AI about Job configuration', exact: true }).click();
+  await expect(panel).toHaveCount(0);
+  await expect(page.locator('.canvas-node-chat')).toBeVisible();
+  await trigger.click();
+  await expect(panel).toBeVisible();
+  await expect(page.locator('.canvas-node-chat')).toHaveCount(0);
+  await expect(page.locator('.funnel-inspector')).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 982 });
+  await expect(input).toBeInViewport();
+  await expect(async () => {
+    const box = await panel.boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(390);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(982);
+  }).toPass();
+  await page.screenshot({ path: '/tmp/careerpassport-global-assistant-mobile.png', fullPage: true });
+  await page.setViewportSize({ width: 1512, height: 982 });
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.reload();
+  await expect(page.locator('.react-flow__node')).toHaveCount(1);
+  await expect(panel).toBeVisible();
+  await page.getByRole('button', { name: 'Close canvas AI assistant' }).click();
+  await page.locator('.react-flow__node[data-id="job"] .fn-main').evaluate(el => el.click());
+  await page.getByRole('button', { name: 'Add hiring stages', exact: true }).click();
+  await expect(page.locator('.react-flow__node')).not.toHaveCount(1);
+  await page.getByRole('button', { name: 'Close detail panel', exact: true }).click();
+  console.log('PASS: single-node scratch start/reload, global demo chat, model picker, task chips, scope switch, panel coexistence and mobile bounds; chat makes no workflow changes.');
+}

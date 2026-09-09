@@ -99,7 +99,9 @@ export function JobDetailsPage() {
               <BackArrowIcon />
             </Link>
             <h1 className="jd-title">{title}</h1>
-            <span className="jd-status-badge">Published</span>
+            <span className={`jd-status-badge jd-status-badge--${job.status.toLowerCase()}`}>
+              {job.status}
+            </span>
           </div>
           <div className="job-pagetabs">
             <Tabs
@@ -116,14 +118,14 @@ export function JobDetailsPage() {
       </header>
 
       {/* The kanban wants every pixel it can get, so it opts out of the 1200px page measure. */}
-      <main className={`preview-main${activeTab === "pipeline" ? " is-wide" : ""}`}>
+      <section className={`preview-main${activeTab === "pipeline" ? " is-wide" : ""}`}>
         <div className="job-tab-body">
           {/* Safe to cast: the early return above guarantees draft is non-null once we render this far. */}
           <Outlet
             context={{ jobId: id, job, draft, title, setDraft: setDraft as Dispatch<SetStateAction<JobDraft>> }}
           />
         </div>
-      </main>
+      </section>
 
       {publishPhase === "celebrating" ? (
         <PublishSuccess

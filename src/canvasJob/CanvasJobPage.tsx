@@ -11,6 +11,7 @@ import { ApplicationPanel } from "./panels/ApplicationPanel";
 import { JobDetailsPanel } from "./panels/JobDetailsPanel";
 import { PublishPanel } from "./panels/PublishPanel";
 import { RoleProfilePanel } from "./panels/RoleProfilePanel";
+import { FunnelPanel } from "./panels/FunnelPanel";
 import { getCurrentJobId, getJob, startNewJob, upsertJobFromDraft, type JobRecord } from "../jobsStore";
 import { loadDraft, saveDraft } from "../storage";
 import type { CanvasNodeId, JobDraft } from "../types";
@@ -21,6 +22,9 @@ const NODE_TITLE: Record<CanvasNodeId, string> = {
   roleProfile: "Role Profile",
   application: "Application",
   publish: "Preview & Publish",
+  prospects: "Prospects",
+  pipeline: "Pipeline",
+  interview: "Interview Process",
 };
 
 export function CanvasJobPage() {
@@ -124,6 +128,9 @@ export function CanvasJobPage() {
           {activePanel === "application" ? <ApplicationPanel draft={draft} setDraft={setDraft} /> : null}
           {activePanel === "publish" ? (
             <PublishPanel jobId={jobId} draft={draft} setDraft={setDraft} onPublished={onPublished} />
+          ) : null}
+          {activePanel === "prospects" || activePanel === "pipeline" || activePanel === "interview" ? (
+            <FunnelPanel node={activePanel} jobId={jobId} draft={draft} setDraft={setDraft} onBoardChanged={() => undefined} />
           ) : null}
         </CanvasSidePanel>
       </div>

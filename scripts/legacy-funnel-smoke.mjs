@@ -1,0 +1,152 @@
+import { runGlobalAssistantAudit } from './global-assistant-smoke.mjs';
+import { chromium, expect } from '@playwright/test';
+import { runNodeInteractionAudit } from './node-interaction-smoke.mjs';
+import { runResponsiveAudit } from './responsive-audit-smoke.mjs';
+import { runHiringAudit } from './hiring-audit-smoke.mjs';
+import { runScreenAudit } from './screen-audit-smoke.mjs';
+
+// Isolated browser context: never alters a user's saved demo state.
+const browser = await chromium.launch({ headless: true });
+const context = await browser.newContext({ viewport: { width: 1512, height: 982 }, colorScheme: 'dark' });
+const page = await context.newPage();
+context.setDefaultTimeout(15000);
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
+page.on('dialog', dialog => dialog.accept());
+async function openWorkspaceTools() {
+  const trigger = page.getByRole('button', { name: 'Workspace tools and demo options' });
+  if (await trigger.getAttribute('aria-expanded') !== 'true') await trigger.click();
+}
+try {
+  await page.goto('http://127.0.0.1:5173/create-job-canvas');
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'light');
+  await runGlobalAssistantAudit(page);
+  const info = page.getByRole('button', { name: 'Workspace tools and demo options' });
+  await expect(page.getByRole('button', { name: 'Load sample demo', exact: true })).toBeHidden();
+  await info.click();
+  await expect(page.getByRole('button', { name: 'Switch job ▾', exact: true })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(info).toBeFocused();
+  await expect(info).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('Control+k');
+  await expect(page.getByRole('dialog', { name: 'Search', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Close navigation' }).click();
+  await openWorkspaceTools();
+  await page.getByRole('button', { name: 'Load sample demo', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Senior Product Designer', exact: true })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Funnel layers' })).toHaveCount(0);
+  await expect(page.locator('.funnel-canvas-label')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Zoom In', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Fit View', exact: true }).click();
+  await page.screenshot({ path: '/tmp/careerpassport-demo-canvas.png', fullPage: true });
+
+  const candidatePagePromise = context.waitForEvent('page');
+  await openWorkspaceTools();
+  await page.getByRole('button', { name: 'Open candidate view ↗', exact: true }).click();
+  const candidatePage = await candidatePagePromise;
+  candidatePage.on('pageerror', error => errors.push(error.message));
+  await candidatePage.getByRole('button', { name: 'Fill sample answers', exact: true }).click();
+  await candidatePage.screenshot({ path: '/tmp/careerpassport-demo-application.png', fullPage: true });
+  await candidatePage.getByRole('button', { name: 'Submit application →', exact: true }).click();
+  await expect(candidatePage.getByRole('heading', { name: 'Application received' })).toBeVisible();
+
+  await openWorkspaceTools();
+  await page.getByRole('button', { name: 'Candidates & outbox', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Candidates (9)', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Priya Nair', exact: true }).click();
+  await page.getByLabel('Move candidate', { exact: true }).selectOption('screened');
+  await page.getByRole('button', { name: 'Complete · 28%', exact: true }).click();
+  await page.getByRole('tab', { name: /^Outbox/ }).click();
+  await expect(page.locator('aside').getByText('Assessment follow-up', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '+1 day', exact: true }).click();
+  await page.getByRole('button', { name: '+1 day', exact: true }).click();
+  await page.getByRole('button', { name: '+1 day', exact: true }).click();
+  await expect(page.getByText('scheduled', { exact: true })).toHaveCount(0);
+  await page.screenshot({ path: '/tmp/careerpassport-demo-outbox.png', fullPage: true });
+
+  await page.getByRole('tab', { name: 'Integrations', exact: true }).click();
+  await page.getByRole('button', { name: 'Connect demo', exact: true }).first().click();
+  await expect(page.getByText('Product Design — hiring brief', { exact: true })).toBeVisible();
+  await page.reload();
+  await openWorkspaceTools();
+  await page.getByRole('button', { name: 'Candidates & outbox', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Candidates (9)', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Alex Morgan', exact: true }).click();
+  await expect(page.getByText('Journey v1', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Close detail panel', exact: true }).click();
+  await page.getByRole('button', { name: 'Fit View', exact: true }).click();
+  await page.locator('.fn-main').getByText('Application form', { exact: true }).click();
+  await page.getByRole('button', { name: 'Ask AI about Application form' }).click();
+  await page.getByLabel('AI request', { exact: true }).fill('Add a portfolio work sample');
+  await page.getByRole('button', { name: 'Send message', exact: true }).click();
+  await expect(page.locator('.funnel-inspector')).toBeVisible();
+  await expect(page.getByRole('log', { name: 'Conversation' })).toContainText('Add a portfolio work sample');
+  await page.screenshot({ path: '/tmp/careerpassport-inline-ai.png', fullPage: true });
+  await page.getByRole('button', { name: 'Accept form changes', exact: true }).click();
+  await page.getByLabel('AI request', { exact: true }).fill('Make the form shorter');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('log')).toContainText('Make the form shorter');
+  await page.getByLabel('AI request', { exact: true }).fill('Keep this draft');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.canvas-node-chat')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Ask AI about Application form' })).toBeFocused();
+  await page.getByRole('button', { name: 'Ask AI about Application form' }).click();
+  await expect(page.getByLabel('AI request')).toHaveValue('Keep this draft');
+  await page.getByRole('button', { name: 'Close detail panel', exact: true }).click();
+  await page.getByRole('button', { name: 'Fit View', exact: true }).click();
+  await page.locator('.fn-main').getByText('Private prospect pool', { exact: true }).click();
+  await page.getByRole('button', { name: 'Ask AI about Private prospect pool' }).click();
+  await expect(page.getByLabel('AI request')).toHaveValue('');
+  await expect(page.getByRole('log')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Accept form changes' })).toHaveCount(0);
+  await page.getByLabel('AI request').fill('Help me organize prospects');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('log')).toContainText('Private prospect pool');
+  await page.setViewportSize({ width: 780, height: 720 });
+  await expect(async () => {
+    const chat = await page.locator('.canvas-node-chat').boundingBox();
+    expect(chat.x).toBeGreaterThanOrEqual(0);
+    expect(chat.x + chat.width).toBeLessThanOrEqual(780);
+    expect(chat.y + chat.height).toBeLessThanOrEqual(720);
+  }).toPass();
+  await expect(page.getByLabel('AI request')).toBeInViewport();
+  await page.setViewportSize({ width: 1512, height: 982 });
+  await page.getByRole('button', { name: 'Close detail panel', exact: true }).click();
+  await page.getByRole('button', { name: 'Fit View', exact: true }).click();
+  await page.locator('.fn-main').getByText('Application form', { exact: true }).click();
+  await page.getByRole('button', { name: 'Ask AI about Application form' }).click();
+  await expect(page.getByRole('log')).toContainText('Make the form shorter');
+  await expect(page.getByLabel('AI request')).toHaveValue('Keep this draft');
+  await page.getByRole('button', { name: 'Preview', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Show required errors', exact: true }).click();
+  await expect(page.getByText('Enter your full name.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Close detail panel', exact: true }).click();
+
+  await page.getByRole('button', { name: 'Fit View', exact: true }).click();
+  await page.locator('.fn-main').getByText('Interview process', { exact: true }).click();
+  await page.getByRole('button', { name: '＋ Add round', exact: true }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Final leadership interview');
+  await page.getByRole('button', { name: '＋ Add communication', exact: true }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Final round invitation');
+  await page.getByLabel('Subject', { exact: true }).fill('Your final conversation');
+  await page.getByLabel('Message', { exact: true }).fill('Hi {{candidate_name}}, we look forward to meeting you.');
+  await page.getByRole('button', { name: 'Publish updates ↗', exact: true }).click();
+  await expect(page.getByText(/Published version 2/)).toBeVisible();
+  await expect(page.locator('.fn-selected')).toBeInViewport({ ratio: 0.9 });
+  await page.screenshot({ path: '/tmp/careerpassport-demo-editor.png', fullPage: true });
+  await runHiringAudit(page, context, errors);
+  await runResponsiveAudit(page);
+  await runNodeInteractionAudit(page);
+  await runScreenAudit(page);
+  if (errors.length) throw new Error(errors.join('\n'));
+  console.log('PASS: seed, apply, cross-tab sync, move, complete, trigger, reminder, integrations, reload.');
+  console.log('Screenshots: /tmp/careerpassport-demo-{canvas,application,outbox}.png');
+} catch (error) {
+  console.error('Browser errors:', errors);
+  console.error((await page.locator('body').innerText()).slice(-16000));
+  await page.screenshot({ path: '/tmp/careerpassport-audit-failure.png', fullPage: true });
+  throw error;
+} finally {
+  await browser.close();
+}

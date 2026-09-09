@@ -17,7 +17,7 @@
   display: flex;
   gap: 6px;
   font-size: 20px;
-  color: #98a2b3;
+  color: var(--text-secondary);
 }
 
 .preview-grid {
@@ -64,6 +64,8 @@
 }
 
 .preview-pane {
+  min-width: 0;
+  container: preview-device / inline-size;
   position: sticky;
   top: 16px;
 }
@@ -443,7 +445,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #98a2b3;
+  color: var(--text-secondary);
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
@@ -701,4 +703,28 @@
  * differs (zoom is derived from --monitor-screen-w). */
 .preview-content .monitor-device {
   --monitor-screen-w: 660;
+}
+
+/* Scale device chrome to its actual pane, not the browser window. */
+@container preview-device (max-width: 700px) {
+  .preview-pane .monitor-device { --monitor-screen-w: 500; }
+}
+@container preview-device (max-width: 560px) {
+  .preview-pane .monitor-device { --monitor-screen-w: 400; }
+}
+@container preview-device (max-width: 460px) {
+  .preview-pane .monitor-device { --monitor-screen-w: 320; }
+}
+@container preview-device (max-width: 380px) {
+  .preview-pane .monitor-device { --monitor-screen-w: 260; }
+  .preview-pane .phone-device { --phone-screen-w: 246; }
+}
+@container preview-device (max-width: 320px) {
+  .preview-pane .monitor-device { --monitor-screen-w: 210; }
+  .preview-pane .phone-device { --phone-screen-w: 210; }
+  .monitor-base { width: 120px; }
+}
+@container preview-device (max-width: 270px) {
+  .preview-pane .monitor-device { --monitor-screen-w: 180; }
+  .preview-pane .phone-device { --phone-screen-w: 180; }
 }

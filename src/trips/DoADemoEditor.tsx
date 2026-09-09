@@ -11,8 +11,7 @@ export function DoADemoEditor({ stage, onChange }: DoADemoEditorProps): JSX.Elem
   return (
     <div className="stage-editor">
       <p>
-        The candidate presses record; screen and video are captured while they work through a
-        situation.
+        Candidates record their screen and video while completing the task.
       </p>
       <EditableField
         label="Prompt / spoken instructions"

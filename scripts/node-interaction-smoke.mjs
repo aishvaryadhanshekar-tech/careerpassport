@@ -1,0 +1,82 @@
+import { expect } from '@playwright/test';
+
+export async function runNodeInteractionAudit(page) {
+  await page.setViewportSize({ width: 1512, height: 982 });
+  const close = page.getByRole('button', { name: 'Close detail panel', exact: true });
+  if (await close.isVisible()) await close.click();
+  const node = page.locator('.react-flow__node[data-id="application"]');
+  await node.locator('.fn-main').evaluate(el => el.click());
+  await expect(node).toBeInViewport({ ratio: 0.9 });
+  await expect(page.locator('.funnel-inspector')).toBeVisible();
+  await node.locator('.fn-top').click();
+  await expect(page.locator('.funnel-inspector')).toHaveCount(0);
+  await node.locator('.funnel-node').click({ position: { x: 8, y: 8 } });
+  await expect(page.locator('.funnel-inspector')).toBeVisible();
+  await node.locator('.fn-main').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.funnel-inspector')).toHaveCount(0);
+  await page.keyboard.press('Space');
+  await expect(page.locator('.funnel-inspector')).toBeVisible();
+  await expect(node).toBeInViewport({ ratio: 0.9 });
+  const before = await node.evaluate(el => el.style.transform);
+  const grip = await node.locator('.fn-drag-hint').boundingBox();
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  const startBox = await node.boundingBox();
+  let previousBox = startBox;
+  const pointer = { x: grip.x + grip.width / 2, y: grip.y + grip.height / 2 };
+  for (let step = 1; step <= 8; step++) {
+    await page.mouse.move(pointer.x + step * 10, pointer.y + step * 6);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+    const box = await node.boundingBox();
+    if (step > 1) {
+      expect(Math.abs(box.x - previousBox.x - 10), 'horizontal pointer tracking').toBeLessThan(4);
+      expect(Math.abs(box.y - previousBox.y - 6), 'vertical pointer tracking').toBeLessThan(4);
+    }
+    previousBox = box;
+  }
+  await page.mouse.up();
+  await expect(async () => expect(await node.evaluate(el => el.style.transform)).not.toBe(before)).toPass();
+  await expect(page.locator('.funnel-inspector')).toBeVisible();
+  const moved = await node.evaluate(el => el.style.transform);
+  await page.getByRole('button', { name: 'Ask AI about Application form' }).click();
+  await expect(page.getByLabel('AI request')).toBeInViewport();
+  await page.screenshot({ path: '/tmp/careerpassport-movable-node.png', fullPage: true });
+  const resize = page.getByRole('separator', { name: 'Resize details panel' });
+  const panel = page.locator('.funnel-inspector');
+  const initialWidth = (await panel.boundingBox()).width;
+  const handle = await resize.boundingBox();
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handle.x - 100, handle.y + handle.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect(async () => expect((await panel.boundingBox()).width).toBeGreaterThan(initialWidth + 80)).toPass();
+  await expect(page.getByLabel('AI request')).toBeInViewport();
+  await resize.focus();
+  await page.keyboard.press('Home');
+  await expect(async () => expect(Math.round((await panel.boundingBox()).width)).toBe(340)).toPass();
+  await page.keyboard.press('ArrowLeft');
+  await expect(async () => expect(Math.round((await panel.boundingBox()).width)).toBe(364)).toPass();
+  await page.keyboard.press('End');
+  await expect(async () => expect((await page.locator('.funnel-surface').boundingBox()).width).toBeGreaterThanOrEqual(279)).toPass();
+  await page.screenshot({ path: '/tmp/careerpassport-resized-panel.png', fullPage: true });
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.reload();
+  await expect(async () => expect(await node.evaluate(el => el.style.transform)).toBe(moved)).toPass();
+  const linksBeforeReset = await page.locator('.react-flow__edge').evaluateAll(edges => edges.map(edge => edge.getAttribute('data-testid')).sort());
+  expect(linksBeforeReset.length).toBeGreaterThan(0);
+  expect(linksBeforeReset.every(Boolean)).toBe(true);
+  await page.getByRole('button', { name: 'Reset canvas layout', exact: true }).click();
+  await expect(async () => expect(await node.evaluate(el => el.style.transform)).toBe(before)).toPass();
+  const linksAfterReset = await page.locator('.react-flow__edge').evaluateAll(edges => edges.map(edge => edge.getAttribute('data-testid')).sort());
+  expect(linksAfterReset).toEqual(linksBeforeReset);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.reload();
+  await expect(async () => expect(await node.evaluate(el => el.style.transform)).toBe(before)).toPass();
+  const canvas = page.locator('.react-flow');
+  const viewportBeforeScroll = await page.locator('.react-flow__viewport').evaluate(el => el.style.transform);
+  await canvas.hover();
+  await page.mouse.wheel(0, 350);
+  await expect(async () => expect(await page.locator('.react-flow__viewport').evaluate(el => el.style.transform)).not.toBe(viewportBeforeScroll)).toPass();
+  console.log('PASS: whole-card toggle, keyboard toggle, drag without toggle, AI anchor and position saved across reload; panel resize bounds, smooth pointer tracking, vertical scroll and layout reset preserving links.');
+}

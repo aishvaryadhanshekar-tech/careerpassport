@@ -1,5 +1,6 @@
 .application-page {
   max-width: none;
+  container: application-page / inline-size;
 }
 
 /* Same 12-column grid and measure as `.preview-page .preview-main` (role-detail.css), so
@@ -32,6 +33,8 @@
 }
 
 .app-card {
+  min-width: 0;
+  container: editor-card / inline-size;
   background: #fff;
   border: 1px solid #e2e6e9;
   border-radius: 12px;
@@ -43,6 +46,7 @@
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
+  flex-wrap: wrap;
   margin: 0;
   padding: 12px 22px;
   background: #f7f8f9;
@@ -58,18 +62,22 @@
 }
 
 .app-card-head-title {
+  min-width: 0;
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .app-card-head-actions {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
 .tab-edit-actions {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -95,7 +103,7 @@
   height: 24px;
   border: none;
   background: transparent;
-  color: #9aa0a6;
+  color: var(--text-secondary);
   cursor: pointer;
   border-radius: 6px;
 }
@@ -120,6 +128,9 @@
 .app-card-body {
   padding: 8px 22px;
 }
+
+.app-card :is(.option-list, .grid-editor-item) input { min-width: 0; }
+.app-card :is(.option-list, .grid-editor-item) .icon-x { flex-shrink: 0; }
 
 .context-block {
   padding: 16px 0;
@@ -234,6 +245,7 @@
 }
 
 .field-copy strong {
+  overflow-wrap: anywhere;
   display: block;
   font-size: 14px;
   font-weight: 700;
@@ -258,7 +270,7 @@
 .icon-x {
   border: 0;
   background: transparent;
-  color: #98a2b3;
+  color: var(--text-secondary);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
@@ -270,6 +282,7 @@
 }
 
 .add-field label {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -316,4 +329,22 @@
   .application-split {
     padding: 0 16px;
   }
+}
+
+/* Use the editor's available width, including the expanded app sidebar. */
+@container application-page (max-width: 960px) {
+  .application-split > .preview-pane,
+  .application-split > .application-editors { grid-column: span 12; }
+  .application-split > .preview-pane { position: static; }
+}
+
+@container application-page (max-width: 640px) {
+  .application-split { padding-inline: 0; }
+}
+
+@container editor-card (max-width: 400px) {
+  .app-card-head { padding: 12px 14px; }
+  .app-card-body { padding-inline: 14px; }
+  .field-row { grid-template-columns: 16px minmax(0, 1fr); row-gap: 8px; }
+  .field-required { grid-column: 2; justify-self: start; }
 }
