@@ -2,7 +2,7 @@ import { FlowIcon } from "./FlowIcon";
 import { connectionError, type CanvasConnection } from "./pipelineConnections";
 import { PipelineTransition } from "./PipelineTransition";
 import { AddPipelineButton, CanvasNodeAssistant } from "./CanvasNodeAssistant";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   applyNodeChanges,
   Background,
@@ -23,6 +23,36 @@ import "@xyflow/react/dist/style.css";
 import "./node-cards.css";
 import { layoutPipeline, buildPipelineEdges, candidateStageNode, pipelineStages } from "./pipelineModel";
 import { type FunnelNode } from "./funnelModel";
+import { BRIEF_HUB_ID, STAGGER_MS, type BriefHandoff } from "./aiBuild/buildPhase";
+
+/** Synthetic backdrop grouping the Role brief's sections; never part of the saved model. */
+const BRIEF_FRAME_ID = "brief-frame";
+/** Unmeasured brief card footprint, used to size the frame from layout positions. */
+const BRIEF_CARD = { width: 260, height: 128 };
+
+function BriefFooter({ brief }: { brief: BriefHandoff }) {
+  const ready = brief.reviewed === brief.total;
+  return (
+    <div className="fn-brief nodrag">
+      <div className="fn-brief-meter" role="progressbar" aria-label="Sections reviewed" aria-valuemin={0} aria-valuemax={brief.total} aria-valuenow={brief.reviewed}>
+        <span style={{ width: `${(brief.reviewed / brief.total) * 100}%` }} />
+      </div>
+      <small>{brief.drafting ? "Drafting sections…" : ready ? "All sections reviewed" : `${brief.reviewed} of ${brief.total} reviewed`}</small>
+      {brief.canGenerate && (
+        <div className="fn-brief-actions">
+          <button type="button" className={`fn-brief-generate ${ready ? "fn-brief-ready" : ""}`} disabled={!ready} onClick={(event) => { event.stopPropagation(); brief.onGenerate(); }}>
+            Generate pipeline →
+          </button>
+          {!ready && (
+            <button type="button" className="fn-brief-skip" onClick={(event) => { event.stopPropagation(); brief.onGenerate(); }}>
+              Skip review
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function FunnelCard({ data }: NodeProps) {
   const d = data as {
@@ -34,12 +64,19 @@ function FunnelCard({ data }: NodeProps) {
     onSelect: () => void;
     onToggle: () => void;
     onConfigure: (id:string)=>void;
+    toolsUnlocked?: boolean;
+    enterIndex?: number;
+    /** Brief node still drafting: render a skeleton instead of content. */
+    pending?: boolean;
+    brief?: BriefHandoff;
   };
   const n = d.item;
+  const hub = n.insightKey === "hub";
   return (
     <div
       title={n.description || undefined}
-      className={`funnel-node ${d.compact?"fn-compact":""} fn-${n.kind} ${d.selected ? "fn-selected" : ""}`}
+      className={`funnel-node ${d.compact?"fn-compact":""} fn-${n.kind} ${hub?"fn-insight-hub":""} ${d.pending?"fn-pending":""} ${n.reviewed?"fn-reviewed":""} ${d.selected ? "fn-selected" : ""} ${d.enterIndex!==undefined?"fn-enter":""}`}
+      style={d.enterIndex!==undefined?{animationDelay:`${d.enterIndex*STAGGER_MS}ms`}:undefined}
     >
       {!d.compact&&[Position.Top,Position.Right,Position.Bottom,Position.Left].map(side=><Handle key={`in-${side}`} id={`in-${side}`} type="target" position={side} className={`pipeline-port pipeline-port-in port-${side}`} title="Connect here"/>)}
       {d.compact&&<Handle id="in-top" type="target" position={Position.Top}/> }
@@ -50,6 +87,7 @@ function FunnelCard({ data }: NodeProps) {
             {
               job: "WORKFLOW",
               stage: "STAGE",
+              insight: hub ? "ROLE BRIEF" : "AI DRAFT",
               round: n.rules?.length ? "RULE CHECK" : "CANDIDATE ACTIVITY",
               application: "APPLICATION",
               trip: "TRIP",
@@ -58,6 +96,7 @@ function FunnelCard({ data }: NodeProps) {
             }[n.kind]
           }
         </span>
+        {n.reviewed && <span className="fn-reviewed-badge">✓ Reviewed</span>}
         <span className="fn-drag-hint" title="Drag to move" aria-hidden="true">⠿</span>
       </div>
       <div className="fn-main" role="button" tabIndex={0} aria-label={n.title} aria-expanded={d.selected}
@@ -68,18 +107,23 @@ function FunnelCard({ data }: NodeProps) {
         }}>
         <strong>{n.title}</strong>
         {n.outcome && <em className={`fn-outcome fn-outcome-${n.outcome}`}>{n.outcome === "failure" ? "Rule not met" : n.outcome === "success" ? "Requirements met" : "On this step"}</em>}
-        <span>
-          {n.placeholder ? "Choose or create to configure" : n.kind === "stage"
-            ? `${d.count ?? 0} candidates`
-            : n.kind === "trip"
-              ? `${n.tripType} · ${n.duration} min`
-              : n.kind === "communication"
-                ? `${n.active ? n.trigger : "Inactive"}`
-                : n.kind === "capability" ? null : n.description || null}
-        </span>
+        {d.pending ? (
+          <div className="fn-skeleton" role="status"><em>{hub ? "Reading your brief…" : "Drafting…"}</em><i /><i /></div>
+        ) : (
+          <span>
+            {n.placeholder ? "Choose or create to configure" : n.kind === "stage"
+              ? `${d.count ?? 0} candidates`
+              : n.kind === "trip"
+                ? `${n.tripType} · ${n.duration} min`
+                : n.kind === "communication"
+                  ? `${n.active ? n.trigger : "Inactive"}`
+                  : n.kind === "capability" ? null : n.description || null}
+          </span>
+        )}
       </div>
-      {n.kind==='job' && !d.compact && <div className="fn-workflow-tools nodrag">{[['cap-setup','Settings'],['cap-brief','Brief & sharing'],['cap-team','Team'],['cap-activity','History']].map(([id,title])=><button key={id} onClick={e=>{e.stopPropagation();d.onConfigure(id);}}>{title}</button>)}</div>}
+      {n.kind==='job' && !d.compact && d.toolsUnlocked && <div className="fn-workflow-tools fn-tools-in nodrag">{[['cap-setup','Settings'],['cap-brief','Brief & sharing'],['cap-team','Team'],['cap-activity','History']].map(([id,title])=><button key={id} onClick={e=>{e.stopPropagation();d.onConfigure(id);}}>{title}</button>)}</div>}
       {n.kind==='application' && <button className="fn-configure nodrag" onClick={e=>{e.stopPropagation();d.onConfigure(n.id);}}>⚙ Configure form</button>}
+      {hub && d.brief && !d.pending && <BriefFooter brief={d.brief} />}
       {d.children > 0 && (
         <button
           className="nodrag fn-collapse"
@@ -94,8 +138,38 @@ function FunnelCard({ data }: NodeProps) {
     </div>
   );
 }
+function BriefFrame({ data }: NodeProps) {
+  const d = data as { drafting: boolean };
+  return (
+    <div className={`fn-brief-frame ${d.drafting ? "fn-brief-frame-drafting" : ""}`}>
+      <span>{d.drafting ? "Drafting role brief…" : "Role brief sections"}</span>
+      <Handle id="in-left" type="target" position={Position.Left} isConnectable={false} />
+    </div>
+  );
+}
+/** Sized from layout (not live drag) positions so the node object stays stable between renders. */
+function briefFrameNode(laidOut: ReturnType<typeof layoutPipeline>, drafting: boolean): Node | null {
+  const sections = laidOut.filter((item) => item.parent === BRIEF_HUB_ID);
+  if (!sections.length) return null;
+  const left = Math.min(...sections.map((item) => item.position.x)) - 18;
+  const top = Math.min(...sections.map((item) => item.position.y)) - 34;
+  const right = Math.max(...sections.map((item) => item.position.x)) + BRIEF_CARD.width + 18;
+  const bottom = Math.max(...sections.map((item) => item.position.y)) + BRIEF_CARD.height + 18;
+  return {
+    id: BRIEF_FRAME_ID,
+    type: "briefFrame",
+    position: { x: left, y: top },
+    style: { width: right - left, height: bottom - top, pointerEvents: "none" },
+    data: { drafting },
+    draggable: false,
+    selectable: false,
+    connectable: false,
+    focusable: false,
+    zIndex: -1,
+  };
+}
 const edgeTypes = { insertion: PipelineTransition };
-const nodeTypes = { funnel: FunnelCard };
+const nodeTypes = { funnel: FunnelCard, briefFrame: BriefFrame };
 export function FunnelCanvas({
   items,
   selected,
@@ -111,11 +185,14 @@ export function FunnelCanvas({
   onAI,
   aiOpen,
   onCloseAI,
-  chat,
   onInit,
   viewport,
   onViewport,
   onAddPipeline,
+  toolsUnlocked,
+  enteringIds,
+  pendingIds,
+  brief,
 }: {
   items: FunnelNode[];
   selected: string | null;
@@ -131,31 +208,42 @@ export function FunnelCanvas({
   onAI: (id: string) => void;
   aiOpen: boolean;
   onCloseAI: () => void;
-  chat: ReactNode;
   onInit: (instance: ReactFlowInstance) => void;
   viewport?: Viewport;
   onViewport: (viewport: Viewport) => void;
   onAddPipeline: () => void;
+  toolsUnlocked?: boolean;
+  enteringIds?: Record<string, number>;
+  pendingIds?: string[];
+  brief?: BriefHandoff;
 }) {
   const displayItems=useMemo(()=>overview?items.filter(n=>n.kind==='job'||n.kind==='stage').map((n,i)=>({...n,collapsed:false,position:{x:n.exit?340:0,y:n.exit?220:i*180}})):items,[items,overview]);
   const laidOut = useMemo(() => overview ? displayItems.map(n=>({...n,position:n.position!})) : layoutPipeline(items), [items,displayItems,overview]);
-  const modelNodes = useMemo<Node[]>(() => laidOut.map((item) => ({
-    id: item.id,
-    type: "funnel",
-    position: item.position,
-    selected: selected === item.id || overview&&candidateStageNode(items,selected||'')?.id===item.id,
-    focusable: false,
-    data: {
-      item,
-      compact:overview,
+  const modelNodes = useMemo<Node[]>(() => {
+    const cards: Node[] = laidOut.map((item) => ({
+      id: item.id,
+      type: "funnel",
+      position: item.position,
       selected: selected === item.id || overview&&candidateStageNode(items,selected||'')?.id===item.id,
-      count: counts[item.id],
-      children: overview ? 0 : items.filter((n) => n.parent === item.id && n.kind !== "capability").length,
-      onSelect: () => onSelect(item.id),
-      onConfigure: onSelect,
-      onToggle: () => onToggle(item.id),
-    },
-  })), [laidOut, selected, counts, items, onSelect, onToggle,overview]);
+      focusable: false,
+      data: {
+        item,
+        compact:overview,
+        selected: selected === item.id || overview&&candidateStageNode(items,selected||'')?.id===item.id,
+        count: counts[item.id],
+        children: overview ? 0 : items.filter((n) => n.parent === item.id && n.kind !== "capability").length,
+        onSelect: () => onSelect(item.id),
+        onConfigure: onSelect,
+        onToggle: () => onToggle(item.id),
+        toolsUnlocked,
+        enterIndex: enteringIds?.[item.id],
+        pending: pendingIds?.includes(item.id),
+        brief: item.insightKey === "hub" ? brief : undefined,
+      },
+    }));
+    const frame = briefFrameNode(laidOut, Boolean(brief?.drafting));
+    return frame ? [frame, ...cards] : cards;
+  }, [laidOut, selected, counts, items, onSelect, onToggle,overview,toolsUnlocked,enteringIds,pendingIds,brief]);
   const [selectedEdge,setSelectedEdge]=useState<Edge|null>(null);
   const [nodes, setNodes] = useState<Node[]>(modelNodes);
   const dragging = useRef(false);
@@ -195,6 +283,10 @@ export function FunnelCanvas({
     labelStyle: { fill: '#607368', fontSize: 10 }, labelBgStyle: { fill: '#f5f7f5' },
     animated: false,
   }));
+  // The hub → sections link is visual only: it targets the frame, so it never enters the pipeline model.
+  if (nodes.some((node) => node.id === BRIEF_FRAME_ID)) {
+    edges.push({ id: `${BRIEF_HUB_ID}->${BRIEF_FRAME_ID}`, source: BRIEF_HUB_ID, target: BRIEF_FRAME_ID, sourceHandle: "out-right", targetHandle: "in-left", animated: Boolean(brief?.drafting), selectable: false, focusable: false, reconnectable: false, style: { stroke: "#8fb5a4", strokeWidth: 1.4, strokeDasharray: "5 4" } });
+  }
   return (
     <ReactFlow
       ref={canvas}
@@ -220,7 +312,7 @@ export function FunnelCanvas({
       onConnect={link=>onConnection(link)}
       onReconnect={(old,link)=>onConnection(link,old)}
       isValidConnection={link=>!connectionError(items,link)}
-      onEdgeClick={(_,edge)=>setSelectedEdge(edge)}
+      onEdgeClick={(_,edge)=>{if(edge.target!==BRIEF_FRAME_ID)setSelectedEdge(edge);}}
       minZoom={0.1}
       maxZoom={1.5}
       panOnScroll
@@ -230,14 +322,14 @@ export function FunnelCanvas({
       zoomOnDoubleClick={false}
       defaultViewport={viewport}
       fitViewOptions={{ padding: 0.2 }}
-      onNodeClick={(_, node) => onSelect(node.id)}
+      onNodeClick={(_, node) => { if (node.id !== BRIEF_FRAME_ID) onSelect(node.id); }}
       onInit={(flow) => { instance.current = flow; onInit(flow); if (!viewport) showStart(flow); }}
       onMoveEnd={(_, v) => {if(!overview)onViewport(v);}}
       proOptions={{ hideAttribution: true }}
     >
       {selectedEdge&&!overview&&<div className="pipeline-connection-actions nodrag nopan"><span>Connection</span><button onClick={()=>{onConnection(null,selectedEdge);setSelectedEdge(null);}}>Remove link</button><button aria-label="Close connection actions" onClick={()=>setSelectedEdge(null)}>×</button></div>}
       {anchor && <CanvasNodeAssistant item={anchor} position={anchorPosition || anchor.position} open={aiOpen}
-        onOpen={() => onAI(anchor.id)} onClose={onCloseAI}>{chat}</CanvasNodeAssistant>}
+        onOpen={() => onAI(anchor.id)} onClose={onCloseAI} />}
       {anchor && anchor.kind === "job" && pipelineStages(items).length === 0 && (
         <AddPipelineButton item={anchor} position={anchorPosition || anchor.position} onClick={onAddPipeline} />
       )}

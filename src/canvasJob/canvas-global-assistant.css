@@ -1,4 +1,152 @@
-.canvas-global-assistant {
+/* Hiring assistant: docked left column of .funnel-body, collapsing to a slim rail. */
+.funnel-workspace { --assistant-width: clamp(300px, 26vw, 360px); }
+.canvas-assistant {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-right: 1px solid #e0e7e3;
+  color: #263c37;
+  color-scheme: light;
+  z-index: 16;
+}
+.canvas-assistant-panel { flex: 0 0 var(--assistant-width); width: var(--assistant-width); animation: canvas-assistant-in .2s ease-out; }
+.canvas-assistant-rail { flex: 0 0 48px; width: 48px; align-items: center; padding: 12px 0; }
+@keyframes canvas-assistant-in { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+
+.funnel-workspace :is(.canvas-assistant, .canvas-authoring-dock) button {
+  border: 1px solid #d6e2da;
+  border-radius: 8px;
+  background: #fff;
+  color: #263c37;
+  font-size: 11.5px;
+  padding: 6px 10px;
+  line-height: 1.4;
+}
+.funnel-workspace :is(.canvas-assistant, .canvas-authoring-dock) button:hover { background: #edf4ef; }
+.funnel-workspace :is(.canvas-assistant, .canvas-authoring-dock) :is(button, select, textarea, input):focus-visible { outline: 2px solid #6b9d83; outline-offset: 2px; }
+.canvas-global-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #dcebe0, #cfe4ee);
+  color: #266b53;
+  line-height: 1;
+}
+.funnel-workspace .canvas-assistant .canvas-assistant-expand { position: relative; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 10px; }
+.funnel-workspace .canvas-assistant-expand .canvas-global-mark { width: 24px; height: 24px; }
+.canvas-assistant-unread { position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: #2f7d62; border: 2px solid #fff; }
+
+/* Header: one line. */
+.canvas-assistant-header { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 11px 8px 11px 14px; border-bottom: 1px solid #edf1ee; }
+.canvas-assistant-header strong { font-size: 13px; font-weight: 600; color: #1f3a31; }
+.funnel-workspace .canvas-assistant-header button { margin-left: auto; border-color: transparent; background: transparent; color: #607368; font-size: 15px; padding: 2px 8px; }
+
+/* History: quiet, bottom-anchored so the latest lines sit against the dock. */
+.canvas-assistant-history {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 12px;
+  /* Earlier lines fade out under the header instead of being cut off mid-line. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 16px);
+}
+.canvas-assistant-thread { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.canvas-assistant-msg { margin: 0; font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.canvas-assistant-msg-assistant { color: #4a5f57; }
+.canvas-assistant-msg-user { align-self: flex-end; max-width: 85%; padding: 6px 11px; border-radius: 14px 14px 4px 14px; background: #e7f1eb; color: #1f3a31; }
+
+/* Dock: the current question or action, pinned on the composer. */
+.canvas-assistant-dock { flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 14px 12px; border-top: 1px solid #edf1ee; }
+.canvas-assistant-prompt { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow: auto; margin: -2px; padding: 2px; }
+.assistant-dock-question { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 13px; font-weight: 600; line-height: 1.45; color: #1f3a31; }
+.assistant-dock-mark { flex-shrink: 0; display: grid; place-items: center; margin-top: 2px; color: #266b53; }
+.assistant-dock-status { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 12.5px; color: #3d534b; }
+.assistant-dock-status .assistant-dock-mark { margin-top: 0; }
+.assistant-dock-pulse { animation: canvas-global-pulse 1.6s ease-in-out infinite; }
+.assistant-dock-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.funnel-workspace .assistant-dock-chips button { border-radius: 999px; padding: 5px 11px; text-align: left; }
+.funnel-workspace .assistant-dock-chips button:hover { border-color: #80a68e; }
+.assistant-dock-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 11.5px; color: #8a9a91; }
+.funnel-workspace .assistant-dock-links button { border: 0; background: none; padding: 0; color: #2f6f58; font-size: 11.5px; text-decoration: underline; text-decoration-color: #a9cfba; text-underline-offset: 3px; }
+.funnel-workspace .assistant-dock-links button:hover { background: none; text-decoration-color: currentColor; }
+.assistant-dock-options { display: grid; gap: 6px; }
+.funnel-workspace .assistant-dock-option { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 9px 12px; border-radius: 10px; text-align: left; }
+.funnel-workspace .assistant-dock-option:hover { background: #fff; border-color: #266b53; }
+.assistant-dock-option strong { font-size: 12px; font-weight: 600; }
+.assistant-dock-option span { color: #607368; font-size: 11px; }
+.assistant-dock-progress { display: grid; gap: 6px; }
+.assistant-dock-meter { height: 4px; border-radius: 4px; background: #e2ebe5; overflow: hidden; }
+.assistant-dock-meter span { display: block; height: 100%; border-radius: inherit; background: #2f7a61; transition: width .3s ease; }
+.assistant-dock-progress small { color: #607368; font-size: 11px; }
+.assistant-dock-proposal { font-size: 12px; line-height: 1.5; color: #263c37; overflow-wrap: anywhere; }
+.assistant-dock-proposal :is(p, ul) { margin: 0 0 8px; }
+.assistant-dock-proposal ul { padding-left: 17px; }
+.assistant-dock-proposal button { margin: 0 6px 0 0; }
+.canvas-assistant-context { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; color: #4a5f57; }
+.canvas-assistant-context span { min-width: 0; overflow-wrap: anywhere; }
+.canvas-assistant-context strong { color: #1f3a31; }
+.funnel-workspace .canvas-assistant-context button { flex-shrink: 0; border-color: transparent; background: transparent; color: #607368; font-size: 14px; padding: 0 6px; }
+
+/* Composer. */
+.canvas-assistant-composer { border: 1px solid #d6e2da; border-radius: 12px; background: #fff; padding: 9px 8px 6px 11px; transition: border-color .15s, box-shadow .15s; }
+.canvas-assistant-composer:focus-within { border-color: #80a68e; box-shadow: 0 0 0 3px #80a68e22; }
+.canvas-assistant-composer-busy { background: #f6f8f7; }
+.funnel-workspace .canvas-assistant textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 38px;
+  max-height: 140px;
+  resize: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #263c37;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.funnel-workspace .canvas-assistant textarea:focus-visible { outline: none; }
+.canvas-assistant textarea::placeholder { color: #8a9a91; }
+.canvas-assistant textarea:disabled { cursor: default; }
+.canvas-assistant-composer-actions { display: flex; align-items: center; gap: 2px; margin-top: 4px; }
+.canvas-assistant-spacer { flex: 1; }
+.funnel-workspace .canvas-assistant-composer-actions button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border-color: transparent; background: transparent; color: #607368; }
+.funnel-workspace .canvas-assistant-composer-actions button:disabled { opacity: .4; cursor: default; background: transparent; }
+.funnel-workspace .canvas-assistant-composer-actions .canvas-assistant-send { margin-left: 4px; border-radius: 8px; background: #266b53; color: #fff; font-size: 16px; }
+.funnel-workspace .canvas-assistant-composer-actions .canvas-assistant-send:hover { background: #1f5c48; }
+.funnel-workspace .canvas-assistant-composer-actions .canvas-assistant-send:disabled { background: #cfdcd4; color: #fff; opacity: 1; }
+.funnel-workspace .canvas-assistant-composer-actions .canvas-global-recording { color: #963e31; background: #fbe9e5; }
+.canvas-assistant-composer > .canvas-document-controls { margin-bottom: 8px; }
+.canvas-global-status { margin: 6px 2px 0; color: #607368; font-size: 11px; line-height: 1.5; }
+@keyframes canvas-global-pulse {
+  0%, 100% { opacity: .45; transform: scale(.9); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .assistant-dock-pulse, .canvas-assistant-panel { animation: none; opacity: 1; transform: none; }
+  .assistant-dock-meter span, .canvas-assistant-composer { transition: none; }
+}
+.canvas-global-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* Narrow workspaces stack the canvas and inspector, so the panel becomes a drawer over the canvas. */
+@container hiring-canvas (max-width: 740px) {
+  .canvas-assistant-rail { flex: 0 0 auto; width: 100%; flex-direction: row; padding: 6px 12px; border-right: 0; border-bottom: 1px solid #e0e7e3; }
+  .canvas-assistant-panel { position: absolute; inset: 0 auto 0 0; width: min(360px, 92%); box-shadow: 10px 0 30px #0000001a; z-index: 22; }
+}
+
+/* Pipeline block toolbar, floating bottom-center on the canvas. */
+.funnel-surface { container: canvas-surface / inline-size; }
+.canvas-authoring-dock {
   position: absolute;
   z-index: 12;
   bottom: 64px;
@@ -10,108 +158,16 @@
   pointer-events: none;
   color: #263c37;
 }
-.funnel-workspace .canvas-global-assistant button,
-.canvas-global-assistant select,
-.canvas-global-panel { pointer-events: auto; }
-.funnel-workspace .canvas-global-assistant button {
-  border: 1px solid #d6e2da;
-  border-radius: 8px;
-  background: #fff;
-  color: #263c37;
-  font-size: 11px;
-  padding: 6px 9px;
-  line-height: 1.4;
-}
-.funnel-workspace .canvas-global-assistant button:hover { background: #edf4ef; }
-.funnel-workspace .canvas-global-assistant button:focus-visible,
-.funnel-workspace .canvas-global-assistant select:focus-visible,
-.funnel-workspace .canvas-global-assistant textarea:focus-visible { outline: 2px solid #6b9d83; outline-offset: 3px; }
-.funnel-workspace .canvas-global-assistant .canvas-global-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 40px;
-  padding: 9px 17px;
-  border-radius: 13px;
-  border-color: #d6e2da;
-  background: #fff;
-  box-shadow: 0 4px 12px #18211c24;
-  font-size: 12px;
-}
-.canvas-global-trigger > span { color: #266b53; font-size: 18px; line-height: 1; }
-.funnel-workspace .canvas-global-assistant .canvas-global-active { border-color: #80a68e; background: #e7f1eb; }
-.canvas-global-panel {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  background: #fff;
-  border: 1px solid #d6e2da;
-  border-radius: 16px;
-  box-shadow: 0 12px 36px #17251b33, 0 2px 6px #17251b22;
-  color-scheme: light;
-}
-.canvas-global-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px 9px; }
-.canvas-global-header strong { font-size: 12px; font-weight: 600; }
-.canvas-global-header span { display: block; color: #607368; font-size: 10px; margin-top: 3px; }
-.funnel-workspace .canvas-global-header button { flex-shrink: 0; background: transparent; border-color: transparent; font-size: 18px; padding: 2px 7px; }
-.canvas-global-content:empty { display: none; }
-.canvas-global-content { padding: 0 14px; overflow: auto; min-height: 0; flex: 1 1 auto; }
-.canvas-global-welcome { margin: 4px 0 12px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
-.canvas-global-tasks { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
-.funnel-workspace .canvas-global-tasks button { font-size: 10px; border-radius: 20px; padding: 5px 9px; }
-.canvas-global-message { padding: 10px; margin: 8px 0; border-radius: 9px; background: #f5f8f6; }
-.canvas-global-message.canvas-global-message-user { margin-left: 22px; background: #e7f1eb; }
-.canvas-global-message small { color: #607368; font-size: 9px; }
-.canvas-global-message p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.55; }
-.canvas-global-proposal { padding: 10px; margin: 10px 0; border: 1px solid #cbded0; border-radius: 9px; color: #263c37; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
-.canvas-global-proposal :is(p, ul) { margin: 6px 0; }
-.canvas-global-proposal ul { padding-left: 17px; }
-.canvas-global-proposal button { margin: 5px 5px 0 0; }
-.canvas-global-form { padding: 10px 12px 11px; flex: 0 0 auto; }
-.canvas-global-composer { border: 1px solid #cbded0; background: #f8faf8; border-radius: 11px; padding: 9px; }
-.funnel-workspace .canvas-global-assistant textarea {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 42px;
-  max-height: 100px;
-  resize: vertical;
-  border: 0;
-  border-radius: 3px;
-  padding: 0;
-  background: transparent;
-  color: #263c37;
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.5;
-}
-.canvas-global-assistant textarea::placeholder { color: #607368; }
-.canvas-global-composer-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
-.funnel-workspace .canvas-global-composer-actions button { display: grid; place-items: center; width: 28px; height: 28px; padding: 3px; }
-.funnel-workspace .canvas-global-composer-actions .canvas-global-send { background: #dcebe0; color: #20523e; border-color: #dcebe0; font-size: 18px; }
-.funnel-workspace .canvas-global-composer-actions .canvas-global-send:disabled { opacity: .35; cursor: default; }
-.funnel-workspace .canvas-global-composer-actions .canvas-global-recording { color: #963e31; border-color: #c68677; }
-.canvas-global-options { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
-.funnel-workspace .canvas-global-options select { width: auto; max-width: 140px; padding: 3px 7px; border: 1px solid #cbded0; border-radius: 6px; background: #fff; color: #263c37; font-size: 10px; }
-.canvas-global-options > span { color: #607368; font-size: 9px; }
-.canvas-global-status { margin: 7px 0 0; color: #607368; font-size: 10px; line-height: 1.5; }
-.canvas-global-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-
-.funnel-surface { container: canvas-surface / inline-size; }
-.canvas-global-header { flex-shrink: 0; }
 @container canvas-surface (max-width: 600px) {
-  .canvas-global-assistant { bottom: 72px; }
+  .canvas-authoring-dock { bottom: 72px; }
 }
 
 .canvas-authoring-toolbar{display:flex;align-items:center;gap:5px;padding:6px;background:#fff;border:1px solid #d6e2da;border-radius:14px;box-shadow:0 5px 20px #233d3520;pointer-events:auto;max-width:100%}
-.canvas-block-tools{display:flex;gap:3px;min-width:0}.canvas-block-tools>button{display:flex;align-items:center;gap:5px;min-height:38px}.canvas-block-picker{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);width:min(320px,calc(100% - 12px));max-height:calc(100dvh - 270px);overflow:auto;background:white;border:1px solid #d6e2da;border-radius:12px;padding:14px;box-shadow:0 8px 24px #233d3526;display:grid;gap:14px;pointer-events:auto}.canvas-block-picker header{display:flex;align-items:center;justify-content:space-between}.canvas-block-picker label{display:grid;gap:6px;font-size:12px}.canvas-block-picker select,.canvas-block-picker input{width:100%;min-width:0;box-sizing:border-box;padding:8px;border:1px solid #d6e2da;border-radius:7px;background:white;color:#263c37;pointer-events:auto}.canvas-block-picker p{font-size:12px;margin:0}.funnel-workspace .canvas-authoring-toolbar .canvas-global-trigger{box-shadow:none;border:0;border-left:1px solid #d6e2da;border-radius:5px;white-space:nowrap;padding:8px}
-@media(max-width:600px){.canvas-block-tools>button{flex-direction:column;gap:1px}.funnel-workspace .canvas-block-tools>button{padding:4px 6px;font-size:10px}.canvas-authoring-toolbar{gap:2px;padding:4px}.canvas-global-assistant{bottom:62px}.canvas-block-picker{bottom:66px}}
+.canvas-block-tools{display:flex;gap:3px;min-width:0}.canvas-block-tools>button{display:flex;align-items:center;gap:5px;min-height:38px}.canvas-block-picker{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);width:min(320px,calc(100% - 12px));max-height:calc(100dvh - 270px);overflow:auto;background:white;border:1px solid #d6e2da;border-radius:12px;padding:14px;box-shadow:0 8px 24px #233d3526;display:grid;gap:14px;pointer-events:auto}.canvas-block-picker header{display:flex;align-items:center;justify-content:space-between}.canvas-block-picker label{display:grid;gap:6px;font-size:12px}.canvas-block-picker select,.canvas-block-picker input{width:100%;min-width:0;box-sizing:border-box;padding:8px;border:1px solid #d6e2da;border-radius:7px;background:white;color:#263c37;pointer-events:auto}.canvas-block-picker p{font-size:12px;margin:0}
+@media(max-width:600px){.canvas-block-tools>button{flex-direction:column;gap:1px}.funnel-workspace .canvas-block-tools>button{padding:4px 6px;font-size:10px}.canvas-authoring-toolbar{gap:2px;padding:4px}.canvas-authoring-dock{bottom:62px}.canvas-block-picker{bottom:66px}}
 /* Keep insertion controls clear of zoom and reset controls on narrow canvases. */
-@media(max-width:600px){.canvas-global-assistant{bottom:126px}.canvas-block-picker{max-height:calc(100dvh - 380px)}}
+@media(max-width:600px){.canvas-authoring-dock{bottom:126px}.canvas-block-picker{max-height:calc(100dvh - 380px)}}
 .canvas-document-controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto}.canvas-document-chip{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;background:#edf4ef;border:1px solid #d6e2da;border-radius:6px;padding-left:7px;font-size:11px}.canvas-document-chip>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}.canvas-document-controls p{width:100%;font-size:11px;color:#9f4436;margin:0}
+.funnel-workspace .canvas-document-chip button{border:0;background:transparent;padding:0 6px}
 .canvas-block-ghost{position:fixed;transform:translate(-50%,-50%);pointer-events:none;background:#f1f7f3;border:2px solid #60927b;border-radius:12px;padding:20px 45px;box-shadow:0 6px 20px #263c3722;z-index:100;font-weight:600}
 .pipeline-placeholder-panel{display:grid;gap:12px}

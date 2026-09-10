@@ -12,6 +12,9 @@
   box-sizing: border-box;
   container: inspector / inline-size;
 }
+/* The docked assistant shares the row, so the canvas keeps its 280px minimum beside both panels. */
+.funnel-workspace .funnel-body:has(> .canvas-assistant-panel) > .funnel-inspector { width: clamp(340px, var(--inspector-width, min(42%, 640px)), calc(100% - 280px - var(--assistant-width))); }
+.funnel-workspace .funnel-body:has(> .canvas-assistant-rail) > .funnel-inspector { width: clamp(340px, var(--inspector-width, min(42%, 640px)), calc(100% - 328px)); }
 .funnel-workspace .funnel-inspector > header { gap: 12px; padding: 16px; }
 .funnel-inspector > header > div { min-width: 0; overflow-wrap: anywhere; }
 .funnel-inspector > header > button { flex-shrink: 0; }
@@ -43,19 +46,11 @@
 @container hiring-canvas (max-width: 740px) {
   .funnel-workspace .funnel-body { flex-direction: column; }
   .funnel-workspace .funnel-surface { min-height: 240px; }
-  .funnel-workspace .funnel-body > .funnel-inspector { width: 100%; min-width: min(340px, 100%); max-width: 100%; height: 48%; max-height: 52%; flex: 0 1 48%; border-left: 0; border-top: 1px solid #e0e7e3; box-shadow: none; }
+  .funnel-workspace .funnel-body > .funnel-inspector,
+  .funnel-workspace .funnel-body:is(:has(> .canvas-assistant-panel), :has(> .canvas-assistant-rail)) > .funnel-inspector { width: 100%; min-width: min(340px, 100%); max-width: 100%; height: 48%; max-height: 52%; flex: 0 1 48%; border-left: 0; border-top: 1px solid #e0e7e3; box-shadow: none; }
 }
-/* Keep the initial composer light and proposals compact without scaling text rendering. */
+/* Keep the node AI button compact. */
 .funnel-workspace .canvas-assistant-trigger { width: 28px; height: 28px; flex-basis: 28px; font-size: 19px; border-radius: 8px; }
-.canvas-node-assistant { gap: 6px; }
-.canvas-node-chat { padding: 9px; border-radius: 12px; }
-.canvas-node-chat > header { gap: 6px; margin-bottom: 6px; }
-.canvas-node-chat header strong { font-size: 11px; }
-.canvas-node-chat header small { font-size: 9px; margin-top: 2px; }
-.canvas-chat-log p { font-size: 11px; padding: 8px; margin-bottom: 6px; }
-.canvas-chat-proposal { font-size: 11px; }
-.funnel-workspace .canvas-chat-composer textarea { font-size: 12px; min-height: 34px; padding: 7px 2px; }
-.funnel-workspace .canvas-chat-composer button { padding: 5px; }
 /* Preserve compact switch geometry instead of inheriting general button padding. */
 .funnel-workspace .funnel-inspector .switch { width: 36px; height: 20px; flex: 0 0 36px; padding: 2px; border: 0; border-radius: 999px; background: #d0d5dd; }
 .funnel-workspace .funnel-inspector .switch.on { background: #2f5d50; }
@@ -73,8 +68,6 @@
 /* Exactly two entry choices: two equal columns sized to their cards, centered as one group with the heading (no stale third track). */
 .funnel-start-options--entry { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(100%, 492px); margin-inline: auto; }
 .funnel-workspace .funnel-start-options button { width: auto; min-width: 0; min-height: 0; padding: 20px; gap: 12px; overflow-wrap: anywhere; }
-.canvas-node-chat > header > div { min-width: 0; }
-.canvas-node-chat > header > button { flex-shrink: 0; }
 @container hiring-canvas (max-width: 740px) {
   .funnel-header { padding: 12px; gap: 8px; flex-wrap: wrap; }
   .funnel-header-actions { width: 100%; margin-left: 0; }
@@ -98,8 +91,8 @@
 
 /* Readable metadata retains the compact assistant and node dimensions. */
 .funnel-header-actions small, .fn-sub, .funnel-panel-help,
-.canvas-node-chat header small, .canvas-global-message small { color: var(--text-secondary); }
-.canvas-node-chat header small, .canvas-global-message small { font-size: 11px; }
+.canvas-global-message small { color: var(--text-secondary); }
+.canvas-global-message small { font-size: 11px; }
 .funnel-workspace button:focus-visible { outline-color: var(--focus-ring); }
 
 /* CAN-07: while a hiring detail panel is expanded on a narrow screen, collapse the

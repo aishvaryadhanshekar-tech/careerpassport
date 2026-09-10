@@ -1,0 +1,260 @@
+/* Staged AI build controls, shown in the hiring assistant's dock above the composer. */
+
+.ai-build-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Shared actions --- */
+
+.ai-build-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.funnel-workspace .ai-build-primary {
+  border-color: #266b53;
+  background: #dcebe0;
+  color: #20523e;
+  font-weight: 600;
+}
+.funnel-workspace .ai-build-primary:hover { background: #cfe4d6; }
+.funnel-workspace .ai-build-primary:disabled { opacity: 0.4; cursor: default; background: #dcebe0; }
+.funnel-workspace .ai-build-ghost { border-color: transparent; background: transparent; color: #607368; }
+.funnel-workspace .ai-build-ghost:hover { background: #edf4ef; }
+
+/* --- Criteria --- */
+
+.ai-build-criteria { margin-top: 11px; }
+.ai-build-criteria-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ai-build-criteria-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 7px;
+  border-radius: 7px;
+  background: #f5f8f6;
+}
+.ai-build-criteria-label { min-width: 0; font-size: 11px; }
+.ai-build-criteria-importance {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: #e2ebe5;
+  color: #3d534b;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ai-build-importance-critical { background: #f3ddd7; color: #8a3f2f; }
+.ai-build-importance-important { background: #dcebe0; color: #20523e; }
+
+/* --- Pipeline choice --- */
+
+.ai-build-choices { display: grid; gap: 8px; }
+.funnel-workspace .ai-build-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.funnel-workspace .ai-build-choice:hover {
+  background: #fff;
+  border-color: #266b53;
+  box-shadow: 0 4px 12px #263c3714;
+}
+.funnel-workspace .ai-build-choice-primary {
+  border-color: #266b53;
+  background: linear-gradient(180deg, #f5faf7 0%, #fff 100%);
+}
+.ai-build-choice-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #263c37;
+}
+.ai-build-choice-blurb { color: #607368; font-size: 11px; line-height: 1.5; }
+
+/* --- Stage checklist --- */
+
+.ai-build-stages { display: grid; gap: 10px; }
+.ai-build-stage-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.ai-build-stage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  border-radius: 8px;
+}
+.ai-build-stage:hover { background: #f5f8f6; }
+.ai-build-stage-check {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #266b53;
+  cursor: pointer;
+}
+.ai-build-stage-check:disabled { cursor: default; opacity: 0.55; }
+.ai-build-stage-check:focus-visible { outline: 2px solid #6b9d83; outline-offset: 2px; }
+.ai-build-stage-body { min-width: 0; flex: 1 1 auto; }
+.funnel-workspace .ai-build-stage-title {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 5px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #263c37;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+}
+.funnel-workspace .ai-build-stage-title:hover { border-color: #d6e2da; background: #fff; }
+.funnel-workspace .ai-build-stage-title:focus-visible {
+  border-color: #6b9d83;
+  background: #fff;
+  outline: 2px solid #6b9d83;
+  outline-offset: 1px;
+}
+
+/* --- Role brief on the canvas --- */
+
+.funnel-workspace .funnel-node.fn-insight {
+  --node-accent: #2f7a61;
+  --node-tint: #e8f3ed;
+  border-color: #c9ddd2;
+  background: linear-gradient(180deg, #f6fbf8 0%, #fff 60%);
+}
+.funnel-workspace .funnel-node.fn-insight-hub {
+  width: 280px;
+  border-top: 3px solid #2f7a61;
+  box-shadow: 0 2px 3px #233a2d08, 0 10px 26px #2f7a611a;
+}
+.funnel-workspace .funnel-node.fn-insight.fn-reviewed { border-color: #9cc5b1; }
+.funnel-workspace .funnel-node.fn-pending { border-style: dashed; }
+
+.fn-reviewed-badge {
+  margin: 0 6px 0 auto;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: #dcebe0;
+  color: #20523e;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fn-skeleton { display: grid; gap: 6px; }
+.fn-skeleton em { font-style: normal; font-size: 10px; color: #4f7f6b; }
+.fn-skeleton i {
+  display: block;
+  height: 7px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e4eee8 0%, #f6faf8 50%, #e4eee8 100%);
+  background-size: 200% 100%;
+  animation: fn-shimmer 1.1s linear infinite;
+}
+.fn-skeleton i:last-child { width: 62%; }
+@keyframes fn-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.fn-brief { display: grid; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #dfe9e3; cursor: default; }
+.fn-brief small { color: #607368; font-size: 10px; }
+.fn-brief-meter { height: 4px; border-radius: 4px; background: #e2ebe5; overflow: hidden; }
+.fn-brief-meter span { display: block; height: 100%; border-radius: inherit; background: #2f7a61; transition: width 0.3s ease; }
+.fn-brief-actions { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.funnel-workspace .fn-brief-generate {
+  flex: 1 1 auto;
+  padding: 7px 10px;
+  border-color: #266b53;
+  background: #266b53;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.funnel-workspace .fn-brief-generate:hover { background: #1f5c48; }
+.funnel-workspace .fn-brief-generate:disabled { border-color: #d6e2da; background: #eef3f0; color: #8a9a91; cursor: default; }
+.funnel-workspace .fn-brief-skip { padding: 7px 6px; border-color: transparent; background: transparent; color: #607368; font-size: 10px; }
+.fn-brief-ready { animation: fn-brief-pulse 1.4s ease-out 1; }
+@keyframes fn-brief-pulse { from { box-shadow: 0 0 0 0 #266b5366; } to { box-shadow: 0 0 0 10px #266b5300; } }
+
+.fn-brief-frame {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed #b5d0c2;
+  border-radius: 20px;
+  background: #eef6f180;
+}
+.fn-brief-frame > span {
+  position: absolute;
+  top: 10px;
+  left: 16px;
+  color: #5f8a76;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.fn-brief-frame .react-flow__handle { opacity: 0; }
+.fn-brief-frame-drafting { animation: fn-frame-breathe 1.6s ease-in-out infinite; }
+@keyframes fn-frame-breathe { 50% { border-color: #6ea58c; background: #e6f2eb99; } }
+
+/* --- Brief inspector --- */
+
+.funnel-inspector.funnel-insight-panel { width: var(--inspector-width, 520px); max-width: 55%; }
+.insight-panel { display: flex; flex-direction: column; min-height: 100%; }
+.insight-panel-eyebrow {
+  margin: 0 0 12px;
+  color: #5f8a76;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.insight-panel-body { flex: 1 1 auto; min-width: 0; }
+.insight-panel-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 20px -20px -20px;
+  padding: 14px 20px;
+  border-top: 1px solid #edf0ed;
+  background: #fff;
+}
+.insight-panel-done { margin-right: auto; color: #20523e; font-size: 11px; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .funnel-workspace .ai-build-choice { transition: none; }
+  .fn-skeleton i,
+  .fn-brief-ready,
+  .fn-brief-frame-drafting { animation: none; }
+  .fn-brief-meter span { transition: none; }
+}

@@ -138,6 +138,16 @@ export function layoutPipeline(nodes: FunnelNode[]) {
   const placed = new Set<string>();
   function activities(parent: FunnelNode, depth: number) {
     const children = nodes.filter(item => item.parent === parent.id && item.kind !== "stage" && item.kind !== "capability");
+    if (parent.insightKey === "hub") {
+      // Brief sections sit beside their hub in a 2×2 grid so the job → stages spine stays readable.
+      const top = positions.get(parent.id)?.y ?? y;
+      children.forEach((child, index) => {
+        if (placed.has(child.id)) return;
+        placed.add(child.id);
+        positions.set(child.id, { x: 370 + (index % 2) * 290, y: top - 60 + Math.floor(index / 2) * 170 });
+      });
+      return;
+    }
     let messageRow = positions.get(parent.id)?.y ?? y;
     for (const child of children.filter(item => item.kind !== "communication")) {
       if (placed.has(child.id)) continue;
@@ -163,8 +173,10 @@ export function layoutPipeline(nodes: FunnelNode[]) {
     activities(stage, 0);
   }
   let exitY = 230;
+  // Exit stages move clear of the Role brief's section grid when there is one.
+  const exitX = nodes.some(item => item.insightKey === "hub") ? 1000 : 650;
   for (const stage of pipelineStages(nodes).filter(item => item.exit)) {
-    positions.set(stage.id, { x: 650, y: exitY });
+    positions.set(stage.id, { x: exitX, y: exitY });
     exitY += 230;
     activities(stage, 0);
   }
@@ -212,7 +224,10 @@ export function buildPipelineEdges(nodes: FunnelNode[]): PipelineEdge[] {
       .flatMap(item => [item, ...descendants(item.id, seen)]);
   }
   const root = visible.find(item => item.kind === "job");
-  if (root) connect(root.id, stages[0]?.id);
+  // An AI-built canvas routes the spine through its Role brief: job → brief → first stage.
+  const hub = visible.find(item => item.insightKey === "hub" && item.parent === root?.id);
+  if (root) connect(root.id, hub?.id ?? stages[0]?.id);
+  if (hub) connect(hub.id, stages[0]?.id);
   stages.forEach((stage, index) => {
     const path = [stage, ...descendants(stage.id)];
     path.forEach((item, step) => connect(item.id, item.destinationId ?? path[step + 1]?.id ?? stages[index + 1]?.id, item.outcome ?? (item.rules?.some(rule => rule.enabled) ? "success" : undefined)));

@@ -52,8 +52,6 @@
 .funnel-workspace .canvas-block-tools > button { border-color: transparent; border-radius: 8px; background: transparent; gap: 5px; }
 .funnel-workspace .canvas-block-tools > button:hover { background: #edf4ef; }
 .funnel-workspace .canvas-block-tools > button > span:first-child { display: grid; place-items: center; color: #4d7260; }
-.funnel-workspace .canvas-global-trigger { border-radius: 8px; background: #edf5ef; color: #285d49; font-weight: 600; }
-.funnel-workspace .canvas-global-assistant { border-color: #d3e1d8; box-shadow: 0 8px 30px #263c3412; }
 @container hiring-canvas (max-width: 740px) {
   .funnel-workspace .funnel-header { padding: 12px; gap: 8px; }
   .funnel-workspace .funnel-header h1 { font-size: 17px; }

@@ -1,114 +1,135 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useDictation } from "../shared/useDictation";
+import { SparkleIcon } from "../shared/icons";
 import "./canvas-global-assistant.css";
 
-const tasks = [
-  { label: "Describe role", prompt: "Help me define this role: job title, location, responsibilities, and the experience a candidate needs." },
-  { label: "Build pipeline", prompt: "Build a hiring pipeline for this role with an application, candidate review, assessment, and interview stages." },
-  { label: "Review workflow", prompt: "Review the entire hiring workflow. Identify missing steps, duplicated work, and opportunities to improve the candidate experience." },
-];
-
-export function CanvasGlobalAssistant({ open, onOpen, onClose, messages, prompt, onPromptChange, model, onModelChange, onSubmit, children, toolbar, attachments, hasAttachments = false, isStarting = false }: {
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
+/**
+ * The hiring assistant, docked as the canvas's left column; collapses to a slim rail.
+ * History scrolls above; `dock` — what's being asked right now — sits pinned on the composer.
+ */
+export function CanvasGlobalAssistant({ collapsed, onToggleCollapsed, messages, prompt, onPromptChange, onSubmit, dock, busy = false, context, placeholder, attachments, hasAttachments = false, onAttach, focusSignal = 0 }: {
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
   messages: { role: "user" | "assistant"; text: string }[];
   prompt: string;
   onPromptChange: (value: string) => void;
-  model: string;
-  onModelChange: (value: string) => void;
   onSubmit: () => void;
-  children?: ReactNode;
-  toolbar?: ReactNode;
+  /** The current question or action, pinned directly above the composer. */
+  dock?: ReactNode;
+  /** The assistant is working; the composer waits and the dock shows the status. */
+  busy?: boolean;
+  /** Set while the conversation is about one canvas node rather than the whole workflow. */
+  context?: { title: string; onClear: () => void };
+  placeholder?: string;
+  /** Attached-file chips, shown inside the composer. */
   attachments?: ReactNode;
   hasAttachments?: boolean;
-  isStarting?: boolean;
+  onAttach?: () => void;
+  /** Bump to move focus into the composer (for example after a node's AI button). */
+  focusSignal?: number;
 }) {
   const panelId = useId();
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
+  const rail = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
-  const content = useRef<HTMLDivElement>(null);
-  const openRef = useRef(open);
-  openRef.current = open;
+  const history = useRef<HTMLDivElement>(null);
+  const collapsedRef = useRef(collapsed);
+  collapsedRef.current = collapsed;
   const speech = useDictation({ value: prompt, onChange: onPromptChange });
   const stopSpeech = useRef(speech.stopRecording);
   stopSpeech.current = speech.stopRecording;
-  const [maxHeight, setMaxHeight] = useState(420);
+  const [seen, setSeen] = useState(messages.length);
+  const unread = collapsed && messages.length > seen;
 
   useEffect(() => {
-    const surface = root.current?.parentElement;
-    if (!surface) return;
-    const observer = new ResizeObserver(([entry]) => {
-      setMaxHeight(Math.max(90, Math.min(420, entry.contentRect.height - 134)));
-    });
-    observer.observe(surface);
-    return () => observer.disconnect();
-  }, []);
+    if (!collapsed) setSeen(messages.length);
+  }, [collapsed, messages.length]);
 
   useEffect(() => {
-    if (open) input.current?.focus();
-    else stopSpeech.current();
-  }, [open]);
+    if (collapsed) stopSpeech.current();
+  }, [collapsed]);
 
   useEffect(() => {
-    if (open && content.current) content.current.scrollTop = content.current.scrollHeight;
-  }, [messages, children, open]);
+    if (focusSignal && !collapsed) input.current?.focus();
+    // Focus follows an explicit request only, never every expand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusSignal]);
 
-  function close() {
+  useEffect(() => {
+    if (!collapsed && history.current) history.current.scrollTop = history.current.scrollHeight;
+  }, [messages, collapsed]);
+
+  function collapse() {
     speech.stopRecording();
-    onClose();
-    trigger.current?.focus();
+    onToggleCollapsed();
+    requestAnimationFrame(() => rail.current?.focus());
+  }
+
+  function expand() {
+    onToggleCollapsed();
+    requestAnimationFrame(() => input.current?.focus());
   }
 
   async function dictate() {
     if (speech.recording) speech.stopRecording();
     else {
       await speech.startRecording();
-      // Permission may finish after the user has dismissed the composer.
-      if (!openRef.current) stopSpeech.current();
+      // Permission may finish after the user has collapsed the panel.
+      if (collapsedRef.current) stopSpeech.current();
     }
   }
 
-  return <div ref={root} className="canvas-global-assistant nodrag nopan nowheel"
-    onKeyDown={(event) => {
-      if (event.key === "Escape" && open) {
-        event.stopPropagation();
-        close();
-      }
-    }}>
-    {open && <section id={panelId} className="canvas-global-panel" style={{ maxHeight }} aria-label="Canvas AI assistant">
-      <header className="canvas-global-header">
-        <div><strong>Canvas assistant</strong></div>
-        <button type="button" aria-label="Close canvas AI assistant" onClick={close}>×</button>
-      </header>
-      <div ref={content} className="canvas-global-content">
+  if (collapsed) {
+    return <aside className="canvas-assistant canvas-assistant-rail" aria-label="Hiring assistant">
+      <button ref={rail} type="button" className="canvas-assistant-expand" aria-label={unread ? "Open hiring assistant (new message)" : "Open hiring assistant"} aria-expanded={false} onClick={expand}>
+        <span className="canvas-global-mark" aria-hidden="true"><SparkleIcon /></span>
+        {unread && <span className="canvas-assistant-unread" aria-hidden="true" />}
+      </button>
+    </aside>;
+  }
 
-        {messages.length > 0 && <div className="canvas-global-log" role="log" aria-label="Canvas conversation" aria-live="polite">
-          {messages.map((message, index) => <div key={index} className={`canvas-global-message canvas-global-message-${message.role}`}><small className="canvas-global-sr-only">{message.role === "user" ? "You" : "Assistant"}</small><p>{message.text}</p></div>)}
-        </div>}
-        {children && <div className="canvas-global-proposal">{children}</div>}
+  return <aside id={panelId} className="canvas-assistant canvas-assistant-panel" aria-label="Hiring assistant"
+    onKeyDown={(event) => {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      if (context) context.onClear();
+      else collapse();
+    }}>
+    <header className="canvas-assistant-header">
+      <span className="canvas-global-mark" aria-hidden="true"><SparkleIcon /></span>
+      <strong>Hiring assistant</strong>
+      <button type="button" aria-label="Collapse hiring assistant" aria-expanded aria-controls={panelId} onClick={collapse}>«</button>
+    </header>
+    <div ref={history} className="canvas-assistant-history" role="log" aria-label="Conversation" aria-live="polite">
+      <div className="canvas-assistant-thread">
+        {messages.length === 0 && <p className="canvas-assistant-msg canvas-assistant-msg-assistant">{context ? `Ask me to change ${context.title} — I'll suggest edits you can accept or dismiss.` : "Ask me to review the workflow or change anything on the canvas."}</p>}
+        {messages.map((message, index) => <p key={index} className={`canvas-assistant-msg canvas-assistant-msg-${message.role}`}><span className="canvas-global-sr-only">{message.role === "user" ? "You: " : "Assistant: "}</span>{message.text}</p>)}
       </div>
-      <form className="canvas-global-form" onSubmit={(event) => { event.preventDefault(); if (prompt.trim() || hasAttachments) { speech.stopRecording(); onSubmit(); } }}>
-        {attachments}
-        <div className="canvas-global-tasks" aria-label="Suggested tasks">
-          {tasks.map((task) => <button key={task.label} type="button" onClick={() => { onPromptChange(task.prompt); input.current?.focus(); }}>{task.label}</button>)}
-        </div>
-        <div className="canvas-global-composer">
-          <textarea ref={input} rows={2} value={prompt} aria-label="Canvas AI request" placeholder={isStarting ? "What role are you hiring for?" : "Ask about your workflow…"} onChange={(event) => onPromptChange(event.target.value)}
+    </div>
+    <div className="canvas-assistant-dock">
+      {context && <div className="canvas-assistant-context">
+        <span>Talking about <strong>{context.title}</strong></span>
+        <button type="button" aria-label="Back to the whole-canvas conversation" onClick={context.onClear}>×</button>
+      </div>}
+      {dock && <div className="canvas-assistant-prompt">{dock}</div>}
+      <form onSubmit={(event) => { event.preventDefault(); if (!busy && (prompt.trim() || hasAttachments)) { speech.stopRecording(); onSubmit(); } }}>
+        <div className={`canvas-assistant-composer${busy ? " canvas-assistant-composer-busy" : ""}`}>
+          {attachments}
+          <textarea ref={input} rows={2} value={prompt} aria-label="Message the hiring assistant" placeholder={placeholder ?? "Ask about your workflow…"} disabled={busy} onChange={(event) => onPromptChange(event.target.value)}
             onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} />
-          <div className="canvas-global-composer-actions">
-            <button type="button" className={speech.recording ? "canvas-global-recording" : undefined} aria-label={speech.recording ? "Stop dictation" : "Dictate canvas request"} aria-pressed={speech.recording} onClick={() => void dictate()}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11v1a6 6 0 0 0 12 0v-1M12 18v3m-4 0h8"/></svg>
+          <div className="canvas-assistant-composer-actions">
+            {onAttach && <button type="button" aria-label="Attach a document" title="Attach a document" disabled={busy} onClick={onAttach}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m21 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.5 3.5 0 0 1 5 5l-8.6 8.6a2 2 0 0 1-2.8-2.8l7.9-7.9"/></svg>
+            </button>}
+            <span className="canvas-assistant-spacer" />
+            <button type="button" className={speech.recording ? "canvas-global-recording" : undefined} aria-label={speech.recording ? "Stop dictation" : "Dictate a message"} aria-pressed={speech.recording} disabled={busy} onClick={() => void dictate()}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11v1a6 6 0 0 0 12 0v-1M12 18v3m-4 0h8"/></svg>
             </button>
-            <button className="canvas-global-send" type="submit" aria-label="Send canvas request" disabled={!prompt.trim() && !hasAttachments}>↑</button>
+            <button className="canvas-assistant-send" type="submit" aria-label="Send message" disabled={busy || (!prompt.trim() && !hasAttachments)}>↑</button>
           </div>
         </div>
         {speech.interim && <p className="canvas-global-status">{speech.interim}</p>}
-        {(speech.micBlocked || speech.micFailed || speech.noSpeechApi) && <p className="canvas-global-status" role="status">Dictation is unavailable. You can type your request.</p>}
-        <div className="canvas-global-options"><label><span className="canvas-global-sr-only">AI model</span><select aria-label="AI model" value={model || "Claude"} onChange={(event) => onModelChange(event.target.value)}><option value="Claude">Claude</option><option value="GPT">GPT</option><option value="Gemini">Gemini</option></select></label><span>Demo · review before applying</span></div>
+        {(speech.micBlocked || speech.micFailed || speech.noSpeechApi) && <p className="canvas-global-status" role="status">Dictation is unavailable. You can type instead.</p>}
       </form>
-    </section>}
-    <div className="canvas-authoring-toolbar" role="toolbar" aria-label="Pipeline tools">{toolbar}<button ref={trigger} type="button" className={`canvas-global-trigger${open ? " canvas-global-active" : ""}`} aria-expanded={open} aria-controls={open ? panelId : undefined} onClick={open ? close : onOpen}><span aria-hidden="true">✦</span> Ask AI</button></div>
-  </div>;
+    </div>
+  </aside>;
 }

@@ -5,11 +5,15 @@ import type { Capability } from "../hiring/types";
 export type FunnelKind =
   | "job"
   | "stage"
+  /** AI-drafted Role brief: a hub under the job plus the four Role Profile sections under it. */
+  | "insight"
   | "application"
   | "round"
   | "trip"
   | "communication"
   | "capability";
+/** Which Role Profile section an insight node mirrors; "hub" is their shared parent. */
+export type InsightKey = "hub" | "summary" | "requirements" | "sourcing" | "evaluation";
 export type FunnelNode = {
   id: string;
   parent: string | null;
@@ -45,6 +49,9 @@ export type FunnelNode = {
   canvasConnections?: {source:string;target:string;sourceHandle:string;targetHandle:string}[];
   hiddenConnections?: string[];
   exit?: boolean;
+  insightKey?: InsightKey;
+  /** Set once the person has checked an AI-drafted brief section. */
+  reviewed?: boolean;
 };
 export function node(
   kind: FunnelKind,
