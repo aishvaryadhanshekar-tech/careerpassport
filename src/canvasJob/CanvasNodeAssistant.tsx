@@ -8,9 +8,8 @@ export type CanvasChatMessage = { role: "user" | "assistant"; text: string };
  * The selected node's AI button, anchored beside it as the canvas moves. The conversation
  * itself lives in the docked hiring assistant; this only points it at the node.
  */
-export function CanvasNodeAssistant({ item, position, open, onOpen, onClose }: {
-  item: FunnelNode; position: { x: number; y: number }; open: boolean;
-  onOpen: () => void; onClose: () => void;
+export function CanvasNodeAssistant({ item, position, onOpen }: {
+  item: FunnelNode; position: { x: number; y: number }; onOpen: () => void;
 }) {
   const { x, y, zoom } = useViewport();
   const flow = useReactFlow();
@@ -29,8 +28,7 @@ export function CanvasNodeAssistant({ item, position, open, onOpen, onClose }: {
   const left = Math.max(12, Math.min(x + (position.x + nodeWidth) * zoom + 12, size.width - 40));
   const top = Math.max(12, Math.min(y + position.y * zoom + 12, size.height - toolbarSpace - 28));
   return <div ref={root} className="canvas-node-assistant nodrag nopan nowheel" style={{ left, top }}>
-    <button className="canvas-assistant-trigger" aria-label={`Ask AI about ${item.title}`} aria-pressed={open}
-      onClick={open ? onClose : onOpen}>✦</button>
+    <button className="canvas-assistant-trigger" aria-label={`Ask AI about ${item.title}`} onClick={onOpen}>✦</button>
   </div>;
 }
 

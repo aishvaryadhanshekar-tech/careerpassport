@@ -2,27 +2,22 @@ import { describe, expect, it } from "vitest";
 import { createDraft } from "../../types";
 import { baseFunnel, node } from "../funnelModel";
 import { buildPipelineEdges, layoutPipeline } from "../pipelineModel";
-import { buildProfileProposal, insightSummary } from "./aiBuildFixtures";
-import { BRIEF_HUB_ID, BRIEF_SECTIONS, briefHandoffOpen, briefProgress } from "./buildPhase";
+import { briefHub, buildProfileProposal, insightSummary } from "./aiBuildFixtures";
+import { BRIEF_CARD_SIZE, BRIEF_HUB_ID, briefHandoffOpen, briefProgress, withSectionReviewed } from "./buildPhase";
 
-function briefCanvas() {
-  const proposal = buildProfileProposal("We need a senior product designer in Berlin", createDraft());
-  return { proposal, items: [...baseFunnel(), proposal.hub, ...proposal.sections] };
-}
-
+const briefCanvas = () => [...baseFunnel(), briefHub()];
 const prospects = () => node("stage", "Prospects", "job", "prospects");
 
 describe("role brief", () => {
-  it("drafts one hub with the four Role Profile sections under it", () => {
-    const { proposal } = briefCanvas();
-    expect(proposal.hub).toMatchObject({ id: BRIEF_HUB_ID, kind: "insight", insightKey: "hub", parent: "job" });
-    expect(proposal.sections.map((s) => [s.id, s.insightKey, s.parent])).toEqual(
-      BRIEF_SECTIONS.map((s) => [s.id, s.key, BRIEF_HUB_ID]),
-    );
+  it("is one card on the job, with no section nodes under it", () => {
+    const items = briefCanvas();
+    expect(items.find((item) => item.id === BRIEF_HUB_ID)).toMatchObject({ kind: "insight", insightKey: "hub", parent: "job" });
+    expect(items.some((item) => item.parent === BRIEF_HUB_ID)).toBe(false);
+    expect(layoutPipeline([...items, prospects()]).some((item) => item.parent === BRIEF_HUB_ID)).toBe(false);
   });
 
   it("reads card copy from the live draft", () => {
-    const { draft } = briefCanvas().proposal;
+    const { draft } = buildProfileProposal("We need a senior product designer in Berlin", createDraft());
     expect(insightSummary("evaluation", draft)).toContain(`${draft.roleProfile.evaluationFramework.length} criteria`);
     const edited = {
       ...draft,
@@ -31,30 +26,27 @@ describe("role brief", () => {
     expect(insightSummary("summary", edited)).toContain("Design lead for payments");
   });
 
-  it("lays sections out in a 2×2 grid beside the hub, off the job → stage spine", () => {
-    const laid = layoutPipeline([...briefCanvas().items, prospects()]);
+  it("sits on the job → stage spine, with the first stage clear of the taller card", () => {
+    const laid = layoutPipeline([...briefCanvas(), prospects()]);
     const at = (id: string) => laid.find((item) => item.id === id)!.position;
     const hub = at(BRIEF_HUB_ID);
-    const grid = BRIEF_SECTIONS.map((section) => at(section.id));
     expect(hub.x).toBe(0);
-    expect(new Set(grid.map((p) => p.x)).size).toBe(2);
-    expect(new Set(grid.map((p) => p.y)).size).toBe(2);
-    expect(Math.min(...grid.map((p) => p.x))).toBeGreaterThan(hub.x + 260);
+    expect(hub.y).toBeGreaterThan(at("job").y);
     expect(at("prospects").x).toBe(0);
-    expect(at("prospects").y).toBeGreaterThan(hub.y);
+    expect(at("prospects").y - hub.y).toBeGreaterThanOrEqual(BRIEF_CARD_SIZE.height);
   });
 
   it("routes the spine through the brief", () => {
-    const ids = buildPipelineEdges([...briefCanvas().items, prospects()]).map((edge) => edge.id);
+    const ids = buildPipelineEdges([...briefCanvas(), prospects()]).map((edge) => edge.id);
     expect(ids).toContain(`job->${BRIEF_HUB_ID}`);
     expect(ids).toContain(`${BRIEF_HUB_ID}->prospects`);
     expect(ids).not.toContain("job->prospects");
   });
 
   it("offers the pipeline hand-off only once drafted and before a pipeline exists", () => {
-    const { items } = briefCanvas();
+    const items = briefCanvas();
     expect(briefProgress(items)).toEqual({ reviewed: 0, total: 4 });
-    const reviewed = items.map((item) => (item.parent === BRIEF_HUB_ID ? { ...item, reviewed: true } : item));
+    const reviewed = (["summary", "requirements", "sourcing", "evaluation"] as const).reduce(withSectionReviewed, items);
     expect(briefProgress(reviewed).reviewed).toBe(4);
     expect(briefHandoffOpen("reviewing", items)).toBe(true);
     expect(briefHandoffOpen("drafting", items)).toBe(false);

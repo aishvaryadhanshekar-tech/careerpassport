@@ -1,4 +1,5 @@
 export * from "./buildPhase";
+export * from "./contract";
 export * from "./mockJd";
 export * from "./aiBuildFixtures";
 export * from "./useAiBuildFlow";

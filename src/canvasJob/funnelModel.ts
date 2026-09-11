@@ -50,7 +50,9 @@ export type FunnelNode = {
   hiddenConnections?: string[];
   exit?: boolean;
   insightKey?: InsightKey;
-  /** Set once the person has checked an AI-drafted brief section. */
+  /** Role brief hub only: the sections the person has ticked off. Persisted with the canvas. */
+  reviewedSections?: Exclude<InsightKey, "hub">[];
+  /** @deprecated Legacy per-section brief nodes; read only by migrateBriefSections. */
   reviewed?: boolean;
 };
 export function node(

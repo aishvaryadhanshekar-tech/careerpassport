@@ -1,19 +1,16 @@
-/* Hiring assistant: docked left column of .funnel-body, collapsing to a slim rail. */
-.funnel-workspace { --assistant-width: clamp(300px, 26vw, 360px); }
+/* Hiring assistant: docked left column of .funnel-body; collapses to a floating round AI button over the canvas. */
+.funnel-workspace { --assistant-width: 320px; }
 .canvas-assistant {
   position: relative;
   box-sizing: border-box;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border-right: 1px solid #e0e7e3;
   color: #263c37;
   color-scheme: light;
   z-index: 16;
 }
-.canvas-assistant-panel { flex: 0 0 var(--assistant-width); width: var(--assistant-width); animation: canvas-assistant-in .2s ease-out; }
-.canvas-assistant-rail { flex: 0 0 48px; width: 48px; align-items: center; padding: 12px 0; }
+.canvas-assistant-panel { flex: 0 0 var(--assistant-width); width: var(--assistant-width); background: #f9fbfa; border-right: 1px solid #e0e7e3; animation: canvas-assistant-in .2s ease-out; }
 @keyframes canvas-assistant-in { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
 
 .funnel-workspace :is(.canvas-assistant, .canvas-authoring-dock) button {
@@ -27,121 +24,189 @@
 }
 .funnel-workspace :is(.canvas-assistant, .canvas-authoring-dock) button:hover { background: #edf4ef; }
 .funnel-workspace :is(.canvas-assistant, .canvas-authoring-dock) :is(button, select, textarea, input):focus-visible { outline: 2px solid #6b9d83; outline-offset: 2px; }
-.canvas-global-mark {
+.canvas-global-mark { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; border-radius: 8px; background: #e3f0e8; color: #266b53; line-height: 1; }
+.canvas-global-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* Collapsed: one floating round AI button at the canvas's top left, taking no layout width. */
+.canvas-assistant-collapsed { position: absolute; top: 12px; left: 12px; z-index: 18; display: block; background: none; border: 0; }
+.funnel-workspace .canvas-assistant .canvas-assistant-pill {
+  position: relative;
   display: grid;
   place-items: center;
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  background: linear-gradient(135deg, #dcebe0, #cfe4ee);
-  color: #266b53;
-  line-height: 1;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2f7a61, #3f9a78);
+  color: #fff;
+  box-shadow: 0 6px 18px #2f7a6147, 0 0 0 4px #3f9a781f;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
-.funnel-workspace .canvas-assistant .canvas-assistant-expand { position: relative; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 10px; }
-.funnel-workspace .canvas-assistant-expand .canvas-global-mark { width: 24px; height: 24px; }
-.canvas-assistant-unread { position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: #2f7d62; border: 2px solid #fff; }
+.funnel-workspace .canvas-assistant .canvas-assistant-pill:hover { background: linear-gradient(135deg, #296c56, #378a6b); transform: translateY(-1px); box-shadow: 0 8px 22px #2f7a6152, 0 0 0 5px #3f9a7826; }
+.funnel-workspace .canvas-assistant .canvas-assistant-pill:focus-visible { outline: 2px solid #1f3a31; outline-offset: 3px; }
+.canvas-assistant-pill-mark { display: grid; place-items: center; }
+.canvas-assistant-pill-mark svg { width: 22px; height: 22px; }
+.canvas-assistant-pill-unread::after { content: ""; position: absolute; inset: -3px; border-radius: inherit; border: 2px solid #3f9a78; pointer-events: none; animation: canvas-assistant-ring 1.8s ease-out infinite; }
+.canvas-assistant-unread { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: #f0a53a; border: 2px solid #fff; }
+@keyframes canvas-assistant-ring { from { opacity: .8; transform: scale(1); } to { opacity: 0; transform: scale(1.18); } }
+/* Header: mark, name and one muted line. */
+.canvas-assistant-header { flex-shrink: 0; display: flex; align-items: center; gap: 9px; padding: 12px 8px 12px 14px; border-bottom: 1px solid #edf1ee; }
+.canvas-assistant-heading { display: grid; gap: 1px; min-width: 0; }
+.canvas-assistant-heading strong { font-size: 13px; font-weight: 600; line-height: 1.3; color: #1f3a31; }
+.canvas-assistant-heading small { font-size: 11px; line-height: 1.35; color: #7a8c83; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.funnel-workspace .canvas-assistant-header button { margin-left: auto; flex-shrink: 0; border-color: transparent; background: transparent; color: #607368; font-size: 15px; padding: 2px 8px; }
 
-/* Header: one line. */
-.canvas-assistant-header { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 11px 8px 11px 14px; border-bottom: 1px solid #edf1ee; }
-.canvas-assistant-header strong { font-size: 13px; font-weight: 600; color: #1f3a31; }
-.funnel-workspace .canvas-assistant-header button { margin-left: auto; border-color: transparent; background: transparent; color: #607368; font-size: 15px; padding: 2px 8px; }
-
-/* History: quiet, bottom-anchored so the latest lines sit against the dock. */
+/* History: bottom-anchored so the latest lines sit against the composer. */
 .canvas-assistant-history {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   display: flex;
   flex-direction: column;
-  padding: 14px 16px 12px;
+  padding: 16px 16px 12px;
   /* Earlier lines fade out under the header instead of being cut off mid-line. */
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16px);
   mask-image: linear-gradient(to bottom, transparent 0, #000 16px);
 }
-.canvas-assistant-thread { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
-.canvas-assistant-msg { margin: 0; font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
-.canvas-assistant-msg-assistant { color: #4a5f57; }
-.canvas-assistant-msg-user { align-self: flex-end; max-width: 85%; padding: 6px 11px; border-radius: 14px 14px 4px 14px; background: #e7f1eb; color: #1f3a31; }
+.canvas-assistant-thread { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.canvas-assistant-msg { margin: 0; font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
+.canvas-assistant-msg-assistant { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 8px; color: #2f443c; }
+.canvas-assistant-msg-first:not(:first-child) { margin-top: 8px; }
+.canvas-assistant-avatar { grid-column: 1; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #e3f0e8; color: #266b53; }
+.canvas-assistant-avatar svg { width: 12px; height: 12px; }
+.canvas-assistant-msg-body { grid-column: 2; min-width: 0; }
+.canvas-assistant-name { display: block; margin: 1px 0 3px; font-size: 11.5px; font-weight: 600; line-height: 18px; color: #1f3a31; }
+.canvas-assistant-msg-body p { margin: 0; white-space: pre-wrap; }
+.canvas-assistant-msg-user { align-self: flex-end; max-width: 85%; padding: 7px 12px; border-radius: 14px 14px 4px 14px; background: #e4f0e9; color: #1f3a31; white-space: pre-wrap; }
 
-/* Dock: the current question or action, pinned on the composer. */
-.canvas-assistant-dock { flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 14px 12px; border-top: 1px solid #edf1ee; }
-.canvas-assistant-prompt { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow: auto; margin: -2px; padding: 2px; }
-.assistant-dock-question { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 13px; font-weight: 600; line-height: 1.45; color: #1f3a31; }
-.assistant-dock-mark { flex-shrink: 0; display: grid; place-items: center; margin-top: 2px; color: #266b53; }
-.assistant-dock-status { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 12.5px; color: #3d534b; }
-.assistant-dock-status .assistant-dock-mark { margin-top: 0; }
-.assistant-dock-pulse { animation: canvas-global-pulse 1.6s ease-in-out infinite; }
-.assistant-dock-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.funnel-workspace .assistant-dock-chips button { border-radius: 999px; padding: 5px 11px; text-align: left; }
-.funnel-workspace .assistant-dock-chips button:hover { border-color: #80a68e; }
-.assistant-dock-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 11.5px; color: #8a9a91; }
-.funnel-workspace .assistant-dock-links button { border: 0; background: none; padding: 0; color: #2f6f58; font-size: 11.5px; text-decoration: underline; text-decoration-color: #a9cfba; text-underline-offset: 3px; }
-.funnel-workspace .assistant-dock-links button:hover { background: none; text-decoration-color: currentColor; }
-.assistant-dock-options { display: grid; gap: 6px; }
-.funnel-workspace .assistant-dock-option { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 9px 12px; border-radius: 10px; text-align: left; }
-.funnel-workspace .assistant-dock-option:hover { background: #fff; border-color: #266b53; }
-.assistant-dock-option strong { font-size: 12px; font-weight: 600; }
-.assistant-dock-option span { color: #607368; font-size: 11px; }
-.assistant-dock-progress { display: grid; gap: 6px; }
-.assistant-dock-meter { height: 4px; border-radius: 4px; background: #e2ebe5; overflow: hidden; }
-.assistant-dock-meter span { display: block; height: 100%; border-radius: inherit; background: #2f7a61; transition: width .3s ease; }
-.assistant-dock-progress small { color: #607368; font-size: 11px; }
-.assistant-dock-proposal { font-size: 12px; line-height: 1.5; color: #263c37; overflow-wrap: anywhere; }
-.assistant-dock-proposal :is(p, ul) { margin: 0 0 8px; }
-.assistant-dock-proposal ul { padding-left: 17px; }
-.assistant-dock-proposal button { margin: 0 6px 0 0; }
-.canvas-assistant-context { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; color: #4a5f57; }
+/* Composer card: the question or current step, the ways to answer, then one action row. */
+.canvas-assistant-footer { flex: 0 0 auto; padding: 4px 10px 12px; }
+.canvas-assistant-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 10px;
+  background: #fff;
+  border: 1px solid #dfe6e1;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px #1f3a310a, 0 6px 18px #1f3a310f;
+  transition: border-color .15s, box-shadow .15s;
+}
+.canvas-assistant-card:focus-within { border-color: #b9cfc2; }
+.canvas-assistant-form { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.canvas-assistant-question, .assistant-dock-question { margin: 0; font-size: 13.5px; font-weight: 600; line-height: 1.4; color: #1f3a31; }
+.canvas-assistant-prompt { display: flex; flex-direction: column; gap: 10px; max-height: 45vh; overflow: auto; margin: -2px; padding: 2px; }
+.canvas-assistant-context { display: flex; align-items: center; gap: 4px; align-self: flex-start; max-width: 100%; box-sizing: border-box; padding: 3px 3px 3px 10px; border-radius: 999px; background: #edf4ef; font-size: 11.5px; color: #4a5f57; }
 .canvas-assistant-context span { min-width: 0; overflow-wrap: anywhere; }
 .canvas-assistant-context strong { color: #1f3a31; }
-.funnel-workspace .canvas-assistant-context button { flex-shrink: 0; border-color: transparent; background: transparent; color: #607368; font-size: 14px; padding: 0 6px; }
+.funnel-workspace .canvas-assistant .canvas-assistant-context button { flex-shrink: 0; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #607368; font-size: 14px; }
 
-/* Composer. */
-.canvas-assistant-composer { border: 1px solid #d6e2da; border-radius: 12px; background: #fff; padding: 9px 8px 6px 11px; transition: border-color .15s, box-shadow .15s; }
-.canvas-assistant-composer:focus-within { border-color: #80a68e; box-shadow: 0 0 0 3px #80a68e22; }
-.canvas-assistant-composer-busy { background: #f6f8f7; }
+/* Numbered ways to start: 1 is the textarea itself, 2–4 are buttons. */
+.canvas-assistant-options { list-style: none; margin: 0 -4px; padding: 0; display: grid; gap: 2px; }
+.canvas-assistant-options > li { margin: 0; min-width: 0; }
+.canvas-assistant-option { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; column-gap: 10px; box-sizing: border-box; width: 100%; padding: 7px 6px; border-radius: 10px; }
+.funnel-workspace .canvas-assistant .canvas-assistant-option { border: 1px solid transparent; border-radius: 10px; background: transparent; color: #263c37; font-size: 12.5px; line-height: 1.4; text-align: left; padding: 7px 6px; }
+.funnel-workspace .canvas-assistant .canvas-assistant-option:is(:hover, :focus-visible) { background: #f2f7f4; }
+.funnel-workspace .canvas-assistant .canvas-assistant-option-selected { background: #f2f7f4; color: #1f5c48; }
+.canvas-assistant-option-selected .canvas-assistant-badge { border-color: #2f7a61; background: #2f7a61; color: #fff; }
+.canvas-assistant-option:is(:hover, :focus-visible) .canvas-assistant-badge { border-color: #80a68e; color: #266b53; }
+.canvas-assistant-option-active { align-items: start; border: 1px solid #e3ebe6; background: #f7faf8; cursor: text; transition: border-color .15s, background .15s, box-shadow .15s; }
+.canvas-assistant-option-active:focus-within { border-color: #9dbcaa; background: #fff; box-shadow: 0 0 0 3px #80a68e1f; }
+.canvas-assistant-badge { display: grid; place-items: center; width: 20px; height: 20px; box-sizing: border-box; border: 1px solid #cfdcd4; border-radius: 50%; background: #fff; color: #607368; font-size: 10.5px; font-weight: 600; line-height: 1; }
+.canvas-assistant-option-active .canvas-assistant-badge, .canvas-assistant-option-active:hover .canvas-assistant-badge { margin-top: 1px; border-color: #1f3a31; background: #1f3a31; color: #fff; }
+.canvas-assistant-option-text { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.canvas-assistant-option-text svg { flex-shrink: 0; color: #607368; }
+.funnel-workspace .canvas-assistant .canvas-assistant-option-recording, .funnel-workspace .canvas-assistant .canvas-assistant-option-recording:hover { background: #fdf0ed; color: #963e31; }
+.canvas-assistant-option-recording .canvas-assistant-badge { border-color: #e3b3aa; color: #963e31; }
+.canvas-assistant-rec-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: #d0473a; animation: canvas-global-pulse 1.2s ease-in-out infinite; }
+
+/* An attached JD fills one tall text box, in place of the options. */
+.canvas-assistant-document { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.funnel-workspace .canvas-assistant .canvas-assistant-document textarea { box-sizing: border-box; width: 100%; min-height: 260px; max-height: 50vh; overflow: auto; resize: vertical; padding: 10px 12px; border: 1px solid #e3ebe6; border-radius: 10px; background: #f7faf8; color: #263c37; font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; transition: border-color .15s, background .15s, box-shadow .15s; }
+.funnel-workspace .canvas-assistant .canvas-assistant-document textarea:focus { outline: none; border-color: #9dbcaa; background: #fff; box-shadow: 0 0 0 3px #80a68e1f; }
+
+/* Template list, in place of the options. */
+.canvas-assistant-templates { max-height: 260px; overflow: auto; }
+.funnel-workspace .canvas-assistant .canvas-assistant-template { align-items: start; }
+.canvas-assistant-template-mark { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: #edf4ef; color: #266b53; }
+.canvas-assistant-template-mark svg { width: 12px; height: 12px; }
+.canvas-assistant-template-text { display: grid; gap: 1px; min-width: 0; }
+.canvas-assistant-template-text strong { font-size: 12.5px; font-weight: 600; color: #1f3a31; }
+.canvas-assistant-template-text small { font-size: 11px; color: #607368; }
+
+/* Typing box: four lines, grows to 220px, then scrolls. */
 .funnel-workspace .canvas-assistant textarea {
   display: block;
   width: 100%;
   box-sizing: border-box;
-  min-height: 38px;
-  max-height: 140px;
+  min-height: 96px;
+  max-height: 220px;
+  overflow-y: auto;
+  field-sizing: content;
   resize: none;
   border: 0;
-  padding: 0;
+  padding: 0 2px;
   background: transparent;
   color: #263c37;
   font: inherit;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .funnel-workspace .canvas-assistant textarea:focus-visible { outline: none; }
 .canvas-assistant textarea::placeholder { color: #8a9a91; }
 .canvas-assistant textarea:disabled { cursor: default; }
-.canvas-assistant-composer-actions { display: flex; align-items: center; gap: 2px; margin-top: 4px; }
-.canvas-assistant-spacer { flex: 1; }
-.funnel-workspace .canvas-assistant-composer-actions button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border-color: transparent; background: transparent; color: #607368; }
-.funnel-workspace .canvas-assistant-composer-actions button:disabled { opacity: .4; cursor: default; background: transparent; }
-.funnel-workspace .canvas-assistant-composer-actions .canvas-assistant-send { margin-left: 4px; border-radius: 8px; background: #266b53; color: #fff; font-size: 16px; }
-.funnel-workspace .canvas-assistant-composer-actions .canvas-assistant-send:hover { background: #1f5c48; }
-.funnel-workspace .canvas-assistant-composer-actions .canvas-assistant-send:disabled { background: #cfdcd4; color: #fff; opacity: 1; }
-.funnel-workspace .canvas-assistant-composer-actions .canvas-global-recording { color: #963e31; background: #fbe9e5; }
-.canvas-assistant-composer > .canvas-document-controls { margin-bottom: 8px; }
-.canvas-global-status { margin: 6px 2px 0; color: #607368; font-size: 11px; line-height: 1.5; }
+
+/* Busy: a spinner line in place of the options or textarea. */
+.canvas-assistant-busy { display: flex; align-items: center; gap: 9px; margin: 0; min-height: 44px; padding: 2px; font-size: 12.5px; line-height: 1.45; color: #3d534b; }
+.canvas-assistant-busy-mark { flex-shrink: 0; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #e3f0e8; color: #266b53; animation: canvas-global-pulse 1.6s ease-in-out infinite; }
+.canvas-assistant-busy-mark svg { animation: canvas-assistant-spin 2.4s linear infinite; }
+@keyframes canvas-assistant-spin { to { transform: rotate(360deg); } }
 @keyframes canvas-global-pulse {
   0%, 100% { opacity: .45; transform: scale(.9); }
   50% { opacity: 1; transform: scale(1); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .assistant-dock-pulse, .canvas-assistant-panel { animation: none; opacity: 1; transform: none; }
-  .assistant-dock-meter span, .canvas-assistant-composer { transition: none; }
-}
-.canvas-global-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
-/* Narrow workspaces stack the canvas and inspector, so the panel becomes a drawer over the canvas. */
+.canvas-assistant-attachments > .canvas-document-controls { margin: 0; }
+.canvas-global-status { margin: 0 2px; color: #607368; font-size: 11px; line-height: 1.5; }
+
+/* Action row, below a hairline. */
+.canvas-assistant-actions { display: flex; align-items: center; gap: 2px; padding-top: 9px; border-top: 1px solid #edf1ee; }
+.canvas-assistant-spacer { flex: 1; }
+.funnel-workspace .canvas-assistant .canvas-assistant-icon { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-color: transparent; background: transparent; color: #607368; }
+.funnel-workspace .canvas-assistant .canvas-assistant-icon:disabled { opacity: .4; cursor: default; background: transparent; }
+.funnel-workspace .canvas-assistant .canvas-global-recording { color: #963e31; background: #fbe9e5; }
+.funnel-workspace .canvas-assistant .canvas-assistant-send { display: grid; place-items: center; width: 30px; height: 30px; margin-left: 4px; padding: 0; border: 0; border-radius: 50%; background: #266b53; color: #fff; font-size: 15px; }
+.funnel-workspace .canvas-assistant .canvas-assistant-send:hover { background: #1f5c48; }
+.funnel-workspace .canvas-assistant .canvas-assistant-send:disabled { background: #cfdcd4; cursor: default; }
+.funnel-workspace .canvas-assistant .canvas-assistant-cta { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px 7px 10px; border: 0; border-radius: 10px; background: #266b53; color: #fff; font-size: 12.5px; font-weight: 600; box-shadow: 0 1px 2px #1f3a3126; }
+.funnel-workspace .canvas-assistant .canvas-assistant-cta:hover { background: #1f5c48; }
+.funnel-workspace .canvas-assistant .canvas-assistant-cta:disabled { background: #dfe8e2; color: #8a9a91; box-shadow: none; cursor: default; }
+.canvas-assistant-cta svg { width: 13px; height: 13px; }
+.funnel-workspace .canvas-assistant .canvas-assistant-back { border: 0; background: transparent; color: #2f6f58; font-size: 12px; padding: 5px 6px; }
+
+/* Dock steps (AssistantDock) and node or pipeline proposals, at the top of the card. */
+.assistant-dock-progress { display: grid; gap: 6px; }
+.assistant-dock-meter { height: 4px; border-radius: 4px; background: #e2ebe5; overflow: hidden; }
+.assistant-dock-meter span { display: block; height: 100%; border-radius: inherit; background: #2f7a61; transition: width .3s ease; }
+.assistant-dock-progress small { color: #607368; font-size: 11px; }
+.assistant-dock-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.funnel-workspace .assistant-dock-chips button { border-radius: 999px; padding: 5px 11px; text-align: left; }
+.funnel-workspace .assistant-dock-chips button:hover { border-color: #80a68e; }
+.assistant-dock-proposal { font-size: 12px; line-height: 1.5; color: #263c37; overflow-wrap: anywhere; }
+.assistant-dock-proposal :is(p, ul) { margin: 0 0 8px; }
+.assistant-dock-proposal ul { padding-left: 17px; }
+.assistant-dock-proposal button { margin: 0 6px 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-assistant-panel, .canvas-assistant-busy-mark, .canvas-assistant-busy-mark svg, .canvas-assistant-rec-dot, .canvas-assistant-pill-unread::after { animation: none; opacity: 1; transform: none; }
+  .funnel-workspace .canvas-assistant .canvas-assistant-pill, .funnel-workspace .canvas-assistant .canvas-assistant-pill:hover { transition: none; transform: none; }
+  .assistant-dock-meter span, .canvas-assistant-card, .canvas-assistant-option-active { transition: none; }
+}
+
+/* Narrow workspaces stack the canvas and inspector, so the panel becomes a drawer over the canvas; the pill stays top left. */
 @container hiring-canvas (max-width: 740px) {
-  .canvas-assistant-rail { flex: 0 0 auto; width: 100%; flex-direction: row; padding: 6px 12px; border-right: 0; border-bottom: 1px solid #e0e7e3; }
-  .canvas-assistant-panel { position: absolute; inset: 0 auto 0 0; width: min(360px, 92%); box-shadow: 10px 0 30px #0000001a; z-index: 22; }
+  .canvas-assistant-panel { position: absolute; inset: 0 auto 0 0; width: min(320px, 92%); box-shadow: 10px 0 30px #0000001a; z-index: 22; }
 }
 
 /* Pipeline block toolbar, floating bottom-center on the canvas. */

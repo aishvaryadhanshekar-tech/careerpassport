@@ -7,14 +7,16 @@ import { CanvasBlockToolbar } from "./CanvasBlockToolbar";
 import { PipelineCandidates, needsDecision } from "./PipelineCandidates";
 import { PipelineTripWorkspace } from "../trips/PipelineTripWorkspace";
 import { PipelineNodeTools } from "./PipelineNodeTools";
-import { migratePipeline, layoutPipeline, candidateStageNode, insertPipelineStage, reorderPipelineStage } from "./pipelineModel";
+import { migratePipeline, layoutPipeline, candidateStageNode, insertPipelineStage, reorderPipelineStage, needsPipelineExpansion } from "./pipelineModel";
 import { migratePipelineTrips } from "./pipelineTrips";
+import { withoutDocumentText } from "./aiBuild/mockJd";
 import { CanvasGlobalAssistant } from "./CanvasGlobalAssistant";
-import { AssistantDock, DEFAULT_ZOOM, INTRO_ZOOM, InsightPanel, TEMPLATE_BLURB, TEMPLATE_ROLES, briefHandoffOpen, briefProgress, insightSummary, isBusyPhase, toolsUnlocked, useAiBuildFlow } from "./aiBuild";
+import { AssistantDock, BRIEF_CARD_SIZE, BRIEF_HUB_ID, DEFAULT_ZOOM, GENERATE_BRIEF_LABEL, INTAKE_QUESTION, INTRO_ZOOM, InsightPanel, TEMPLATE_BLURB, TEMPLATE_ROLES, briefHandoffOpen, briefProgress, briefReviewed, briefSectionViews, insightSummary, isBusyPhase, migrateBriefSections, toolsUnlocked, useAiBuildFlow, type BriefCardModel, type ComposerIntake } from "./aiBuild";
+import { newJobDraft, newJobNodes } from "../demo/seniorProductDesigner";
 import { globalDemoReply } from "./globalAssistantModel";
 import { InspectorResizeHandle } from "./InspectorResizeHandle";
 import type { CanvasChatMessage } from "./CanvasNodeAssistant";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { ReactFlowInstance, Viewport } from "@xyflow/react";
 import {
@@ -41,7 +43,7 @@ import { ApplicationPanel } from "./panels/ApplicationPanel";
 import { DemoApplication } from "../demo/DemoApplication";
 import { DemoPanel, DemoToolbar } from "../demo/DemoPanel";
 import { demoService, toBoard } from "../demo/service";
-import { demoDraft, demoNodes } from "../demo/fixtures";
+import { demoDraft } from "../demo/fixtures";
 import type { DemoProject } from "../demo/types";
 import { JobDetailsPanel } from "./panels/JobDetailsPanel";
 import { FunnelCanvas } from "./FunnelCanvas";
@@ -107,13 +109,17 @@ function FunnelWorkspaceInner() {
     return getCurrentJobId() ?? startNewJob();
   });
   const [saved] = useState(() => read(jobId));
-  const [initial] = useState(() => migratePipelineTrips(migratePipeline(
-    saved?.nodes ?? (getJob(jobId) ? withCapabilities(expandFunnel(baseFunnel())) : baseFunnel()),
-    saved?.board ?? getBoard(jobId)), saved?.draft ?? loadDraft()));
+  const [initial] = useState(() => {
+    const migrated = migratePipelineTrips(migratePipeline(
+      saved?.nodes ?? (getJob(jobId) ? withCapabilities(expandFunnel(baseFunnel())) : baseFunnel()),
+      saved?.board ?? getBoard(jobId)), saved?.draft ?? loadDraft());
+    // Older saved canvases drew the Role brief as one node per section; it is a single card now.
+    return { ...migrated, nodes: migrateBriefSections(migrated.nodes) };
+  });
   const [draft, setDraft] = useState(initial.draft);
   const [items, setItems] = useState(initial.nodes);
   useEffect(() => {
-    if (items.some(n => n.kind === 'trip' && !n.tripId && !n.placeholder) || (items.some(n=>n.kind==='stage') && !items.some(n=>n.stageKey))) {
+    if (items.some(n => n.kind === 'trip' && !n.tripId && !n.placeholder) || needsPipelineExpansion(items)) {
       const next = migratePipelineTrips(migratePipeline(items, board), draft);
       setItems(next.nodes); setDraft(next.draft);
     }
@@ -201,7 +207,20 @@ function FunnelWorkspaceInner() {
   });
   const jobToolsUnlocked = toolsUnlocked(draft, items);
   const briefOpen = briefHandoffOpen(aiBuild.phase, items);
-  const brief = { ...briefProgress(items), canGenerate: briefOpen, drafting: aiBuild.phase === "drafting", onGenerate: aiBuild.requestGenerate };
+  const briefInspectorOpen = active === BRIEF_HUB_ID && workspaceTab === "pipeline";
+  const { generation, briefTab, openBrief, requestGenerate } = aiBuild;
+  // Memoised: FunnelCanvas rebuilds its nodes whenever this object changes identity.
+  const briefCard = useMemo<BriefCardModel>(() => ({
+    sections: briefSectionViews(items, generation),
+    ...briefProgress(items),
+    generating: aiBuild.phase === "analysing" || aiBuild.phase === "drafting",
+    statusLabel: generation?.label ?? null,
+    canGenerate: briefOpen,
+    activeSection: briefInspectorOpen ? briefTab : null,
+    onReview: () => openBrief(),
+    onOpenSection: (key) => openBrief(key),
+    onGenerate: requestGenerate,
+  }), [items, generation, aiBuild.phase, briefOpen, briefInspectorOpen, briefTab, openBrief, requestGenerate]);
   // Held in a ref so changing phase never re-runs the centering effect on its own.
   const zoomRef = useRef(DEFAULT_ZOOM);
   zoomRef.current = aiBuild.phase === "intro" || aiBuild.phase === "collecting" ? INTRO_ZOOM : DEFAULT_ZOOM;
@@ -245,9 +264,10 @@ function FunnelWorkspaceInner() {
     const position = layoutPipeline(items).find((n) => n.id === target)?.position;
     if (!position) return;
     const zoom = zoomRef.current;
+    const size = target === BRIEF_HUB_ID ? BRIEF_CARD_SIZE : { width: 260, height: 120 };
     centerTimer.current = window.setTimeout(
       () =>
-        flow.current?.setCenter(position.x + 130, position.y + 60, {
+        flow.current?.setCenter(position.x + size.width / 2, position.y + size.height / 2, {
           zoom,
           duration: 250,
         }),
@@ -287,7 +307,7 @@ function FunnelWorkspaceInner() {
     current.current = { ...config, board: toBoard(project) };
     setDraft(config.draft);
     const migrated = migratePipelineTrips(migratePipeline(withCapabilities(config.nodes), toBoard(project)), config.draft);
-    setItems(migrated.nodes); setDraft(migrated.draft);
+    setItems(migrateBriefSections(migrated.nodes)); setDraft(migrated.draft);
     setBoard(toBoard(project));
     setStarted(config.started);
     setPublished(config.published);
@@ -431,8 +451,8 @@ function FunnelWorkspaceInner() {
   }
   /** Lays a starting template out on the canvas: from the start screen or the assistant. */
   function applyTemplate(role: string) {
-    setItems(withCapabilities(demoNodes(role)));
-    setDraft(demoDraft(role));
+    setItems(withCapabilities(newJobNodes(role)));
+    setDraft(newJobDraft(role));
   }
   function start(role?: string, mode: "scratch" | "import" = "scratch") {
     setStarted(true);
@@ -711,6 +731,31 @@ function FunnelWorkspaceInner() {
   const documents = draft.attachments.filter((a) => a.kind === "document");
   const intakeOpen = aiBuild.phase === "intro" || aiBuild.phase === "collecting";
   const assistantBusy = isBusyPhase(aiBuild.phase);
+  const briefGenerating = aiBuild.phase === "analysing" || aiBuild.phase === "drafting";
+  const busyLabel = aiBuild.phase === "generating" ? "Building your pipeline…" : briefGenerating ? aiBuild.generation?.label ?? null : null;
+  /** "Generate role brief": from the typed description, or from the attached documents alone. */
+  function generateRoleBrief() {
+    const typed = globalPrompt.trim();
+    const attached = documents.length ? `Attached: ${documents.map((a) => a.name).join(", ")}` : "";
+    // The uploaded JD already sits in the text box; history echoes only what was typed around it.
+    const own = withoutDocumentText(typed, aiBuild.documentBrief).trim();
+    if (typed) { aiBuild.generateBrief(typed, attached ? { echo: `${own || "Uploaded job description"}\n${attached}` } : undefined); return; }
+    if (attached) aiBuild.generateBrief("Use the attached job description.", { echo: attached });
+  }
+  const intake: ComposerIntake | undefined = !nodeContext && intakeOpen ? {
+    question: INTAKE_QUESTION,
+    view: aiBuild.intakeView,
+    cta: { label: GENERATE_BRIEF_LABEL, disabled: !(globalPrompt.trim() || documents.length), onClick: generateRoleBrief },
+    onUpload: () => documentInput.current?.click(),
+    onOpenTemplates: aiBuild.openTemplates,
+    onCloseTemplates: aiBuild.closeTemplates,
+    onTemplate: (role) => {
+      applyTemplate(role);
+      setActive(null);
+      aiBuild.finishWithTemplate(role);
+      requestAnimationFrame(() => flow.current?.fitView({ padding: 0.2, duration: 400 }));
+    },
+  } : undefined;
   // What the assistant is asking right now: node suggestions, a pipeline draft, or the guided step.
   const assistantDock = nodeContext ? (
     nodeProposal && <div className="assistant-dock-proposal">{nodeProposal}</div>
@@ -719,22 +764,11 @@ function FunnelWorkspaceInner() {
   ) : (
     <AssistantDock
       phase={aiBuild.phase}
-      intakeMode={aiBuild.intakeMode}
-      question={aiBuild.question}
       stages={aiBuild.stages}
-      brief={brief}
+      brief={briefProgress(items)}
       showTasks={globalMessages.length === 0}
       onTask={setGlobalPrompt}
-      onAnswer={aiBuild.answer}
-      onOpenTemplates={aiBuild.openTemplates}
-      onOpenJd={aiBuild.openJd}
-      onBackToQuestions={aiBuild.backToQuestions}
-      onTemplate={(role) => {
-        applyTemplate(role);
-        setActive(null);
-        aiBuild.finishWithTemplate(role);
-        requestAnimationFrame(() => flow.current?.fitView({ padding: 0.2, duration: 400 }));
-      }}
+      onReviewBrief={() => aiBuild.openBrief()}
       onGenerate={aiBuild.requestGenerate}
       onChooseScope={aiBuild.choose}
       onToggleStage={(id) => aiBuild.toggleStage(id)}
@@ -755,16 +789,16 @@ function FunnelWorkspaceInner() {
       onPromptChange={nodeContext ? setPrompt : (value) => { setGlobalPrompt(value); if (value.trim()) aiBuild.noteTyping(); }}
       placeholder={nodeContext ? `Ask for changes to ${nodeContext.title}…`
         : assistantBusy ? "One moment…"
-        : aiBuild.question ? aiBuild.question.placeholder
-        : intakeOpen && aiBuild.intakeMode === "jd" ? "Paste the job description…"
-        : intakeOpen ? "Or describe the role in your own words…"
+        : intakeOpen ? "Describe the role — title, team, location, must-haves…"
         : "Ask for changes to the workflow…"}
       dock={assistantDock}
       busy={assistantBusy}
+      busyLabel={busyLabel}
+      intake={intake}
       hasAttachments={!nodeContext && documents.length > 0}
       onAttach={nodeContext ? undefined : () => documentInput.current?.click()}
       attachments={!nodeContext && (documents.length > 0 || documentErrors.length > 0 || aiBuild.documentError) ? <div className="canvas-document-controls">
-        {documents.map(a=><span className="canvas-document-chip" key={a.id}><span title={a.name}>{a.name}</span><button type="button" aria-label={`Remove document ${a.name}`} onClick={()=>{removeDocument(a.id);setPipelineProposal(null);}}>×</button></span>)}
+        {documents.map(a=><span className="canvas-document-chip" key={a.id}><span title={a.name}>{a.name}</span><button type="button" aria-label={`Remove document ${a.name}`} onClick={()=>{removeDocument(a.id);aiBuild.clearDocumentBrief();setPipelineProposal(null);}}>×</button></span>)}
         {documentErrors.map(error=><p role="alert" key={error}>{error}</p>)}
         {aiBuild.documentError && <p role="alert">{aiBuild.documentError}</p>}
       </div> : undefined}
@@ -772,8 +806,8 @@ function FunnelWorkspaceInner() {
         if (nodeContext) { suggest(); return; }
         const message = globalPrompt.trim() || (documents.length?'Build a pipeline with the attached documents.':'');
         if (!message) return;
-        if (aiBuild.question && globalPrompt.trim()) { aiBuild.answer(message); return; }
-        if (aiBuild.phase === "intro" || aiBuild.phase === "collecting") { aiBuild.submit(message); return; }
+        // The composer routes intake sends to the CTA; this only guards a stray submit.
+        if (intakeOpen) { generateRoleBrief(); return; }
         setGlobalMessages((history) => [...history,
           { role: "user", text: message + (documents.length?`\nAttached: ${documents.map(a=>a.name).join(", ")}`:"") },
           { role: "assistant", text: documents.length?"Documents attached. Here’s a demo pipeline to review and tailor to your role.":globalDemoReply(message, items, draft) },
@@ -894,7 +928,6 @@ function FunnelWorkspaceInner() {
         <div className="funnel-body">
           {assistant}
           <section ref={surface} className="funnel-surface" aria-label="Hiring canvas">
-            <div className="pipeline-overview-control"><button aria-pressed={overview} onClick={()=>{setOverview(v=>!v);setAI(false);}}>{overview?'Detailed canvas':'Stage overview'}</button>{overview&&<span>Select a stage to focus</span>}</div>
             <FunnelCanvas
               onAddPipeline={build}
               overview={overview}
@@ -905,14 +938,17 @@ function FunnelWorkspaceInner() {
               counts={counts}
               toolsUnlocked={jobToolsUnlocked}
               enteringIds={aiBuild.enteringIds}
-              pendingIds={aiBuild.pendingIds}
-              brief={brief}
+              brief={briefCard}
               onSelect={(id) => {
-                if(overview){select(id);return;}
+                // Selecting a card attaches it to the assistant, except while the guided intake is asking questions.
+                if(overview){select(id);if(!intakeOpen)setAI(true);return;}
                 if (active === id && !demoOpen && !preview) {
                   setActive(null);
                   setAI(false);
-                } else select(id);
+                } else {
+                  select(id);
+                  if (!intakeOpen) setAI(true);
+                }
               }}
               resetVersion={resetVersion}
               onDragStart={() => {
@@ -929,8 +965,6 @@ function FunnelWorkspaceInner() {
                   collapsed: !items.find((n) => n.id === id)?.collapsed,
                 })
               }
-              aiOpen={ai}
-              onCloseAI={() => setAI(false)}
               onAI={() => {
                 setPreview(false);
                 setDemoOpen(false);
@@ -949,7 +983,7 @@ function FunnelWorkspaceInner() {
             />
             <div className="canvas-authoring-dock nodrag nopan nowheel"><div className="canvas-authoring-toolbar" role="toolbar" aria-label="Pipeline tools"><CanvasBlockToolbar insertion={insertion} aiOpen={false} onOpen={()=>undefined} items={items} onSpawn={(kind,point)=>{
                 const bounds=surface.current?.getBoundingClientRect();if(!bounds||!flow.current)return;
-                if(point&&(point.x<bounds.left||point.x>bounds.right||point.y<bounds.top||point.y>bounds.bottom||document.elementFromPoint(point.x,point.y)?.closest('.canvas-assistant,.canvas-authoring-dock,.pipeline-overview-control,.workspace-canvas-controls')))return;
+                if(point&&(point.x<bounds.left||point.x>bounds.right||point.y<bounds.top||point.y>bounds.bottom||document.elementFromPoint(point.x,point.y)?.closest('.canvas-assistant,.canvas-authoring-dock,.workspace-canvas-controls')))return;
                 const position=flow.current.screenToFlowPosition(point||{x:bounds.left+bounds.width/2,y:bounds.top+bounds.height*.4});
                 const added={...node(kind,kind==='round'?'New activity':kind==='communication'?'New message':`New ${kind}`,null),manual:true,placeholder:kind==='trip'||kind==='communication',active:kind!=='communication',position:{x:position.x-130,y:position.y-45},...(kind==='stage'?{stageKey:crypto.randomUUID()}: {})};
                 returningDetail.current=true;window.clearTimeout(centerTimer.current);setItems(all=>[...all,added]);setActive(null);setOverview(false);setFocus(false);setWorkspaceTab('pipeline');setAI(false);setAttachment(null);
@@ -963,6 +997,10 @@ function FunnelWorkspaceInner() {
                 }else{select(parent);setAttachment({parent,kind,outcome});}
               }}/></div></div>
             <div className="workspace-canvas-controls">
+            <div className="pipeline-overview-control">
+              <button aria-pressed={overview} onClick={()=>{setOverview(v=>!v);setAI(false);}}>{overview?'Detailed canvas':'Stage overview'}</button>
+              {overview&&<span className="pipeline-overview-hint" role="status">Select a stage to focus</span>}
+            </div>
             <button
               className="funnel-fit"
               onClick={() => {
@@ -989,7 +1027,9 @@ function FunnelWorkspaceInner() {
                       ? "Demo tools"
                       : preview
                         ? "Application preview"
-                        : selected?.title}
+                        : selected?.kind === "insight"
+                          ? "Role brief"
+                          : selected?.title}
                   </h2>
                 </div>
                 <button aria-label={workspaceTab !== "pipeline" ? "Return to pipeline" : focus ? "Collapse detail view" : "Expand detail view"} onClick={()=>{if(workspaceTab !== "pipeline"){setWorkspaceTab("pipeline");setCandidateStage(null);setFocus(false);}else setFocus(v=>!v);}}>{focus ? "↙" : "↗"}</button>
@@ -1059,8 +1099,8 @@ function FunnelWorkspaceInner() {
                   selected && (
                     <>
                       {selected.kind === "insight" && (
-                        <InsightPanel key={selected.id} item={selected} items={items} draft={draft} setDraft={setDraft}
-                          canGenerate={briefOpen} onOpen={select} onReviewed={aiBuild.markReviewed} onGenerate={aiBuild.requestGenerate} />
+                        <InsightPanel key={selected.id} draft={draft} setDraft={setDraft} tab={aiBuild.briefTab} onTab={aiBuild.setBriefTab}
+                          reviewed={briefReviewed(items)} canGenerate={briefOpen} onReviewed={aiBuild.markReviewed} onGenerate={aiBuild.requestGenerate} />
                       )}
                       {selected.kind === "job" && (
                         <>

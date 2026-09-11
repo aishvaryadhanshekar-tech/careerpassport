@@ -1,0 +1,146 @@
+/* Staged AI build controls, shown in the hiring assistant's composer card.
+   Selectors carry an extra class so they beat the assistant's shared button/input resets. */
+
+.ai-build-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Shared actions --- */
+
+.ai-build-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.funnel-workspace .ai-build-actions .ai-build-primary {
+  border: 1px solid #266b53;
+  border-radius: 9px;
+  background: #266b53;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+.funnel-workspace .ai-build-actions .ai-build-primary:hover { background: #1f5c48; border-color: #1f5c48; }
+.funnel-workspace .ai-build-actions .ai-build-primary:disabled { cursor: default; border-color: #dfe8e2; background: #dfe8e2; color: #8a9a91; }
+.funnel-workspace .ai-build-ghost,
+.funnel-workspace .ai-build-actions .ai-build-ghost { border-color: transparent; background: transparent; color: #607368; font-size: 12px; }
+.funnel-workspace .ai-build-ghost:hover,
+.funnel-workspace .ai-build-actions .ai-build-ghost:hover { background: #edf4ef; }
+
+/* --- Criteria --- */
+
+.ai-build-criteria { margin-top: 11px; }
+.ai-build-criteria-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ai-build-criteria-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 7px;
+  border-radius: 7px;
+  background: #f5f8f6;
+}
+.ai-build-criteria-label { min-width: 0; font-size: 11px; }
+.ai-build-criteria-importance {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: #e2ebe5;
+  color: #3d534b;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ai-build-importance-critical { background: #f3ddd7; color: #8a3f2f; }
+.ai-build-importance-important { background: #dcebe0; color: #20523e; }
+
+/* --- Pipeline choice --- */
+
+.ai-build-choices { display: grid; gap: 6px; }
+.funnel-workspace .ai-build-choices .ai-build-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid #dfe6e1;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.funnel-workspace .ai-build-choices .ai-build-choice:hover { background: #f5f9f6; border-color: #266b53; }
+.funnel-workspace .ai-build-choices .ai-build-choice-primary { border-color: #9dbcaa; background: #f5f9f6; }
+.ai-build-choice-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1f3a31;
+}
+.ai-build-choice-blurb { color: #607368; font-size: 11px; line-height: 1.45; }
+
+/* --- Stage checklist --- */
+
+.ai-build-stages { display: grid; gap: 10px; }
+.ai-build-stage-list { list-style: none; margin: 0 -4px; padding: 0; display: grid; gap: 1px; }
+.ai-build-stage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 4px;
+  border-radius: 8px;
+}
+.ai-build-stage:hover { background: #f5f8f6; }
+.ai-build-stage-check {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #266b53;
+  cursor: pointer;
+}
+.ai-build-stage-check:disabled { cursor: default; opacity: 0.55; }
+.ai-build-stage-check:focus-visible { outline: 2px solid #6b9d83; outline-offset: 2px; }
+.ai-build-stage-body { min-width: 0; flex: 1 1 auto; }
+.funnel-workspace .ai-build-stages .ai-build-stage-title {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #263c37;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+}
+.funnel-workspace .ai-build-stages .ai-build-stage-title:hover { border-color: #d6e2da; background: #fff; }
+.funnel-workspace .ai-build-stages .ai-build-stage-title:focus-visible {
+  border-color: #6b9d83;
+  background: #fff;
+  outline: 2px solid #6b9d83;
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .funnel-workspace .ai-build-choices .ai-build-choice { transition: none; }
+}

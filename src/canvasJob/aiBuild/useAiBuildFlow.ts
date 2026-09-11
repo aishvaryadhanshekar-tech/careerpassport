@@ -3,23 +3,28 @@ import type { Dispatch, SetStateAction } from "react";
 import type { ReactFlowInstance } from "@xyflow/react";
 import type { JobDraft } from "../../types";
 import type { FunnelNode } from "../funnelModel";
-import { layoutPipeline } from "../pipelineModel";
 import type { CanvasChatMessage } from "../CanvasNodeAssistant";
 import {
   ANALYSING_MS,
+  BRIEF_GENERATION_MS,
   BRIEF_HUB_ID,
-  DRAFT_FILL_MS,
   DRAFT_STEP_MS,
   STAGGER_MS,
-  briefSections,
+  briefGenerationAt,
+  briefReviewed,
+  nextUnreviewed,
+  withSectionReviewed,
+  type BriefGeneration,
+  type BriefSectionKey,
   type BuildPhase,
+  type IntakeView,
   type PipelineScope,
   type ProfileProposal,
   type StageProposal,
 } from "./buildPhase";
 import { briefHub, buildProfileProposal, inferRole, proposeStages, stageNodesFor } from "./aiBuildFixtures";
-import { INTAKE_STEPS, INTAKE_WELCOME, TEMPLATE_BLURB, applyIntake, composeBrief, type IntakeAnswers } from "./intake";
-import { readDocuments } from "./mockJd";
+import { INTAKE_WELCOME, TEMPLATE_BLURB } from "./intake";
+import { readDocuments, withDocumentText, withoutDocumentText } from "./mockJd";
 
 type Deps = {
   items: FunnelNode[];
@@ -37,20 +42,12 @@ type Deps = {
   select: (id: string | null) => void;
 };
 
-/** How the person is describing the role: the question steps, a pasted JD, or a template. */
-export type IntakeMode = "questions" | "jd" | "templates";
-
-type Intake = { mode: IntakeMode; step: number; answers: IntakeAnswers };
-
-const FRESH_INTAKE: Intake = { mode: "questions", step: 0, answers: {} };
-
 const HOW_FAR = "How far should I build the pipeline?";
 const WHICH_STAGES = "Which stages should I create?";
+const BRIEF_READY_MESSAGE = "Your role brief is ready — review each section, then generate the pipeline.";
 
 /** Entrance animation length, kept in sync with `fn-node-in` in funnel.css. */
 const ENTER_MS = 320;
-/** Card footprint for framing nodes React Flow has not measured yet. */
-const CARD = { width: 260, height: 140 };
 
 export function useAiBuildFlow(deps: Deps) {
   const [phase, setPhase] = useState<BuildPhase>("off");
@@ -58,15 +55,21 @@ export function useAiBuildFlow(deps: Deps) {
   // "Build with AI" mounts the canvas for the first time, so the camera must wait for React Flow.
   const [focusNonce, setFocusNonce] = useState(0);
   const [enteringIds, setEnteringIds] = useState<Record<string, number>>({});
-  /** Brief nodes still showing as skeletons. */
-  const [pendingIds, setPendingIds] = useState<string[]>([]);
   const [proposal, setProposal] = useState<ProfileProposal | null>(null);
   const [stages, setStages] = useState<StageProposal[]>([]);
   const [scope, setScope] = useState<PipelineScope>("full");
   const [documentError, setDocumentError] = useState("");
-  const [intake, setIntake] = useState<Intake>(FRESH_INTAKE);
+  /** The uploaded JD markdown last put into the composer, so removing the file can take it back out. */
+  const [documentBrief, setDocumentBrief] = useState("");
+  const [intakeView, setIntakeView] = useState<IntakeView>("open");
+  /** The generating animation's current step; null when no brief is being generated. */
+  const [generation, setGeneration] = useState<BriefGeneration | null>(null);
+  /** The Role brief section open in the inspector. */
+  const [briefTab, setBriefTab] = useState<BriefSectionKey>("summary");
 
   const timers = useRef<number[]>([]);
+  /** Timers for the brief animation, kept apart so a restart only cancels its own steps. */
+  const generationTimers = useRef<number[]>([]);
   const latest = useRef(deps);
   latest.current = deps;
 
@@ -74,10 +77,17 @@ export function useAiBuildFlow(deps: Deps) {
     timers.current.push(window.setTimeout(run, ms));
   }, []);
 
+  const cancelGeneration = useCallback(() => {
+    generationTimers.current.forEach((id) => window.clearTimeout(id));
+    generationTimers.current = [];
+  }, []);
+
   useEffect(
     () => () => {
       timers.current.forEach((id) => window.clearTimeout(id));
       timers.current = [];
+      generationTimers.current.forEach((id) => window.clearTimeout(id));
+      generationTimers.current = [];
     },
     [],
   );
@@ -98,161 +108,138 @@ export function useAiBuildFlow(deps: Deps) {
     [after],
   );
 
-  /** Frame the hub and where its sections will land before they exist, so the camera never chases them. */
-  const frameBrief = useCallback((sections: FunnelNode[]) => {
-    const { items, flow, clearCenterTimer } = latest.current;
-    const ids = new Set([BRIEF_HUB_ID, ...sections.map((section) => section.id)]);
-    const laid = layoutPipeline([
-      ...items.filter((item) => !ids.has(item.id) || item.id === BRIEF_HUB_ID),
-      ...sections,
-    ]).filter((item) => ids.has(item.id));
-    if (!laid.length || !flow.current) return;
-    const xs = laid.map((item) => item.position.x);
-    const ys = laid.map((item) => item.position.y);
-    const x = Math.min(...xs);
-    const y = Math.min(...ys);
-    clearCenterTimer();
-    void flow.current.fitBounds(
-      { x, y, width: Math.max(...xs) + CARD.width - x, height: Math.max(...ys) + CARD.height - y },
-      { padding: 0.25, duration: 500 },
-    );
-  }, []);
-
+  /** "Build with AI": the assistant welcomes the person and the composer offers the ways to describe the role. */
   const begin = useCallback(() => {
+    cancelGeneration();
     setPhase("intro");
     setFocusNode("job");
     setProposal(null);
     setStages([]);
-    setPendingIds([]);
+    setGeneration(null);
+    setBriefTab("summary");
     setDocumentError("");
-    setIntake(FRESH_INTAKE);
+    setDocumentBrief("");
+    setIntakeView("open");
     latest.current.setGlobalOpen(true);
     latest.current.setGlobalPrompt("");
     latest.current.setGlobalMessages([{ role: "assistant", text: INTAKE_WELCOME }]);
-  }, []);
+  }, [cancelGeneration]);
 
   const noteTyping = useCallback(() => {
     setPhase((current) => (current === "intro" ? "collecting" : current));
   }, []);
 
-  /** Uploaded documents land in the composer as markdown the user can edit. */
+  const openTemplates = useCallback(() => setIntakeView("templates"), []);
+  const closeTemplates = useCallback(() => setIntakeView("open"), []);
+
+  /** The uploaded JD lands in the composer as editable markdown, after anything already typed. */
   const ingestDocuments = useCallback(async (files: File[]) => {
     if (!files.length) return;
     const result = await readDocuments(files);
     setDocumentError(result.error ?? "");
     if (!result.markdown) return;
-    // A JD answers every question at once, so the next send drafts from it directly.
-    setIntake((current) => ({ ...current, mode: "jd" }));
-    latest.current.setGlobalPrompt((current) =>
-      current.trim() ? `${current.trim()}\n\n${result.markdown}` : result.markdown,
-    );
+    setIntakeView("open");
+    setDocumentBrief((current) => withDocumentText(current, result.markdown));
+    latest.current.setGlobalPrompt((current) => withDocumentText(current, result.markdown));
     setPhase((current) => (current === "intro" ? "collecting" : current));
   }, []);
 
+  /** Removing the uploaded JD takes its text back out of the composer, unless it has been edited. */
+  const clearDocumentBrief = useCallback(() => {
+    latest.current.setGlobalPrompt((current) => withoutDocumentText(current, documentBrief));
+    setDocumentBrief("");
+  }, [documentBrief]);
+
   /**
-   * Drafts the role brief from `message`. `options.draft` is the draft just written by the
-   * intake, before state catches up; `options.echo` is what the history shows as sent, or
-   * false when the intake has already recorded the answer.
+   * "Generate role brief": reads `message`, then fills the Role brief card section by section.
+   * The animation is driven by `briefGenerationAt(elapsed)` at 0, ANALYSING_MS and every
+   * DRAFT_STEP_MS after, and ends in the review phase at BRIEF_GENERATION_MS.
+   * `opts.echo` is what the history shows as sent (defaults to `message`).
    */
-  const submit = useCallback(
-    (message: string, options: { draft?: JobDraft; echo?: string | false } = {}) => {
+  const generateBrief = useCallback(
+    (message: string, opts: { echo?: string } = {}) => {
+      const text = message.trim();
+      if (!text) return;
       const { setGlobalPrompt, setItems } = latest.current;
-      if (options.echo !== false) record({ role: "user", text: options.echo ?? message });
+      cancelGeneration();
+      const step = (elapsed: number, run: () => void) => {
+        generationTimers.current.push(window.setTimeout(run, elapsed));
+      };
+
+      record({ role: "user", text: opts.echo ?? text });
       setGlobalPrompt("");
+      setIntakeView("open");
+      setProposal(null);
+      setBriefTab("summary");
       setPhase("analysing");
-      // The hub lands straight away so the canvas visibly starts working while the brief is read.
+      setGeneration(briefGenerationAt(0));
+      // The card lands straight away so the canvas visibly starts working while the brief is read.
       setItems((all) => [
         ...all.filter((item) => item.id !== BRIEF_HUB_ID && item.parent !== BRIEF_HUB_ID),
         briefHub(),
       ]);
-      setPendingIds([BRIEF_HUB_ID]);
       reveal([BRIEF_HUB_ID]);
       setFocusNode(BRIEF_HUB_ID);
 
-      after(ANALYSING_MS, () => {
-        const next = buildProfileProposal(message, options.draft ?? latest.current.draft);
+      step(ANALYSING_MS, () => {
+        const next = buildProfileProposal(text, latest.current.draft);
         setProposal(next);
         latest.current.setDraft(next.draft);
-        latest.current.setItems((all) => all.map((item) => (item.id === BRIEF_HUB_ID ? next.hub : item)));
-        setPendingIds([]);
-        setFocusNode(null);
-        setPhase("drafting");
-        frameBrief(next.sections);
+        latest.current.setItems((all) =>
+          all.map((item) => (item.id === BRIEF_HUB_ID ? { ...next.hub, position: item.position } : item)),
+        );
+        setGeneration(briefGenerationAt(ANALYSING_MS));
+        // A manual interaction may have ended the guided flow; the brief still finishes filling in.
+        setPhase((current) => (current === "analysing" ? "drafting" : current));
+      });
 
-        // Sections arrive one at a time, each a skeleton first, so the drafting reads as real work.
-        next.sections.forEach((section, index) => {
-          after(index * DRAFT_STEP_MS, () => {
-            latest.current.setItems((all) => [...all.filter((item) => item.id !== section.id), section]);
-            setPendingIds((ids) => [...ids, section.id]);
-            reveal([section.id]);
-          });
-          after(index * DRAFT_STEP_MS + DRAFT_FILL_MS, () =>
-            setPendingIds((ids) => ids.filter((id) => id !== section.id)),
-          );
-        });
+      for (let elapsed = ANALYSING_MS + DRAFT_STEP_MS; elapsed < BRIEF_GENERATION_MS; elapsed += DRAFT_STEP_MS) {
+        const at = elapsed;
+        step(at, () => setGeneration(briefGenerationAt(at)));
+      }
 
-        after(next.sections.length * DRAFT_STEP_MS, () => {
-          setPhase("reviewing");
-          record({ role: "assistant", text: `Your role brief for ${next.role} is ready — four sections on the canvas.` });
-          // Review opens on the first section so the person lands in an editor, not on a blank canvas.
-          latest.current.select(next.sections[0]?.id ?? BRIEF_HUB_ID);
-        });
+      step(BRIEF_GENERATION_MS, () => {
+        generationTimers.current = [];
+        setGeneration(null);
+        setPhase((current) => (current === "analysing" || current === "drafting" ? "reviewing" : current));
+        record({ role: "assistant", text: BRIEF_READY_MESSAGE });
       });
     },
-    [after, frameBrief, record, reveal],
+    [cancelGeneration, record, reveal],
   );
 
-  /** Records one intake answer; the last one drafts the brief from everything answered. */
-  const answer = useCallback(
-    (text: string) => {
-      const step = INTAKE_STEPS[intake.step];
-      if (!step) return;
-      const reply = text.trim();
-      const answers = { ...intake.answers, [step.key]: reply };
-      setIntake({ ...intake, step: intake.step + 1, answers });
-      latest.current.setGlobalPrompt("");
-      record({ role: "assistant", text: step.question }, { role: "user", text: reply });
-      if (INTAKE_STEPS[intake.step + 1]) {
-        setPhase("collecting");
-        return;
-      }
-      const draft = applyIntake(answers, latest.current.draft);
-      latest.current.setDraft(draft);
-      submit(composeBrief(answers), { draft, echo: false });
-    },
-    [intake, record, submit],
-  );
+  /** Opens the Role brief inspector on `key`, or the first section still to review. */
+  const openBrief = useCallback((key?: BriefSectionKey) => {
+    const { items, select } = latest.current;
+    setBriefTab(key ?? nextUnreviewed(briefReviewed(items)) ?? "summary");
+    select(BRIEF_HUB_ID);
+  }, []);
 
-  const openTemplates = useCallback(() => setIntake((current) => ({ ...current, mode: "templates" })), []);
-  const openJd = useCallback(() => setIntake((current) => ({ ...current, mode: "jd" })), []);
-  const backToQuestions = useCallback(() => setIntake((current) => ({ ...current, mode: "questions" })), []);
+  /** Ticks a section off and moves to the next one still to check; stays put once all are done. */
+  const markReviewed = useCallback((key: BriefSectionKey) => {
+    const { items, setItems } = latest.current;
+    setItems((all) => withSectionReviewed(all, key));
+    const next = nextUnreviewed(briefReviewed(withSectionReviewed(items, key)), key);
+    setBriefTab(next ?? key);
+  }, []);
 
   /** The workspace has laid the template out; the guided flow ends with a note of what was loaded. */
   const finishWithTemplate = useCallback(
     (role: string) => {
+      cancelGeneration();
+      setGeneration(null);
       setPhase("done");
       setFocusNode(null);
-      setPendingIds([]);
       setStages([]);
-      setIntake(FRESH_INTAKE);
+      setIntakeView("open");
       latest.current.setGlobalPrompt("");
       record(
         { role: "user", text: `Use the ${role} template` },
         { role: "assistant", text: `Loaded the ${role} template — ${TEMPLATE_BLURB.toLowerCase()}. Everything stays editable.` },
       );
     },
-    [record],
+    [cancelGeneration, record],
   );
-
-  /** Tick a section off and move straight to the next one still to check. */
-  const markReviewed = useCallback((id: string) => {
-    const { items, setItems, select } = latest.current;
-    setItems((all) => all.map((item) => (item.id === id ? { ...item, reviewed: true } : item)));
-    const order = briefSections(items);
-    const at = order.findIndex((item) => item.id === id);
-    const next = [...order.slice(at + 1), ...order.slice(0, Math.max(at, 0))].find((item) => !item.reviewed);
-    select(next ? next.id : BRIEF_HUB_ID);
-  }, []);
 
   /** The Role brief hands off to the "how far should I build?" question in the dock. */
   const requestGenerate = useCallback(() => {
@@ -275,11 +262,15 @@ export function useAiBuildFlow(deps: Deps) {
       setFocusNode(null);
       after(ENTER_MS + fresh.length * STAGGER_MS + 160, () => {
         setPhase("done");
-        // The brief has done its job; fold it away. It stays one click from expanding again.
-        latest.current.setItems((all) =>
-          all.map((item) => (item.id === BRIEF_HUB_ID ? { ...item, collapsed: true } : item)),
+        // Frame the top of the new pipeline at a readable zoom; fitting every round would shrink it to specks.
+        after(80, () =>
+          latest.current.flow.current?.fitView({
+            nodes: ["job", BRIEF_HUB_ID, "prospects", "application"].map((id) => ({ id })),
+            padding: 0.25,
+            maxZoom: 1,
+            duration: 500,
+          }),
         );
-        after(80, () => latest.current.flow.current?.fitView({ padding: 0.2, duration: 500 }));
         record({
           role: "assistant",
           text:
@@ -343,32 +334,30 @@ export function useAiBuildFlow(deps: Deps) {
 
   const refocus = useCallback(() => setFocusNonce((n) => n + 1), []);
 
-  /** The intake question awaiting an answer, if the assistant is still asking. */
-  const question =
-    (phase === "intro" || phase === "collecting") && intake.mode === "questions" ? INTAKE_STEPS[intake.step] : undefined;
-
   return {
     phase,
     focusNode,
     focusNonce,
     refocus,
     enteringIds,
-    pendingIds,
     proposal,
     stages,
     documentError,
-    question,
-    intakeMode: intake.mode,
+    documentBrief,
+    intakeView,
+    generation,
+    briefTab,
+    setBriefTab,
     begin,
     noteTyping,
     ingestDocuments,
-    submit,
-    answer,
+    clearDocumentBrief,
+    generateBrief,
     openTemplates,
-    openJd,
-    backToQuestions,
-    finishWithTemplate,
+    closeTemplates,
+    openBrief,
     markReviewed,
+    finishWithTemplate,
     requestGenerate,
     choose,
     toggleStage,
@@ -378,3 +367,5 @@ export function useAiBuildFlow(deps: Deps) {
     leave,
   };
 }
+
+export type AiBuildFlow = ReturnType<typeof useAiBuildFlow>;

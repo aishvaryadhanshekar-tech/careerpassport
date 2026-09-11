@@ -1,103 +1,68 @@
-import { useRef, useState, type Dispatch, type JSX, type SetStateAction } from "react";
+import { useEffect, useRef, useState, type JSX } from "react";
 import { EvaluationTab } from "../../roleProfile/EvaluationTab";
 import { restoreTabSlice } from "../../roleProfile/hydrate";
 import { RequirementsTab } from "../../roleProfile/RequirementsTab";
 import { RoleSidebar, type RoleSidebarField } from "../../roleProfile/RoleSidebar";
 import { SourcingTab } from "../../roleProfile/SourcingTab";
-import type {
-  Currency,
-  EvaluationCriterion,
-  JobDraft,
-  JobPreviewFields,
-  RoleProfileFields,
-} from "../../types";
-import type { FunnelNode } from "../funnelModel";
-import { BRIEF_SECTIONS, briefSections, type BriefSectionKey } from "./buildPhase";
+import { tabKeyboard } from "../../shared/tabKeyboard";
+import type { Currency, EvaluationCriterion, JobDraft, JobPreviewFields, RoleProfileFields } from "../../types";
+import { BRIEF_SECTIONS, type BriefSectionKey } from "./buildPhase";
+import type { BriefInspectorProps } from "./contract";
 
-export type InsightPanelProps = {
-  item: FunnelNode;
-  items: FunnelNode[];
-  draft: JobDraft;
-  setDraft: Dispatch<SetStateAction<JobDraft>>;
-  /** Whether "Generate pipeline" is on offer right now (see briefHandoffOpen). */
-  canGenerate: boolean;
-  onOpen: (id: string) => void;
-  onReviewed: (id: string) => void;
-  onGenerate: () => void;
+const NOT_EDITING: Record<BriefSectionKey, boolean> = {
+  summary: false,
+  requirements: false,
+  sourcing: false,
+  evaluation: false,
 };
 
-/** Inspector for Role brief nodes: the hub lists its sections; each section reuses its Role Profile editor. */
-export function InsightPanel(props: InsightPanelProps): JSX.Element | null {
-  const key = props.item.insightKey;
-  if (key === "hub") return <BriefOverview {...props} />;
-  if (!key) return null;
-  return <BriefSection {...props} sectionKey={key} />;
-}
-
-function BriefOverview({ items, canGenerate, onOpen, onGenerate }: InsightPanelProps): JSX.Element {
-  const sections = briefSections(items);
-  const ready = sections.filter((section) => section.reviewed).length === BRIEF_SECTIONS.length;
+function TabCheck(): JSX.Element {
   return (
-    <section className="insight-panel">
-      <p className="funnel-help">
-        Drafted from your brief. These are the same four sections as the Role Profile step. Open one to check or
-        edit it.
-      </p>
-      {sections.map((section) => (
-        <button key={section.id} type="button" className="funnel-child" onClick={() => onOpen(section.id)}>
-          <span>
-            <small>{section.reviewed ? "Reviewed" : "To review"}</small>
-            <strong>{section.title}</strong>
-          </span>
-          <span aria-hidden="true">{section.reviewed ? "✓" : "→"}</span>
-        </button>
-      ))}
-      {canGenerate && (
-        <div className="insight-panel-footer">
-          {!ready && (
-            <button type="button" className="ai-build-ghost" onClick={onGenerate}>
-              Skip review
-            </button>
-          )}
-          <button type="button" className="funnel-primary" disabled={!ready} onClick={onGenerate}>
-            Generate pipeline →
-          </button>
-        </div>
-      )}
-    </section>
+    <svg className="insight-tab-check" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="8" fill="currentColor" />
+      <path d="M4.6 8.2l2.2 2.2 4.6-4.8" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
-function BriefSection({
-  item,
-  items,
+/** The Role brief inspector: one panel, a tab per section, each reusing its Role Profile editor. */
+export function InsightPanel({
   draft,
   setDraft,
+  tab,
+  onTab,
+  reviewed,
+  canGenerate,
   onReviewed,
-  sectionKey,
-}: InsightPanelProps & { sectionKey: BriefSectionKey }): JSX.Element {
-  const [editing, setEditing] = useState(false);
-  const snapshot = useRef<JobDraft | null>(null);
+  onGenerate,
+}: BriefInspectorProps): JSX.Element {
+  const [editing, setEditing] = useState(NOT_EDITING);
+  const snapshots = useRef<Partial<Record<BriefSectionKey, JobDraft>>>({});
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const activeTab = useRef<HTMLButtonElement>(null);
 
-  // Same snapshot/discard contract as RoleProfilePage, scoped to this one section.
-  function beginEdit() {
-    snapshot.current = structuredClone(draft);
-    setEditing(true);
+  // A clipped tab scrolls into view when it becomes active, by click, keyboard or the workspace.
+  useEffect(() => {
+    activeTab.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [tab]);
+
+  // Same snapshot/discard contract as RoleProfilePanel, one snapshot per section.
+  function beginEdit(key: BriefSectionKey) {
+    snapshots.current[key] = structuredClone(draftRef.current);
+    setEditing((current) => ({ ...current, [key]: true }));
   }
-  function discardEdit() {
-    const saved = snapshot.current;
-    if (saved) setDraft((current) => restoreTabSlice(sectionKey, current, saved));
-    setEditing(false);
+  function discardEdit(key: BriefSectionKey) {
+    const saved = snapshots.current[key];
+    if (saved) setDraft((current) => restoreTabSlice(key, current, saved));
+    setEditing((current) => ({ ...current, [key]: false }));
   }
-  function saveEdit() {
-    setEditing(false);
+  function saveEdit(key: BriefSectionKey) {
+    setEditing((current) => ({ ...current, [key]: false }));
   }
 
   function onField(id: RoleSidebarField | "mustHaves" | "redFlags", value: string) {
-    setDraft((current) => ({
-      ...current,
-      fields: { ...current.fields, [id]: { value, source: "user" } },
-    }));
+    setDraft((current) => ({ ...current, fields: { ...current.fields, [id]: { value, source: "user" } } }));
   }
   function onRoleProfile(patch: Partial<RoleProfileFields>) {
     setDraft((current) => ({ ...current, roleProfile: { ...current.roleProfile, ...patch } }));
@@ -106,62 +71,105 @@ function BriefSection({
     setDraft((current) => ({ ...current, preview: { ...current.preview, ...patch } }));
   }
   function onFramework(next: EvaluationCriterion[]) {
-    setDraft((current) => ({
-      ...current,
-      roleProfile: { ...current.roleProfile, evaluationFramework: next },
-    }));
+    setDraft((current) => ({ ...current, roleProfile: { ...current.roleProfile, evaluationFramework: next } }));
   }
   function onCurrency(value: Currency | null) {
     setDraft((current) => ({ ...current, salaryCurrency: value }));
   }
-  const edit = { editing, onEdit: beginEdit, onDiscard: discardEdit, onSave: saveEdit };
+  const edit = (key: BriefSectionKey) => ({
+    editing: editing[key],
+    onEdit: () => beginEdit(key),
+    onDiscard: () => discardEdit(key),
+    onSave: () => saveEdit(key),
+  });
 
-  const order = briefSections(items);
-  const position = order.findIndex((section) => section.id === item.id);
-  const othersDone = order.filter((section) => section.id !== item.id).every((section) => section.reviewed);
-  const nextLabel = !othersDone
-    ? "Looks good → next"
-    : item.reviewed
-      ? "Back to Role brief"
-      : "Looks good — finish review";
+  const allReviewed = BRIEF_SECTIONS.every((section) => reviewed.includes(section.key));
+  const lastToReview = BRIEF_SECTIONS.every((section) => section.key === tab || reviewed.includes(section.key));
 
   return (
     <section className="insight-panel">
-      <p className="insight-panel-eyebrow">
-        AI draft · section {position + 1} of {BRIEF_SECTIONS.length}
-      </p>
-      <div className="insight-panel-body">
-        {sectionKey === "summary" && (
+      <div className="insight-tabs" role="tablist" aria-label="Role brief sections" onKeyDown={tabKeyboard}>
+        {BRIEF_SECTIONS.map((section) => {
+          const active = section.key === tab;
+          const done = reviewed.includes(section.key);
+          return (
+            <button
+              key={section.key}
+              ref={active ? activeTab : undefined}
+              type="button"
+              role="tab"
+              id={`brief-tab-${section.key}`}
+              aria-selected={active}
+              aria-controls={`brief-tabpanel-${section.key}`}
+              tabIndex={active ? 0 : -1}
+              className={`insight-tab ${active ? "insight-tab-active" : ""}`}
+              onClick={() => onTab(section.key)}
+            >
+              {section.label}
+              {done && (
+                <>
+                  <TabCheck />
+                  <span className="sr-only"> (reviewed)</span>
+                </>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        className="insight-panel-body"
+        role="tabpanel"
+        id={`brief-tabpanel-${tab}`}
+        aria-labelledby={`brief-tab-${tab}`}
+      >
+        {tab === "summary" && (
           <RoleSidebar
             draft={draft}
             editable
-            editing={editing}
-            onToggleEditing={() => (editing ? saveEdit() : beginEdit())}
+            editing={editing.summary}
+            onToggleEditing={() => (editing.summary ? saveEdit("summary") : beginEdit("summary"))}
             onField={onField}
             onRoleProfile={onRoleProfile}
             onCurrency={onCurrency}
           />
         )}
-        {sectionKey === "requirements" && (
-          <RequirementsTab draft={draft} onPreview={onPreview} onField={onField} {...edit} />
+        {tab === "requirements" && (
+          <RequirementsTab draft={draft} onPreview={onPreview} onField={onField} {...edit("requirements")} />
         )}
-        {sectionKey === "sourcing" && (
-          <SourcingTab draft={draft} onPreview={onPreview} onRoleProfile={onRoleProfile} {...edit} />
+        {tab === "sourcing" && (
+          <SourcingTab draft={draft} onPreview={onPreview} onRoleProfile={onRoleProfile} {...edit("sourcing")} />
         )}
-        {sectionKey === "evaluation" && <EvaluationTab draft={draft} onFramework={onFramework} {...edit} />}
+        {tab === "evaluation" && <EvaluationTab draft={draft} onFramework={onFramework} {...edit("evaluation")} />}
       </div>
+
       <div className="insight-panel-footer">
-        {item.reviewed && <span className="insight-panel-done">✓ Reviewed</span>}
-        <button
-          type="button"
-          className="funnel-primary"
-          onClick={() => {
-            setEditing(false);
-            onReviewed(item.id);
-          }}
-        >
-          {nextLabel}
-        </button>
+        {reviewed.includes(tab) && <span className="insight-panel-done">✓ Reviewed</span>}
+        {allReviewed ? (
+          canGenerate && (
+            <button type="button" className="funnel-primary" onClick={onGenerate}>
+              Generate pipeline →
+            </button>
+          )
+        ) : (
+          <>
+            {canGenerate && (
+              <button type="button" className="ai-build-ghost" onClick={onGenerate}>
+                Skip review
+              </button>
+            )}
+            <button
+              type="button"
+              className="funnel-primary"
+              onClick={() => {
+                saveEdit(tab);
+                onReviewed(tab);
+              }}
+            >
+              {lastToReview ? "Looks good" : "Looks good → next"}
+            </button>
+          </>
+        )}
       </div>
     </section>
   );

@@ -1,5 +1,9 @@
 import { DEFAULT_PIPELINE_STAGES, type PipelineBoard } from "../types";
 import { node, visibleNodes, type FunnelNode } from "./funnelModel";
+import { BRIEF_CARD_SIZE } from "./aiBuild/buildPhase";
+
+/** Clear space between the Role brief card's bottom edge and the next spine node. */
+const BRIEF_GAP = 110;
 
 export type PipelineEdge = { id: string; source: string; target: string; label?: string; outcome?: FunnelNode["outcome"] };
 export type HardRule = NonNullable<FunnelNode["rules"]>[number];
@@ -28,8 +32,9 @@ export function migratePipeline(nodes: FunnelNode[], board: PipelineBoard): Funn
     }
     return next;
   });
-  // A new scratch canvas remains just its existing role/tools until expansion is requested.
-  if (!existingStages.length) return migrated;
+  // A new scratch canvas remains just its existing role/tools until expansion is requested,
+  // and an application-only build stays just Prospects until later stages are added.
+  if (existingStages.every(item => item.id === "prospects")) return migrated;
   if (root.pipelineVersion === 2 && existingStages.some(item => item.stageKey)) return migrated;
 
   const prospects = migrated.find(item => item.kind === "stage" && item.id === "prospects");
@@ -80,6 +85,12 @@ export function migratePipeline(nodes: FunnelNode[], board: PipelineBoard): Funn
   }
   // Stage order is represented by array order. Every original non-stage node stays intact.
   return [migrated.find(item => item.id === root.id)!, ...ordered, ...migrated.filter(item => item.id !== root.id && item.kind !== "stage")];
+}
+
+/** Stages without board keys are a legacy or freshly built pipeline that `migratePipeline` should expand. */
+export function needsPipelineExpansion(nodes: FunnelNode[]): boolean {
+  const stages = pipelineStages(nodes);
+  return !stages.some(item => item.stageKey) && !stages.every(item => item.id === "prospects");
 }
 
 export function pipelineStages(nodes: FunnelNode[]): FunnelNode[] {
@@ -138,22 +149,13 @@ export function layoutPipeline(nodes: FunnelNode[]) {
   const placed = new Set<string>();
   function activities(parent: FunnelNode, depth: number) {
     const children = nodes.filter(item => item.parent === parent.id && item.kind !== "stage" && item.kind !== "capability");
-    if (parent.insightKey === "hub") {
-      // Brief sections sit beside their hub in a 2×2 grid so the job → stages spine stays readable.
-      const top = positions.get(parent.id)?.y ?? y;
-      children.forEach((child, index) => {
-        if (placed.has(child.id)) return;
-        placed.add(child.id);
-        positions.set(child.id, { x: 370 + (index % 2) * 290, y: top - 60 + Math.floor(index / 2) * 170 });
-      });
-      return;
-    }
     let messageRow = positions.get(parent.id)?.y ?? y;
     for (const child of children.filter(item => item.kind !== "communication")) {
       if (placed.has(child.id)) continue;
       placed.add(child.id);
       positions.set(child.id, { x: 0, y });
-      y += 230;
+      // The Role brief card is taller than a regular node, so the next spine node drops further.
+      y += child.insightKey === "hub" ? BRIEF_CARD_SIZE.height + BRIEF_GAP : 230;
       activities(child, depth + 1);
     }
     for (const child of children.filter(item => item.kind === "communication")) {
@@ -173,8 +175,7 @@ export function layoutPipeline(nodes: FunnelNode[]) {
     activities(stage, 0);
   }
   let exitY = 230;
-  // Exit stages move clear of the Role brief's section grid when there is one.
-  const exitX = nodes.some(item => item.insightKey === "hub") ? 1000 : 650;
+  const exitX = 650;
   for (const stage of pipelineStages(nodes).filter(item => item.exit)) {
     positions.set(stage.id, { x: exitX, y: exitY });
     exitY += 230;

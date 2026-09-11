@@ -48,7 +48,12 @@
       "Bash(npm init *)",
       "Bash(node screenshot.mjs)",
       "Bash(node screenshot2.mjs)",
-      "Bash(lsof -ti:5183 -sTCP:LISTEN)"
+      "Bash(lsof -ti:5183 -sTCP:LISTEN)",
+      "Bash(command -v node)",
+      "Read(//opt/homebrew/Cellar/node/26.5.1/bin/**)",
+      "Bash(git rm *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'WIP: docked hiring assistant, guided intake and templates \\(checkpoint before v3\\) *)"
     ],
     "additionalDirectories": [
       "/private/tmp"
