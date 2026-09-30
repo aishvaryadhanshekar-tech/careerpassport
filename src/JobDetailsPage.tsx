@@ -19,7 +19,8 @@ import type { JobDraft } from "./types";
  */
 
 const JOB_TABS = [
-  { id: "overview", label: "Job Overview", path: "" },
+  { id: "actions", label: "Overview & Actions", path: "" },
+  { id: "overview", label: "Job Details", path: "overview" },
   { id: "trips", label: "Trips", path: "trips" },
   { id: "pipeline", label: "Pipeline", path: "pipeline" },
   { id: "prospects", label: "Prospects", path: "prospects" },
@@ -28,9 +29,9 @@ const JOB_TABS = [
 
 function activeTabFor(pathname: string, jobId: string): string {
   const rest = pathname.replace(`/jobs/${jobId}`, "").replace(/^\//, "");
-  if (rest === "") return "overview";
+  if (rest === "") return "actions";
   const segment = rest.split("/")[0];
-  return JOB_TABS.find((t) => t.path === segment)?.id ?? "overview";
+  return JOB_TABS.find((t) => t.path === segment)?.id ?? "actions";
 }
 
 export function JobDetailsPage() {

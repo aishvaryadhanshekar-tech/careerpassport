@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { ApplicationPreview } from "../ApplicationPreview";
 import { CustomQuestionsCard } from "../CustomQuestionsCard";
-import { getBoard, sendMessage } from "../candidatesStore";
 import { upsertJobFromDraft } from "../jobsStore";
 import { EvaluationTab } from "../roleProfile/EvaluationTab";
 import { restoreTabSlice, type EditKey } from "../roleProfile/hydrate";
@@ -18,7 +17,6 @@ import type {
   RoleProfileFields,
 } from "../types";
 import { useJobContext } from "./jobContext";
-import { JobActionSummary } from "./NextStepNudge";
 
 function CheckIcon() {
   return (
@@ -68,7 +66,6 @@ export function JobOverviewTab() {
   const { jobId, job, draft, setDraft } = useJobContext();
   const [tab, setTab] = useState<"details" | "application">("details");
   const [mode, setMode] = useState<"mobile" | "desktop">("desktop");
-  const [board, setBoard] = useState(() => getBoard(jobId));
   const config = draft.application;
 
   const [editingTabs, setEditingTabs] = useState<Record<EditKey, boolean>>({
@@ -151,15 +148,6 @@ export function JobOverviewTab() {
 
   return (
     <>
-      <JobActionSummary
-        jobId={jobId}
-        job={job}
-        draft={draft}
-        board={board}
-        onSendMessage={(candidateId, template, values) =>
-          setBoard(sendMessage(jobId, candidateId, template, values))
-        }
-      />
       <div className="preview-layout">
         <RoleSidebar
           draft={draft}

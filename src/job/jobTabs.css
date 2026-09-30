@@ -63,6 +63,75 @@
   white-space: nowrap;
 }
 
+/* Key-numbers stat row at the top of the Overview & Actions tab (see JobActionsTab.tsx). */
+.ja-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 720px) {
+  .ja-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ja-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid #e2e6e9;
+  border-left: 3px solid #e2e6e9;
+  border-radius: 12px;
+}
+
+.ja-stat-total {
+  border-left-color: #475569;
+}
+
+.ja-stat-review {
+  border-left-color: #a5620a;
+}
+
+.ja-stat-flagged {
+  border-left-color: #c2410c;
+}
+
+.ja-stat-trip {
+  border-left-color: #0e7490;
+}
+
+.ja-stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  color: #1f1b16;
+}
+
+.ja-stat-total .ja-stat-value {
+  color: #475569;
+}
+
+.ja-stat-review .ja-stat-value {
+  color: #a5620a;
+}
+
+.ja-stat-flagged .ja-stat-value {
+  color: #c2410c;
+}
+
+.ja-stat-trip .ja-stat-value {
+  color: #0e7490;
+}
+
+.ja-stat-label {
+  font-size: 13px;
+  color: #667085;
+}
+
 /* Post-publish "done for you / needs your call" panel (see NextStepNudge.tsx JobActionSummary). */
 .job-action-summary {
   display: grid;
