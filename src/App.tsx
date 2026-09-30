@@ -4,6 +4,7 @@ import { ApplicationPage } from "./ApplicationPage";
 import { CollectJobPage } from "./CollectJobPage";
 import { JobDetailsPage } from "./JobDetailsPage";
 import { CommunicationsTab } from "./job/CommunicationsTab";
+import { JobActionsTab } from "./job/JobActionsTab";
 import { JobOverviewTab } from "./job/JobOverviewTab";
 import { ProspectsTab } from "./job/ProspectsTab";
 import { JobsPage } from "./JobsPage";
@@ -27,7 +28,8 @@ export function App() {
           <Route path="/step-3" element={<Step3Page />} />
           {/* Job shell: header + page tabs; tab bodies render into its <Outlet/>. */}
           <Route path="/jobs/:id" element={<JobDetailsPage />}>
-            <Route index element={<JobOverviewTab />} />
+            <Route index element={<JobActionsTab />} />
+            <Route path="overview" element={<JobOverviewTab />} />
             <Route path="trips" element={<TripsListPage />} />
             <Route path="pipeline" element={<PipelineTab />} />
             <Route path="prospects" element={<ProspectsTab />} />
